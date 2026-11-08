@@ -28,14 +28,14 @@
 
 ## Fase 1 — Pipeline Suara (Minggu 2)
 
-- [ ] `audio/stream.py`: input mic 16 kHz, ring buffer
-- [ ] `audio/wakeword.py`: openWakeWord `hey_jarvis` (ONNX)
-- [ ] `audio/vad.py`: Silero VAD, deteksi selesai bicara
-- [ ] `stt/whisper.py`: faster-whisper `small`, int8, bahasa Indonesia
-- [ ] `tts/piper.py` + `tts/fallback.py`
-- [ ] `app.py`: state machine IDLE → LISTENING → THINKING → SPEAKING
-- [ ] Log latensi tiap tahap (mode DEBUG)
-- [ ] `setup.py`: `check`, `list-mics`, `download-voice`
+- [x] `audio/stream.py`: input mic 16 kHz, ring buffer
+- [x] `audio/wakeword.py`: openWakeWord `hey_jarvis` (ONNX)
+- [x] `audio/vad.py`: Silero VAD, deteksi selesai bicara
+- [x] `stt/whisper.py`: faster-whisper `small`, int8, bahasa Indonesia
+- [x] `tts/piper.py` + `tts/fallback.py`
+- [x] `app.py`: state machine IDLE → LISTENING → THINKING → SPEAKING
+- [x] Log latensi tiap tahap (mode DEBUG)
+- [x] `setup.py`: `check`, `list-mics`, `download-voice`
 
 **Definition of Done:** "Hey Jarvis, apa ibu kota Jepang?" → dijawab dengan suara di 3 OS, total latensi ≤ 5 detik di CPU.
 

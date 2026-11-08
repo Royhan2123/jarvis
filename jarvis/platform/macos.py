@@ -5,13 +5,20 @@ import subprocess
 
 from jarvis.platform.base import PlatformAdapter
 
-_VOICES = {"female": "Damayanti", "male": None}
-
 
 class MacAdapter(PlatformAdapter):
-    def say(self, text: str, gender: str) -> None:
+    name = "macos"
+
+    def __init__(self) -> None:
+        self._proc: subprocess.Popen | None = None
+
+    def say(self, text: str, voice: str | None = None) -> None:
         if not shutil.which("say"):
             raise NotImplementedError("Perintah 'say' tidak ditemukan di macOS ini")
-        voice = _VOICES.get(gender)
-        cmd = ["say", "-r", "185", *(["-v", voice] if voice else []), text]
-        subprocess.run(cmd, check=False)
+        cmd = ["say", "-r", "185", *(["-v", voice] if voice else []), "--", text]
+        self._proc = subprocess.Popen(cmd)
+        self._proc.wait()
+
+    def stop_say(self) -> None:
+        if self._proc and self._proc.poll() is None:
+            self._proc.terminate()

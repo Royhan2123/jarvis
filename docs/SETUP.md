@@ -188,12 +188,14 @@ uv run python -m jarvis
 
 ```bash
 python -m jarvis                     # mode normal (tray + suara)
+python -m jarvis --listen            # pipeline suara penuh (wake word "Hey Jarvis")
 python -m jarvis --text              # mode teks di terminal (tanpa mic) — untuk debugging
 python -m jarvis --no-tray           # tanpa ikon tray (server / headless)
 python -m jarvis --config my.yaml    # pakai config lain
 python -m jarvis --log-level DEBUG   # log detail (latensi tiap tahap)
 python -m jarvis.setup check         # cek semua dependensi
 python -m jarvis.setup list-mics     # lihat daftar mikrofon
+python -m jarvis.setup download-models  # unduh model wake word & Whisper (sekali, butuh internet)
 ```
 
 ---

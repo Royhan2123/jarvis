@@ -11,6 +11,11 @@ dependencies = [
   "pydantic>=2.6",
   "platformdirs>=4.2",
   "loguru>=0.7",
+  "onnxruntime>=1.17",
+  "openwakeword>=0.6",
+  "faster-whisper>=1.0",
+  "piper-tts>=1.2",
+  "pyttsx3>=2.90 ; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]
@@ -35,3 +40,7 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["slow: komponen audio/model besar, tidak wajib jalan di CI"]
+
+[tool.uv]
+# Mac Intel: onnxruntime terbaru tidak punya wheel x86_64 macOS; paksa uv memilih versi yang ada.
+required-environments = ["sys_platform == 'darwin' and platform_machine == 'x86_64'"]

@@ -21,6 +21,38 @@ class GeneralConfig(_Section):
     offline_only: bool = True
 
 
+class AudioConfig(_Section):
+    input_device: int | str | None = None
+    output_device: int | str | None = None
+    sample_rate: int = 16000
+    chunk_ms: int = 80
+    sounds: bool = True
+
+
+class WakewordConfig(_Section):
+    model: str = "hey_jarvis"
+    threshold: float = 0.5
+    cooldown_s: float = 2.0
+    inference_framework: Literal["onnx", "tflite"] = "onnx"
+
+
+class VADConfig(_Section):
+    threshold: float = 0.5
+    silence_ms: int = 800
+    max_record_s: int = 15
+    listen_timeout_s: int = 8
+
+
+class STTConfig(_Section):
+    model: str = "small"
+    device: Literal["auto", "cpu", "cuda"] = "auto"
+    compute_type: str = "int8"
+    language: str | None = "id"
+    beam_size: int = 1
+    initial_prompt: str = "Jarvis, buka, tutup, volume, Spotify, Chrome, VS Code"
+    cpu_threads: int = 8
+
+
 class LLMConfig(_Section):
     host: str = "http://localhost:11434"
     fast_model: str = "qwen3.5:4b"
@@ -47,9 +79,30 @@ class RouterConfig(_Section):
     preload_smart_model: bool = False
 
 
+class VoicePair(_Section):
+    male: str | None = None
+    female: str | None = None
+
+
+class SystemVoices(_Section):
+    macos: VoicePair = VoicePair(female="Damayanti")
+    windows: VoicePair = VoicePair(male="Microsoft Andika")
+    linux: VoicePair = VoicePair(male="id+m3", female="id+f3")
+
+
+class TTSVoices(_Section):
+    piper: VoicePair = VoicePair(male="id_ID-news_tts-medium", female="custom/jarvis_cewek.onnx")
+    system: SystemVoices = SystemVoices()
+    edge: VoicePair = VoicePair(male="id-ID-ArdiNeural", female="id-ID-GadisNeural")
+
+
 class TTSConfig(_Section):
     engine: Literal["piper", "system", "edge"] = "piper"
     gender: Literal["male", "female"] = "male"
+    voices: TTSVoices = TTSVoices()
+    length_scale: float = 1.0
+    noise_scale: float = 0.667
+    volume: float = 1.0
     max_spoken_chars: int = 400
 
 
@@ -61,6 +114,10 @@ class MemoryConfig(_Section):
 
 class Config(_Section):
     general: GeneralConfig = GeneralConfig()
+    audio: AudioConfig = AudioConfig()
+    wakeword: WakewordConfig = WakewordConfig()
+    vad: VADConfig = VADConfig()
+    stt: STTConfig = STTConfig()
     llm: LLMConfig = LLMConfig()
     router: RouterConfig = RouterConfig()
     tts: TTSConfig = TTSConfig()

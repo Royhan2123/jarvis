@@ -75,7 +75,9 @@ def chat(cfg: Config, voice: bool) -> None:
         print()
         if adapter and reply.strip():
             try:
-                adapter.say(reply, cfg.tts.gender)
+                adapter.say(
+                    reply, getattr(getattr(cfg.tts.voices.system, adapter.name), cfg.tts.gender)
+                )
             except NotImplementedError as e:
                 logger.warning(str(e))
                 adapter = None
@@ -85,7 +87,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(prog="jarvis")
     ap.add_argument("--check", action="store_true", help="cek mic & Ollama")
     ap.add_argument("--text", action="store_true", help="mode teks (default)")
-    ap.add_argument("--voice", action="store_true", help="bacakan jawaban")
+    ap.add_argument("--voice", action="store_true", help="mode teks + jawaban dibacakan")
+    ap.add_argument("--listen", action="store_true", help="pipeline suara penuh (Hey Jarvis)")
     ap.add_argument("--config", default="config.yaml")
     ap.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING"])
     args = ap.parse_args()
@@ -100,6 +103,11 @@ def main() -> None:
 
     if args.check:
         sys.exit(0 if check(cfg) else 1)
+    if args.listen:
+        from jarvis.app import Jarvis
+
+        Jarvis(cfg).run()
+        return
     chat(cfg, voice=args.voice)
 
 

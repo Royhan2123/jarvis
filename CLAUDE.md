@@ -51,6 +51,8 @@ uv sync --extra dev                 # install dependensi
 uv run python -m jarvis --check     # cek mic & Ollama
 uv run python -m jarvis             # mode teks
 uv run python -m jarvis --voice     # mode teks + suara
+uv run python -m jarvis --listen    # pipeline suara penuh ("Hey Jarvis")
+uv run python -m jarvis.setup download-voice && uv run python -m jarvis.setup download-models
 uv run pytest -q                    # test
 uv run ruff check . && uv run ruff format .   # lint & format
 ```

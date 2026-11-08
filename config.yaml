@@ -7,6 +7,34 @@ general:
   log_level: "INFO"
   offline_only: true
 
+audio:
+  input_device: null
+  output_device: null
+  sample_rate: 16000
+  chunk_ms: 80
+  sounds: true
+
+wakeword:
+  model: "hey_jarvis"
+  threshold: 0.5
+  cooldown_s: 2.0
+  inference_framework: "onnx"
+
+vad:
+  threshold: 0.5
+  silence_ms: 800
+  max_record_s: 15
+  listen_timeout_s: 8
+
+stt:
+  model: "small"
+  device: "auto"
+  compute_type: "int8"
+  language: "id"
+  beam_size: 1
+  initial_prompt: "Jarvis, buka, tutup, volume, Spotify, Chrome, VS Code"
+  cpu_threads: 8
+
 llm:
   host: "http://localhost:11434"
   fast_model: "qwen3.5:4b"
@@ -32,6 +60,20 @@ router:
 tts:
   engine: "piper"
   gender: "male"
+  voices:
+    piper:
+      male: "id_ID-news_tts-medium"
+      female: "custom/jarvis_cewek.onnx"
+    system:
+      macos:   { male: null, female: "Damayanti" }
+      windows: { male: "Microsoft Andika", female: null }
+      linux:   { male: "id+m3", female: "id+f3" }
+    edge:
+      male: "id-ID-ArdiNeural"
+      female: "id-ID-GadisNeural"
+  length_scale: 1.0
+  noise_scale: 0.667
+  volume: 1.0
   max_spoken_chars: 400
 
 memory:
