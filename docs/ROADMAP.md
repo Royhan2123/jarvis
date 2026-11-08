@@ -67,7 +67,7 @@
 - [ ] Build PyInstaller 3 OS di CI, upload ke GitHub Releases
 - [ ] Uji dengan 3 pengguna nyata, perbaiki SETUP.md
 
-> Status: kode & unit test selesai (106 test). Belum: `jarvis.spec` + `release.yml` belum pernah dijalankan (build 3 OS), model 9B belum diunduh, belum diuji 3 pengguna nyata.
+> Status: kode & unit test selesai (106 test); alur suara (aturan, konfirmasi, tray) dikonfirmasi berhasil oleh pengguna di Mac. Belum: `jarvis.spec` + `release.yml` belum pernah dijalankan (build 3 OS), model 9B belum diunduh, belum diuji 3 pengguna nyata.
 
 **🚀 Rilis MVP v0.1**
 
