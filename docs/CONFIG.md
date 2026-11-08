@@ -52,7 +52,8 @@ vad:
 # SPEECH-TO-TEXT
 # ─────────────────────────────────────────────
 stt:
-  model: "small"              # tiny | base | small | medium | large-v3-turbo
+  model: "medium"            # model untuk perintah: tiny | base | small | medium | large-v3-turbo
+  wake_model: "small"        # model untuk mengenali frasa pemanggil (dipanggil sering → pakai yang cepat)
   device: "auto"              # auto | cpu | cuda
   compute_type: "int8"        # CPU: int8 | GPU: float16
   language: "id"              # null = deteksi otomatis (lebih lambat)

@@ -46,7 +46,8 @@ class VADConfig(_Section):
 
 
 class STTConfig(_Section):
-    model: str = "small"
+    model: str = "medium"
+    wake_model: str = "small"
     device: Literal["auto", "cpu", "cuda"] = "auto"
     compute_type: str = "int8"
     language: str | None = "id"

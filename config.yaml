@@ -29,7 +29,8 @@ vad:
   listen_timeout_s: 8
 
 stt:
-  model: "small"
+  model: "medium"             # untuk perintah (lebih akurat, lebih lambat)
+  wake_model: "small"         # untuk mengenali frasa pemanggil (cepat)
   device: "auto"
   compute_type: "int8"
   language: "id"

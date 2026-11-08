@@ -46,8 +46,9 @@ def download_models(config: str) -> None:
     cfg = load_config(config)
     print("⬇ model wake word…")
     openwakeword.utils.download_models([cfg.wakeword.model])
-    print(f"⬇ Whisper '{cfg.stt.model}'…")
-    WhisperModel(cfg.stt.model, device="cpu", compute_type=cfg.stt.compute_type)
+    for name in dict.fromkeys([cfg.stt.wake_model, cfg.stt.model]):
+        print(f"⬇ Whisper '{name}'…")
+        WhisperModel(name, device="cpu", compute_type=cfg.stt.compute_type)
     print("✅ Model siap")
 
 

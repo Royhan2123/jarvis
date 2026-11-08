@@ -45,6 +45,8 @@ class Jarvis:
         self.wake = WakeWord(cfg.wakeword) if cfg.wakeword.engine == "openwakeword" else None
         self.vad = VAD(cfg.vad)
         self.stt = WhisperSTT(cfg.stt)
+        wake_cfg = cfg.stt.model_copy(update={"model": cfg.stt.wake_model, "beam_size": 1})
+        self.wake_stt = self.stt if wake_cfg.model == cfg.stt.model else WhisperSTT(wake_cfg)
         self.llm = LLM(cfg)
         self.tts: TTS = build_tts(cfg)
 
@@ -115,7 +117,7 @@ class Jarvis:
         if seg is None or len(seg) < c.audio.sample_rate * 0.4:
             return None
         t0 = time.perf_counter()
-        text = self.stt.transcribe(seg)
+        text = self.wake_stt.transcribe(seg)
         rest = match_phrase(text, c.wakeword.phrase)
         logger.debug(
             f"[wake] '{text}' → {'COCOK' if rest is not None else 'abaikan'} "
