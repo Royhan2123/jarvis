@@ -121,6 +121,8 @@ class AppsConfig(_Section):
         "vs code": "Visual Studio Code",
         "browser": "Google Chrome",
         "musik": "Spotify",
+        "kalkulator": "Calculator",
+        "kalender": "Calendar",
     }
 
 
@@ -141,6 +143,10 @@ class PlatformConfig(_Section):
     linux: LinuxPlatformConfig = LinuxPlatformConfig()
 
 
+class UIConfig(_Section):
+    tray: bool = True
+
+
 class Config(_Section):
     general: GeneralConfig = GeneralConfig()
     audio: AudioConfig = AudioConfig()
@@ -153,6 +159,7 @@ class Config(_Section):
     tools: ToolsConfig = ToolsConfig()
     memory: MemoryConfig = MemoryConfig()
     platform: PlatformConfig = PlatformConfig()
+    ui: UIConfig = UIConfig()
 
 
 def load_config(path: str | Path = "config.yaml") -> Config:

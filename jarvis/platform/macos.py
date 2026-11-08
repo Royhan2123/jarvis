@@ -68,3 +68,12 @@ class MacAdapter(PlatformAdapter):
 
     def lock_screen(self) -> None:
         run(["pmset", "displaysleepnow"])
+
+    def shutdown(self) -> None:
+        self._osascript('tell application "System Events" to shut down')
+
+    def restart(self) -> None:
+        self._osascript('tell application "System Events" to restart')
+
+    def open_path(self, path: str) -> None:
+        run(["open", path])

@@ -150,3 +150,16 @@ Angka yang ditulis Whisper sebagai kata ("tiga puluh") dikonversi ke digit.
 | `open_url` / `web_search` | ⚠️ validasi URL saja | ⬜ belum | ⬜ belum | ⬜ belum |
 | `get_time` / `system_info` | ✅ diuji | ⬜ belum | ⬜ belum | ⬜ belum |
 | `lock_screen` | ⬜ belum (mematikan layar) | ⬜ belum | ⬜ belum | ⬜ belum |
+
+### Router & LLM tool calling (Fase 3)
+
+- Urutan: **aturan regex** (`brain/rules.py`) → **Qwen 4B** → **Qwen 9B** (kata kunci kompleks,
+  > `router.complex_min_words` kata, atau 4B memanggil tool `escalate`; jika 9B belum terpasang
+  jatuh kembali ke 4B).
+- **Skema tool hanya dikirim bila relevan** (`TOOL_HINTS` di `brain/router.py`). Terukur di Mac i9:
+  mengirim tool ke Qwen 4B menambah 5–8 detik prefill (obrolan biasa tanpa tool ≈ 2,6 detik), dan 4B
+  cenderung memanggil `web_search` untuk pertanyaan fakta. Perintah umum ditangkap aturan regex
+  (instan); jalur LLM+tool (≈ 12–19 detik) hanya untuk ucapan yang tidak cocok aturan.
+- **Konfirmasi suara:** tool `high` → Jarvis bertanya "Yakin …? Bilang ya atau tidak.", mendengar
+  `tools.confirm_timeout_s` detik. Kata "tidak/jangan/batal" selalu menang; diam atau tidak jelas =
+  batal. Tool call dari LLM juga lewat jalur yang sama (tidak bisa melewati konfirmasi).

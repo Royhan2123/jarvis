@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from jarvis.platform._util import terminate_user_processes
+from jarvis.platform._util import run, terminate_user_processes
 from jarvis.platform.base import AppNotFound, MediaAction, PlatformAdapter, PlatformError
 
 
@@ -95,3 +95,12 @@ class WindowsAdapter(PlatformAdapter):
 
         if not ctypes.windll.user32.LockWorkStation():  # type: ignore[attr-defined]
             raise PlatformError("Gagal mengunci layar")
+
+    def shutdown(self) -> None:
+        run(["shutdown", "/s", "/t", "0"])
+
+    def restart(self) -> None:
+        run(["shutdown", "/r", "/t", "0"])
+
+    def open_path(self, path: str) -> None:
+        os.startfile(path)  # type: ignore[attr-defined]  # noqa: S606

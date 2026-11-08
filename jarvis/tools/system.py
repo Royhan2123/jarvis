@@ -66,3 +66,25 @@ def system_info(kind: Literal["battery", "cpu", "ram", "all"] = "all") -> str:
 def lock_screen() -> str:
     context.adapter.lock_screen()
     return "Layar dikunci"
+
+
+@tool(
+    name="shutdown",
+    description="Mematikan komputer. Selalu butuh konfirmasi pengguna",
+    risk="high",
+    category="system",
+)
+def shutdown() -> str:
+    context.adapter.shutdown()
+    return "Komputer akan dimatikan"
+
+
+@tool(
+    name="restart",
+    description="Merestart komputer. Selalu butuh konfirmasi pengguna",
+    risk="high",
+    category="system",
+)
+def restart() -> str:
+    context.adapter.restart()
+    return "Komputer akan direstart"

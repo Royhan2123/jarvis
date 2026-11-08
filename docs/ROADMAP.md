@@ -59,13 +59,15 @@
 
 ## Fase 3 — MVP Polish (Minggu 4)
 
-- [ ] `brain/rules.py`: Tier 0 regex + normalisasi teks
-- [ ] `brain/router.py`: rule → 4B → 9B + tool `escalate`
-- [ ] Alur konfirmasi untuk tool risk `high`
-- [ ] `ui/tray.py`: ikon state, toggle mic, buka config, keluar
-- [ ] Bunyi notifikasi (ting / selesai / error)
+- [x] `brain/rules.py`: Tier 0 regex + normalisasi teks
+- [x] `brain/router.py`: rule → 4B → 9B + tool `escalate`
+- [x] Alur konfirmasi untuk tool risk `high`
+- [x] `ui/tray.py`: ikon state, toggle mic, buka config, keluar
+- [x] Bunyi notifikasi (ting / selesai / error)
 - [ ] Build PyInstaller 3 OS di CI, upload ke GitHub Releases
 - [ ] Uji dengan 3 pengguna nyata, perbaiki SETUP.md
+
+> Status: kode & unit test selesai (106 test). Belum: `jarvis.spec` + `release.yml` belum pernah dijalankan (build 3 OS), model 9B belum diunduh, belum diuji 3 pengguna nyata.
 
 **🚀 Rilis MVP v0.1**
 

@@ -83,12 +83,47 @@ def chat(cfg: Config, voice: bool) -> None:
                 adapter = None
 
 
+def run_listen(cfg: Config, tray: bool, config_path: str) -> None:
+    from pathlib import Path
+
+    from jarvis.app import Jarvis
+
+    if tray:
+        try:
+            from jarvis.app import start_in_thread
+            from jarvis.tools.registry import context
+            from jarvis.ui.tray import Tray
+
+            holder: dict[str, Jarvis] = {}
+            ui = Tray(
+                cfg.general.name,
+                on_quit=lambda: holder["j"].stop() if "j" in holder else None,
+                on_toggle_mute=lambda m: holder["j"].set_mic_muted(m) if "j" in holder else None,
+                on_open_config=lambda: context.adapter.open_path(str(Path(config_path).resolve())),
+            )
+
+            def ready(j: Jarvis) -> None:
+                holder["j"] = j
+                j.listeners.append(lambda st: ui.set_state(st.value))
+                ui.set_state(j.state.value)
+
+            start_in_thread(lambda: Jarvis(cfg), ready)
+            ui.run()  # blocking di thread utama sampai "Keluar"
+            if "j" in holder:
+                holder["j"].stop()
+            return
+        except Exception as e:  # noqa: BLE001 — tray tidak tersedia (mis. Linux headless)
+            logger.warning(f"System tray tidak bisa dipakai ({e}); lanjut tanpa tray")
+    Jarvis(cfg).run()
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="jarvis")
     ap.add_argument("--check", action="store_true", help="cek mic & Ollama")
     ap.add_argument("--text", action="store_true", help="mode teks (default)")
     ap.add_argument("--voice", action="store_true", help="mode teks + jawaban dibacakan")
-    ap.add_argument("--listen", action="store_true", help="pipeline suara penuh (Hey Jarvis)")
+    ap.add_argument("--listen", action="store_true", help="pipeline suara penuh (frasa pemanggil)")
+    ap.add_argument("--no-tray", action="store_true", help="tanpa ikon system tray")
     ap.add_argument("--config", default="config.yaml")
     ap.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING"])
     args = ap.parse_args()
@@ -104,9 +139,7 @@ def main() -> None:
     if args.check:
         sys.exit(0 if check(cfg) else 1)
     if args.listen:
-        from jarvis.app import Jarvis
-
-        Jarvis(cfg).run()
+        run_listen(cfg, tray=cfg.ui.tray and not args.no_tray, config_path=args.config)
         return
     chat(cfg, voice=args.voice)
 

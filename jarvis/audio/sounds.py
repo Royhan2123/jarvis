@@ -18,3 +18,23 @@ def _tone(freqs: list[float], dur: float, rate: int = 16000, gain: float = 0.25)
 def play_ting(device: int | str | None = None) -> None:
     """'ting' naik, lembut, ~150 ms (non-blocking)."""
     sd.play(_tone([880, 1320], 0.15), 16000, device=device)
+
+
+def _play(wave: np.ndarray, device: int | str | None) -> None:
+    sd.play(wave, 16000, device=device)
+
+
+def play_done(device: int | str | None = None) -> None:
+    """Klik pendek: selesai mendengar."""
+    _play(_tone([1000, 800], 0.05, gain=0.2), device)
+
+
+def play_error(device: int | str | None = None) -> None:
+    """Nada turun rendah."""
+    _play(_tone([400, 220], 0.25), device)
+
+
+def play_confirm(device: int | str | None = None) -> None:
+    """Dua nada pendek: butuh konfirmasi."""
+    gap = np.zeros(int(16000 * 0.06), dtype=np.int16)
+    _play(np.concatenate([_tone([700], 0.1), gap, _tone([700], 0.1)]), device)

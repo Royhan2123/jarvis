@@ -45,6 +45,15 @@ class MockAdapter(PlatformAdapter):
     def lock_screen(self) -> None:
         self._rec("lock_screen")
 
+    def shutdown(self) -> None:
+        self._rec("shutdown")
+
+    def restart(self) -> None:
+        self._rec("restart")
+
+    def open_path(self, path) -> None:
+        self._rec("open_path", path)
+
 
 @pytest.fixture
 def adapter() -> MockAdapter:

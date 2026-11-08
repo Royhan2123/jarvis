@@ -1,0 +1,64 @@
+name: Release
+# Build installer 3 OS saat tag v* di-push, lalu unggah ke GitHub Releases.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13        # Intel (onnxruntime terbaru tidak punya wheel x86_64 macOS)
+            name: macos-intel
+          - os: macos-latest    # Apple Silicon
+            name: macos-arm64
+          - os: windows-latest
+            name: windows
+          - os: ubuntu-latest
+            name: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.12
+      - name: Dependensi sistem (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y portaudio19-dev libgirepository1.0-dev gir1.2-appindicator3-0.1
+      - run: uv sync --extra dev
+      - run: uv run pytest -q -m "not slow"
+      - run: uv run pyinstaller jarvis.spec --noconfirm
+      - name: Arsipkan
+        shell: bash
+        run: |
+          cd dist
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a ../jarvis-${{ matrix.name }}.zip Jarvis
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            ditto -c -k --keepParent Jarvis.app ../jarvis-${{ matrix.name }}.zip
+          else
+            tar czf ../jarvis-${{ matrix.name }}.tar.gz Jarvis
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-${{ matrix.name }}
+          path: jarvis-${{ matrix.name }}.*
+
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true

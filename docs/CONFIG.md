@@ -126,6 +126,8 @@ tools:
       "vs code": "Visual Studio Code"
       "browser": "Google Chrome"
       "musik": "Spotify"
+      "kalkulator": "Calculator"
+      "kalender": "Calendar"
 
 # ─────────────────────────────────────────────
 # MEMORI

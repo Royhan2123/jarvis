@@ -51,3 +51,15 @@ class PlatformAdapter(ABC):
     # ── Sistem ──
     @abstractmethod
     def lock_screen(self) -> None: ...
+
+    @abstractmethod
+    def shutdown(self) -> None:
+        """Matikan komputer. HANYA boleh dipanggil lewat tool risk=high yang sudah dikonfirmasi."""
+
+    @abstractmethod
+    def restart(self) -> None:
+        """Restart komputer. HANYA lewat tool risk=high yang sudah dikonfirmasi."""
+
+    @abstractmethod
+    def open_path(self, path: str) -> None:
+        """Buka file/folder dengan aplikasi default (mis. config.yaml)."""

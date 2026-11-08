@@ -116,3 +116,12 @@ class LinuxAdapter(PlatformAdapter):
             run(["loginctl", "lock-session"])
         except PlatformError:
             run(["xdg-screensaver", "lock"])
+
+    def shutdown(self) -> None:
+        run(["systemctl", "poweroff"])
+
+    def restart(self) -> None:
+        run(["systemctl", "reboot"])
+
+    def open_path(self, path: str) -> None:
+        run(["xdg-open", path])
