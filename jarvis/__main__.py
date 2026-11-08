@@ -92,6 +92,7 @@ def main() -> None:
     ap.add_argument("--config", default="config.yaml")
     ap.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING"])
     args = ap.parse_args()
+    
 
     try:
         cfg = load_config(args.config)

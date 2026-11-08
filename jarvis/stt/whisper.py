@@ -27,7 +27,8 @@ class WhisperSTT:
             language=self.cfg.language,
             beam_size=self.cfg.beam_size,
             initial_prompt=self.cfg.initial_prompt or None,
-            vad_filter=False,
+            vad_filter=True,
+            vad_parameters={"min_silence_duration_ms": 300},
             condition_on_previous_text=False,
         )
         return " ".join(s.text.strip() for s in segments).strip()

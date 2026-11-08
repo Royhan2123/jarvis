@@ -52,3 +52,10 @@ def test_match_phrase() -> None:
     assert match_phrase("Heyteman volume 30", "hey teman") == "volume 30"
     assert match_phrase("cuaca hari ini cerah", "hey teman") is None
     assert match_phrase("teman saya datang", "hey teman") is None
+
+
+def test_split_sentences() -> None:
+    from jarvis.tts.stream import split_sentences
+
+    assert split_sentences("Halo. Apa kabar? Baik") == (["Halo.", "Apa kabar?"], "Baik")
+    assert split_sentences("Belum selesai") == ([], "Belum selesai")
