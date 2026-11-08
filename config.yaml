@@ -1,0 +1,40 @@
+# Config default Jarvis (lihat docs/CONFIG.md untuk penjelasan tiap parameter).
+# Fase 0: hanya bagian general, llm, router, tts, memory yang dipakai.
+general:
+  name: "Jarvis"
+  user_title: "Bos"
+  language: "id"
+  log_level: "INFO"
+  offline_only: true
+
+llm:
+  host: "http://localhost:11434"
+  fast_model: "qwen3.5:4b"
+  smart_model: "qwen3.5:9b"
+  vision_model: "qwen3.5:4b"
+  temperature: 0.3
+  top_p: 0.8
+  top_k: 20
+  num_ctx: 4096
+  num_predict: 200
+  num_thread: 8
+  keep_alive: -1
+  think: false
+  history_turns: 6
+
+router:
+  enable_rules: true
+  enable_smart_model: true
+  complex_min_words: 25
+  complex_keywords: ["jelaskan", "analisis", "bandingkan", "kenapa", "mengapa", "buatkan", "rangkum"]
+  preload_smart_model: false
+
+tts:
+  engine: "piper"
+  gender: "male"
+  max_spoken_chars: 400
+
+memory:
+  enabled: true
+  save_conversations: true
+  retention_days: 30
