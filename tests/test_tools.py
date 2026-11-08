@@ -151,3 +151,10 @@ def test_time_and_date_format() -> None:
 def test_system_info_runs(adapter) -> None:
     out = registry.call("system_info", {"kind": "ram"})
     assert out.startswith("RAM terpakai") and "persen" in out
+
+
+def test_cannot_close_itself(adapter) -> None:
+    for n in ("Jarvis", "jarvis"):
+        with pytest.raises(ToolError, match="diri sendiri"):
+            registry.call("close_app", {"name": n})
+    assert adapter.calls == []

@@ -16,6 +16,8 @@ def resolve_app(name: str) -> str:
     name = " ".join(name.split())
     if not _SAFE_NAME.match(name):
         raise ToolError("Nama aplikasi mengandung karakter yang tidak diizinkan")
+    if name.lower() in {"jarvis", context.cfg.general.name.lower()}:
+        raise ToolError("Saya tidak bisa menutup atau membuka diri sendiri")
     apps = context.cfg.tools.apps
     name = {k.lower(): v for k, v in apps.aliases.items()}.get(name.lower(), name)
     if apps.allowed and name.lower() not in {a.lower() for a in apps.allowed}:

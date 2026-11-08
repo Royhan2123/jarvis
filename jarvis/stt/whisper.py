@@ -21,8 +21,8 @@ class WhisperSTT:
             cpu_threads=cfg.cpu_threads,
         )
 
-    def transcribe(self, audio: np.ndarray) -> str:
-        """audio: int16 mono 16 kHz."""
+    def transcribe(self, audio: np.ndarray, fast: bool = False) -> str:
+        """audio: int16 mono 16 kHz. fast=True: tanpa fallback suhu (untuk wake)."""
         samples = audio.astype(np.float32) / 32768.0
         segments, _ = self.model.transcribe(
             samples,
@@ -32,6 +32,7 @@ class WhisperSTT:
             vad_filter=True,
             vad_parameters={"min_silence_duration_ms": 300},
             condition_on_previous_text=False,
+            **({"temperature": 0.0, "without_timestamps": True} if fast else {}),
         )
         text = " ".join(s.text.strip() for s in segments).strip()
         return "" if self._is_prompt_echo(text) else text

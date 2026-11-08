@@ -211,7 +211,7 @@ class Jarvis:
         Return sisa ucapan setelah frasa ("" jika hanya frasa), None jika belum terdengar.
         """
         c, v = self.cfg, self.cfg.vad
-        short = VADConfig(threshold=v.threshold, silence_ms=500, max_record_s=5, listen_timeout_s=1)
+        short = VADConfig(threshold=v.threshold, silence_ms=500, max_record_s=3, listen_timeout_s=1)
         self.vad.reset()
         seg = record_utterance(
             self._chunks(), self.vad.is_speech, short, c.audio.sample_rate, c.audio.chunk_ms
@@ -219,7 +219,7 @@ class Jarvis:
         if seg is None or len(seg) < c.audio.sample_rate * 0.4:
             return None
         t0 = time.perf_counter()
-        text = self.wake_stt.transcribe(seg)
+        text = self.wake_stt.transcribe(seg, fast=True)
         rest = match_phrase(text, c.wakeword.phrase)
         logger.debug(
             f"[wake] '{text}' → {'COCOK' if rest is not None else 'abaikan'} "
