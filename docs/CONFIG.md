@@ -32,6 +32,8 @@ audio:
 # WAKE WORD
 # ─────────────────────────────────────────────
 wakeword:
+  engine: "phrase"            # phrase = kenali frasa lewat Whisper (bebas kata) | openwakeword
+  phrase: "hey teman"         # frasa pemanggil (engine: phrase)
   model: "hey_jarvis"
   threshold: 0.5              # 0.0–1.0; naikkan jika sering terpanggil sendiri
   cooldown_s: 2.0             # jeda minimal antar aktivasi
@@ -55,7 +57,7 @@ stt:
   compute_type: "int8"        # CPU: int8 | GPU: float16
   language: "id"              # null = deteksi otomatis (lebih lambat)
   beam_size: 1                # 1 = tercepat; 5 = lebih akurat
-  initial_prompt: "Jarvis, buka, tutup, volume, Spotify, Chrome, VS Code"
+  initial_prompt: "Hey teman, buka, tutup, volume, Spotify, Chrome, VS Code"
   cpu_threads: 8
 
 # ─────────────────────────────────────────────

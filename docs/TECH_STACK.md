@@ -25,7 +25,7 @@ Prinsip pemilihan: **open source, jalan offline, jalan di CPU, dan cross-platfor
 | Tahap | Library / Model | Ukuran | Catatan |
 |---|---|---|---|
 | Input audio | **sounddevice** (PortAudio) | – | Cross-platform, low latency |
-| Wake word | **openWakeWord** — model `hey_jarvis` | ~1 MB | Pakai `inference_framework="onnx"` agar jalan di Windows & Mac |
+| Wake word | **Frasa via Whisper** (`wakeword.engine: phrase`, default "hey teman", bebas kata) atau **openWakeWord** `hey_jarvis` | ~1 MB | Pakai `inference_framework="onnx"` agar jalan di Windows & Mac |
 | VAD | **Silero VAD** (ONNX, bawaan `faster_whisper.vad`) | ~2 MB | Deteksi kapan pengguna selesai bicara. Jangan pakai paket `silero-vad` (butuh PyTorch, bermasalah di Mac Intel) |
 | Speech-to-Text | **faster-whisper** — model `small` | ~460 MB | CTranslate2, `int8` di CPU, CUDA otomatis jika ada GPU NVIDIA |
 | LLM runtime | **Ollama** | – | Satu cara install di 3 OS, support tool calling |

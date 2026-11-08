@@ -36,3 +36,15 @@ def test_vad_detects_synth_speech() -> None:
     assert any(hits)
     vad.reset()
     assert not any(vad.is_speech(np.zeros(1280, dtype=np.int16)) for _ in range(5))
+
+
+def test_wake_phrase_recognised_by_whisper() -> None:
+    from jarvis.audio.wakeword import match_phrase
+    from jarvis.stt.whisper import WhisperSTT
+    from jarvis.tts.piper import PiperTTS
+
+    cfg = Config()
+    audio, rate = PiperTTS(cfg).synthesize("Hey teman, jam berapa sekarang")
+    idx = np.linspace(0, audio.size - 1, int(audio.size * 16000 / rate)).astype(int)
+    text = WhisperSTT(cfg.stt).transcribe(audio[idx])
+    assert match_phrase(text, cfg.wakeword.phrase) is not None, text

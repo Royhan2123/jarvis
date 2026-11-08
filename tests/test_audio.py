@@ -41,3 +41,14 @@ def test_shorten_for_speech() -> None:
     assert shorten_for_speech("Halo.  Apa kabar?", 400) == "Halo. Apa kabar?"
     long = "Kalimat satu. " + "x" * 500
     assert shorten_for_speech(long, 50) == "Kalimat satu."
+
+
+def test_match_phrase() -> None:
+    from jarvis.audio.wakeword import match_phrase
+
+    assert match_phrase("Hey teman", "hey teman") == ""
+    assert match_phrase("Hai temen, jam berapa sekarang?", "hey teman") == "jam berapa sekarang"
+    assert match_phrase("hey teman buka spotify", "hey teman") == "buka spotify"
+    assert match_phrase("Heyteman volume 30", "hey teman") == "volume 30"
+    assert match_phrase("cuaca hari ini cerah", "hey teman") is None
+    assert match_phrase("teman saya datang", "hey teman") is None

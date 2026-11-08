@@ -11,9 +11,9 @@ from loguru import logger
 from jarvis.audio.sounds import play_ting
 from jarvis.audio.stream import MicStream
 from jarvis.audio.vad import VAD, record_utterance
-from jarvis.audio.wakeword import WakeWord
+from jarvis.audio.wakeword import WakeWord, match_phrase
 from jarvis.brain.llm import LLM
-from jarvis.config import Config
+from jarvis.config import Config, VADConfig
 from jarvis.stt.whisper import WhisperSTT
 from jarvis.tts import TTS, build_tts
 
@@ -41,7 +41,7 @@ class Jarvis:
         self.state = State.IDLE
         logger.info("Memuat model (wake word, VAD, STT, TTS)…")
         self.mic = MicStream(cfg.audio)
-        self.wake = WakeWord(cfg.wakeword)
+        self.wake = WakeWord(cfg.wakeword) if cfg.wakeword.engine == "openwakeword" else None
         self.vad = VAD(cfg.vad)
         self.stt = WhisperSTT(cfg.stt)
         self.llm = LLM(cfg)
@@ -57,13 +57,19 @@ class Jarvis:
 
     def handle_utterance(self, audio) -> str | None:
         """STT → LLM → TTS untuk satu ucapan. Mengembalikan jawaban (atau None)."""
-        t0 = time.perf_counter()
         self._set(State.THINKING)
+        t0 = time.perf_counter()
         text = self.stt.transcribe(audio)
-        t_stt = time.perf_counter()
         if not text:
             logger.info("(tidak ada teks terdengar)")
             return None
+        return self.handle_text(text, t0)
+
+    def handle_text(self, text: str, t0: float | None = None) -> str | None:
+        """LLM → TTS untuk teks perintah."""
+        self._set(State.THINKING)
+        t0 = t0 or time.perf_counter()
+        t_stt = time.perf_counter()
         print(f"Kamu: {text}")
         reply = "".join(self.llm.ask(text)).strip()
         t_llm = time.perf_counter()
@@ -81,33 +87,68 @@ class Jarvis:
         )
         return reply
 
+    def _wait_wake_phrase(self) -> str | None:
+        """Mode frasa: dengarkan ucapan pendek, transkripsi, cocokkan frasa.
+
+        Return sisa ucapan setelah frasa ("" jika hanya frasa), None jika belum terdengar.
+        """
+        c, v = self.cfg, self.cfg.vad
+        short = VADConfig(threshold=v.threshold, silence_ms=500, max_record_s=5, listen_timeout_s=1)
+        self.vad.reset()
+        seg = record_utterance(
+            self._chunks(), self.vad.is_speech, short, c.audio.sample_rate, c.audio.chunk_ms
+        )
+        if seg is None or len(seg) < c.audio.sample_rate * 0.4:
+            return None
+        t0 = time.perf_counter()
+        text = self.stt.transcribe(seg)
+        rest = match_phrase(text, c.wakeword.phrase)
+        logger.debug(
+            f"[wake] '{text}' → {'COCOK' if rest is not None else 'abaikan'} "
+            f"({time.perf_counter() - t0:.2f}s)"
+        )
+        return rest
+
     def run(self) -> None:
+        phrase_mode = self.wake is None
         self.mic.start()
-        print('🎙️  Katakan "Hey Jarvis" (Ctrl+C untuk berhenti)')
+        name = self.cfg.wakeword.phrase if phrase_mode else self.cfg.wakeword.model
+        print(f'🎙️  Katakan "{name}" (Ctrl+C untuk berhenti)')
         try:
             while True:
-                chunk = self.mic.read()
-                if chunk is None or not self.wake.process(chunk):
-                    continue
+                remainder = ""
+                if phrase_mode:
+                    rest = self._wait_wake_phrase()
+                    if rest is None:
+                        continue
+                    remainder = rest
+                else:
+                    chunk = self.mic.read()
+                    if chunk is None or not self.wake.process(chunk):
+                        continue
                 logger.info("Wake word terdeteksi")
                 if self.cfg.audio.sounds:
                     play_ting(self.cfg.audio.output_device)
-                self._set(State.LISTENING)
-                self.mic.flush()
-                self.vad.reset()
-                audio = record_utterance(
-                    self._chunks(),
-                    self.vad.is_speech,
-                    self.cfg.vad,
-                    self.cfg.audio.sample_rate,
-                    self.cfg.audio.chunk_ms,
-                )
-                if audio is not None:
-                    self.handle_utterance(audio)
+                if len(remainder) >= 3:  # perintah diucapkan satu napas: "hey teman, jam berapa"
+                    self.handle_text(remainder)
                 else:
-                    logger.info("Tidak ada suara, kembali idle")
+                    self._set(State.LISTENING)
+                    self.mic.flush()
+                    self.vad.reset()
+                    audio = record_utterance(
+                        self._chunks(),
+                        self.vad.is_speech,
+                        self.cfg.vad,
+                        self.cfg.audio.sample_rate,
+                        self.cfg.audio.chunk_ms,
+                    )
+                    if audio is not None:
+                        self.handle_utterance(audio)
+                    else:
+                        logger.info("Tidak ada suara, kembali idle")
                 self.mic.flush()
-                self.wake.reset()
+                if self.wake:
+                    self.wake.reset()
                 self._set(State.IDLE)
         except KeyboardInterrupt:
             print()

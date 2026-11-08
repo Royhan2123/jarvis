@@ -30,6 +30,8 @@ class AudioConfig(_Section):
 
 
 class WakewordConfig(_Section):
+    engine: Literal["phrase", "openwakeword"] = "phrase"
+    phrase: str = "hey teman"
     model: str = "hey_jarvis"
     threshold: float = 0.5
     cooldown_s: float = 2.0

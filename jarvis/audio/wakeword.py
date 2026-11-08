@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 import time
+from difflib import SequenceMatcher
 
 import numpy as np
 
@@ -32,3 +34,34 @@ class WakeWord:
 
     def reset(self) -> None:
         self.model.reset()
+
+
+_GREETINGS = {"hey", "hei", "hai", "hay", "he", "hi", "hello", "halo"}
+
+
+def _norm(text: str) -> list[str]:
+    return re.sub(r"[^\w\s]", " ", text.lower()).split()
+
+
+def _word_match(heard: str, target: str) -> bool:
+    if target in _GREETINGS and heard in _GREETINGS:
+        return True
+    return SequenceMatcher(None, heard, target).ratio() >= 0.75
+
+
+def match_phrase(text: str, phrase: str) -> str | None:
+    """Cari `phrase` (toleran salah dengar) di awal `text`.
+
+    Mengembalikan sisa ucapan setelah frasa ("" jika tidak ada), atau None jika tidak cocok.
+    """
+    words, target = _norm(text), _norm(phrase)
+    n = len(target)
+    # frasa harus muncul di awal ucapan (maks 1 kata sebelumnya, mis. "oke hey teman")
+    for i in range(min(2, len(words) - n + 1)):
+        if all(_word_match(w, t) for w, t in zip(words[i : i + n], target, strict=True)):
+            return " ".join(words[i + n :])
+    want = "".join(target)
+    for k in range(1, n + 1):  # Whisper kadang menyambung: "heyteman"
+        if SequenceMatcher(None, "".join(words[:k]), want).ratio() >= 0.85:
+            return " ".join(words[k:])
+    return None
