@@ -16,7 +16,7 @@ audio:
 
 wakeword:
   engine: "phrase"            # phrase = kenali frasa lewat Whisper | openwakeword = model hey_jarvis
-  phrase: "hey teman"
+  phrase: "hello"
   model: "hey_jarvis"
   threshold: 0.5
   cooldown_s: 2.0
@@ -30,12 +30,12 @@ vad:
 
 stt:
   model: "small"              # untuk perintah. medium lebih akurat tapi ±2.5x lebih lambat di CPU
-  wake_model: "small"         # untuk mengenali frasa pemanggil (cepat)
+  wake_model: "base"         # untuk mengenali frasa pemanggil (cepat)
   device: "auto"
   compute_type: "int8"
   language: "id"
   beam_size: 1
-  initial_prompt: "Hey teman, buka, tutup, volume, Spotify, Chrome, VS Code"
+  initial_prompt: "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"
   cpu_threads: 6
 
 llm:

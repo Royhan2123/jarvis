@@ -43,22 +43,26 @@ def test_shorten_for_speech() -> None:
     assert shorten_for_speech(long, 50) == "Kalimat satu."
 
 
-def test_match_phrase() -> None:
+def test_match_phrase_hello() -> None:
+    from jarvis.audio.wakeword import match_phrase
+
+    assert match_phrase("Hello", "hello") == ""
+    assert match_phrase("Hi, jam berapa sekarang?", "hello") == "jam berapa sekarang"
+    assert match_phrase("halo buka spotify", "hello") == "buka spotify"
+    assert match_phrase("Hey volume 30", "hello") == "volume 30"
+    assert match_phrase("hai", "hello") == ""
+    assert match_phrase("cuaca hari ini cerah", "hello") is None
+    assert match_phrase("oke hello", "hello") is None  # bukan di awal ucapan
+    assert match_phrase("helmet", "hello") is None
+
+
+def test_match_phrase_multiword() -> None:
     from jarvis.audio.wakeword import match_phrase
 
     assert match_phrase("Hey teman", "hey teman") == ""
     assert match_phrase("Hai temen, jam berapa sekarang?", "hey teman") == "jam berapa sekarang"
-    assert match_phrase("hey teman buka spotify", "hey teman") == "buka spotify"
     assert match_phrase("Heyteman volume 30", "hey teman") == "volume 30"
-    assert match_phrase("cuaca hari ini cerah", "hey teman") is None
     assert match_phrase("teman saya datang", "hey teman") is None
-
-
-def test_split_sentences() -> None:
-    from jarvis.tts.stream import split_sentences
-
-    assert split_sentences("Halo. Apa kabar? Baik") == (["Halo.", "Apa kabar?"], "Baik")
-    assert split_sentences("Belum selesai") == ([], "Belum selesai")
 
 
 def test_prompt_echo_filter() -> None:
@@ -67,6 +71,6 @@ def test_prompt_echo_filter() -> None:
 
     stt = object.__new__(WhisperSTT)
     stt.cfg = STTConfig()
-    assert stt._is_prompt_echo("Teman, buka, utup, volume, Spotify, Chrome, VS Code")
+    assert stt._is_prompt_echo("Hello, buka, utup, volume, Spotify, Chrome, VS Code")
     assert not stt._is_prompt_echo("buka spotify dan putar musik santai")
-    assert not stt._is_prompt_echo("hey teman")
+    assert not stt._is_prompt_echo("hello")

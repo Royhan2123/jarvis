@@ -211,7 +211,7 @@ class Jarvis:
         Return sisa ucapan setelah frasa ("" jika hanya frasa), None jika belum terdengar.
         """
         c, v = self.cfg, self.cfg.vad
-        short = VADConfig(threshold=v.threshold, silence_ms=500, max_record_s=3, listen_timeout_s=1)
+        short = VADConfig(threshold=v.threshold, silence_ms=400, max_record_s=3, listen_timeout_s=1)
         self.vad.reset()
         seg = record_utterance(
             self._chunks(), self.vad.is_speech, short, c.audio.sample_rate, c.audio.chunk_ms
@@ -260,7 +260,7 @@ class Jarvis:
                 if self.cfg.audio.sounds:
                     play_ting(self.cfg.audio.output_device)
                     time.sleep(0.25)  # tunggu 'ting' selesai agar tidak terekam mic
-                if len(remainder) >= 3:  # perintah diucapkan satu napas: "hey teman, jam berapa"
+                if len(remainder) >= 3:  # perintah diucapkan satu napas: "hello, jam berapa"
                     self.handle_text(remainder)
                 else:
                     self._set(State.LISTENING)

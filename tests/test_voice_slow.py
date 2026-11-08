@@ -44,7 +44,7 @@ def test_wake_phrase_recognised_by_whisper() -> None:
     from jarvis.tts.piper import PiperTTS
 
     cfg = Config()
-    audio, rate = PiperTTS(cfg).synthesize("Hey teman, jam berapa sekarang")
+    audio, rate = PiperTTS(cfg).synthesize("Hello, jam berapa sekarang")
     idx = np.linspace(0, audio.size - 1, int(audio.size * 16000 / rate)).astype(int)
     text = WhisperSTT(cfg.stt).transcribe(audio[idx])
     assert match_phrase(text, cfg.wakeword.phrase) is not None, text

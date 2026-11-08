@@ -31,7 +31,7 @@ class AudioConfig(_Section):
 
 class WakewordConfig(_Section):
     engine: Literal["phrase", "openwakeword"] = "phrase"
-    phrase: str = "hey teman"
+    phrase: str = "hello"
     model: str = "hey_jarvis"
     threshold: float = 0.5
     cooldown_s: float = 2.0
@@ -47,12 +47,12 @@ class VADConfig(_Section):
 
 class STTConfig(_Section):
     model: str = "small"
-    wake_model: str = "small"
+    wake_model: str = "base"
     device: Literal["auto", "cpu", "cuda"] = "auto"
     compute_type: str = "int8"
     language: str | None = "id"
     beam_size: int = 1
-    initial_prompt: str = "Hey teman, buka, tutup, volume, Spotify, Chrome, VS Code"
+    initial_prompt: str = "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"
     cpu_threads: int = 6
 
 

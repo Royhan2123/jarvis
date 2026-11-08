@@ -57,11 +57,12 @@ def match_phrase(text: str, phrase: str) -> str | None:
     words, target = _norm(text), _norm(phrase)
     n = len(target)
     # frasa harus muncul di awal ucapan (maks 1 kata sebelumnya, mis. "oke hey teman")
-    for i in range(min(2, len(words) - n + 1)):
+    # frasa 1 kata yang sangat umum ("hello") hanya sah di kata pertama → kurangi salah picu
+    for i in range(min(1 if n == 1 else 2, len(words) - n + 1)):
         if all(_word_match(w, t) for w, t in zip(words[i : i + n], target, strict=True)):
             return " ".join(words[i + n :])
     want = "".join(target)
-    for k in range(1, n + 1):  # Whisper kadang menyambung: "heyteman"
+    for k in range(1, n + 1) if n > 1 else []:  # Whisper kadang menyambung: "heyteman"
         if SequenceMatcher(None, "".join(words[:k]), want).ratio() >= 0.85:
             return " ".join(words[k:])
     return None

@@ -33,7 +33,7 @@ audio:
 # ─────────────────────────────────────────────
 wakeword:
   engine: "phrase"            # phrase = kenali frasa lewat Whisper (bebas kata) | openwakeword
-  phrase: "hey teman"         # frasa pemanggil (engine: phrase)
+  phrase: "hello"         # frasa pemanggil (engine: phrase)
   model: "hey_jarvis"
   threshold: 0.5              # 0.0–1.0; naikkan jika sering terpanggil sendiri
   cooldown_s: 2.0             # jeda minimal antar aktivasi
@@ -53,12 +53,12 @@ vad:
 # ─────────────────────────────────────────────
 stt:
   model: "small"             # model untuk perintah (medium ±2.5x lebih lambat di CPU): tiny | base | small | medium | large-v3-turbo
-  wake_model: "small"        # model untuk mengenali frasa pemanggil (dipanggil sering → pakai yang cepat)
+  wake_model: "base"        # model untuk mengenali frasa pemanggil (dipanggil sering → pakai yang cepat)
   device: "auto"              # auto | cpu | cuda
   compute_type: "int8"        # CPU: int8 | GPU: float16
   language: "id"              # null = deteksi otomatis (lebih lambat)
   beam_size: 1                # 1 = tercepat; 5 = lebih akurat
-  initial_prompt: "Hey teman, buka, tutup, volume, Spotify, Chrome, VS Code"
+  initial_prompt: "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"
   cpu_threads: 6              # hasil bench Mac i9: 6 lebih cepat dari 8 (sisakan core untuk audio)
 
 # ─────────────────────────────────────────────
