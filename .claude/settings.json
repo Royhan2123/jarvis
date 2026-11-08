@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(uv sync *)",
+      "Bash(uv run pytest *)",
+      "Bash(uv run ruff *)",
+      "Bash(uv run python -m jarvis --check)",
+      "Bash(uv run python -m jarvis.bench *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(ollama list)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(uv add *)",
+      "Bash(brew install *)",
+      "Bash(ollama pull *)",
+      "Bash(rm *)"
+    ],
+    "deny": [
+      "Read(./models/**)",
+      "Read(./**/*.onnx)",
+      "Read(./**/*.gguf)",
+      "Read(./**/*.bin)",
+      "Read(./**/*.wav)",
+      "Read(./**/*.mp3)",
+      "Read(./uv.lock)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}
