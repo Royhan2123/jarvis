@@ -63,3 +63,15 @@ class PlatformAdapter(ABC):
     @abstractmethod
     def open_path(self, path: str) -> None:
         """Buka file/folder dengan aplikasi default (mis. config.yaml)."""
+
+    # ── Layar, keyboard, notifikasi ──
+    @abstractmethod
+    def screenshot(self) -> bytes:
+        """Tangkap layar utama sebagai PNG."""
+
+    @abstractmethod
+    def type_text(self, text: str) -> None:
+        """Ketik teks ke jendela yang sedang aktif. `text` sudah dibersihkan oleh tool."""
+
+    @abstractmethod
+    def notify(self, title: str, body: str) -> None: ...

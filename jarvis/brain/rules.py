@@ -122,11 +122,65 @@ def _open_intent(item: str) -> Intent:
     return Intent("open_app", {"name": item.title()})
 
 
+_RAW_VERBS = (
+    (re.compile(r"^\W*(?:jarvis\W+)?(?:tolong\s+)?ketik(?:kan)?\b\s*[:,]?\s*(.+)$", re.I | re.S),
+     "type_text"),
+    (re.compile(r"^\W*(?:jarvis\W+)?(?:tolong\s+)?catat(?:kan)?\b\s*[:,]?\s*(.+)$", re.I | re.S),
+     "add_note"),
+)  # fmt: skip
+_UNIT_MIN = {"detik": 1 / 60, "menit": 1.0, "jam": 60.0}
+
+
+def _match_raw(text: str) -> list[Intent] | None:
+    """Perintah yang isinya harus persis seperti diucapkan (ketik/catat): jangan dinormalisasi."""
+    for pat, tool in _RAW_VERBS:
+        if m := pat.match(text.strip()):
+            return [Intent(tool, {"text": m.group(1).strip()})]
+    return None
+
+
 def match(text: str) -> list[Intent] | None:
     """Kembalikan daftar intent jika `text` cocok dengan salah satu aturan, selain itu None."""
+    if raw := _match_raw(text):
+        return raw
     t = normalize(text)
     if not t:
         return None
+
+    if m := re.fullmatch(
+        r"ingatkan(?: saya)?(?: untuk)? (.+?) (\d+(?:\.\d+)?) (menit|jam|detik) lagi", t
+    ):
+        return [
+            Intent(
+                "set_reminder",
+                {"text": m.group(1), "minutes": float(m.group(2)) * _UNIT_MIN[m.group(3)]},
+            )
+        ]
+    if m := re.fullmatch(
+        r"ingatkan(?: saya)? (\d+(?:\.\d+)?) (menit|jam|detik) lagi(?: untuk)? (.+)", t
+    ):
+        return [
+            Intent(
+                "set_reminder",
+                {"text": m.group(3), "minutes": float(m.group(1)) * _UNIT_MIN[m.group(2)]},
+            )
+        ]
+    if re.fullmatch(r"(?:bacakan|baca) catatan(?: saya)?|catatan saya apa(?: saja)?", t):
+        return [Intent("list_notes")]
+    if m := re.fullmatch(r"(?:nama saya|namaku|panggil saya)\s+(.+)", t):
+        return [Intent("remember_fact", {"key": "nama", "value": m.group(1).title()})]
+    if m := re.fullmatch(r"(?:saya|aku) tinggal di\s+(.+)", t):
+        return [Intent("remember_fact", {"key": "kota", "value": m.group(1).title()})]
+    if re.fullmatch(
+        r"(?:rangkum|baca|jelaskan) (?:isi )?layar(?: ini)?"
+        r"|apa (?:yang )?(?:ada )?di layar(?: ini)?",
+        t,
+    ):
+        return [Intent("read_screen", {"question": "Rangkum isi layar ini secara singkat"})]
+    if re.fullmatch(r"ini error apa|error apa ini|kenapa error ini", t):
+        return [
+            Intent("read_screen", {"question": "Ada error apa di layar ini dan apa penyebabnya?"})
+        ]
 
     if m := re.fullmatch(
         r"(?:(?:atur|set|ubah|ganti)\s+)?volume(?:\s+(?:ke|jadi|menjadi))?\s+(\d{1,3})(?:\s+persen)?",

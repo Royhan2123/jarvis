@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from jarvis.brain.memory import Memory
 from jarvis.config import Config
 from jarvis.platform.base import AppNotFound, PlatformAdapter
 from jarvis.tools.registry import context, load_tools
@@ -54,10 +55,26 @@ class MockAdapter(PlatformAdapter):
     def open_path(self, path) -> None:
         self._rec("open_path", path)
 
+    def screenshot(self) -> bytes:
+        self._rec("screenshot")
+        import io
+
+        from PIL import Image
+
+        buf = io.BytesIO()
+        Image.new("RGB", (64, 36), (120, 200, 90)).save(buf, "PNG")
+        return buf.getvalue()
+
+    def type_text(self, text) -> None:
+        self._rec("type_text", text)
+
+    def notify(self, title, body) -> None:
+        self._rec("notify", title, body)
+
 
 @pytest.fixture
-def adapter() -> MockAdapter:
+def adapter(tmp_path) -> MockAdapter:
     a = MockAdapter()
-    context.configure(a, Config())
+    context.configure(a, Config(), Memory(path=tmp_path / "test.db"))
     load_tools(Config())
     return a

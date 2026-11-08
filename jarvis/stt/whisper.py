@@ -9,6 +9,14 @@ import numpy as np
 from jarvis.config import STTConfig
 
 
+def is_repetitive(text: str) -> bool:
+    """Halusinasi Whisper pada noise: kalimat/angka yang diulang puluhan kali → buang."""
+    words = re.findall(r"\w+", text.lower())
+    if len(words) < 12:
+        return False
+    return len(set(words)) / len(words) < 0.35
+
+
 class WhisperSTT:
     def __init__(self, cfg: STTConfig) -> None:
         from faster_whisper import WhisperModel
@@ -35,7 +43,9 @@ class WhisperSTT:
             **({"temperature": 0.0, "without_timestamps": True} if fast else {}),
         )
         text = " ".join(s.text.strip() for s in segments).strip()
-        return "" if self._is_prompt_echo(text) else text
+        if self._is_prompt_echo(text) or is_repetitive(text):
+            return ""
+        return text
 
     def _is_prompt_echo(self, text: str) -> bool:
         """Whisper kadang mengulang initial_prompt saat hening/noise → buang."""

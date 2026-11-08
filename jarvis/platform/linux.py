@@ -7,7 +7,13 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from jarvis.platform._util import run, terminate_user_processes
+from jarvis.platform._util import (
+    grab_screen_png,
+    run,
+    run_bytes,
+    terminate_user_processes,
+    type_via_pynput,
+)
 from jarvis.platform.base import AppNotFound, MediaAction, PlatformAdapter, PlatformError
 
 _APP_DIRS = (
@@ -49,9 +55,20 @@ def find_desktop_entry(name: str) -> str | None:
 class LinuxAdapter(PlatformAdapter):
     name = "linux"
 
-    def __init__(self, volume_backend: str = "auto") -> None:
+    def __init__(
+        self,
+        volume_backend: str = "auto",
+        typing_backend: str = "auto",
+        screenshot_backend: str = "auto",
+    ) -> None:
         self._proc: subprocess.Popen | None = None
         self.volume_backend = volume_backend
+        self.typing_backend = typing_backend
+        self.screenshot_backend = screenshot_backend
+
+    @staticmethod
+    def _wayland() -> bool:
+        return bool(os.environ.get("WAYLAND_DISPLAY"))
 
     def say(self, text: str, voice: str | None = None) -> None:
         exe = shutil.which("espeak-ng") or shutil.which("espeak")
@@ -125,3 +142,35 @@ class LinuxAdapter(PlatformAdapter):
 
     def open_path(self, path: str) -> None:
         run(["xdg-open", path])
+
+    def screenshot(self) -> bytes:
+        b = self.screenshot_backend
+        if b == "auto":
+            b = "grim" if self._wayland() else "mss"
+        if b == "grim":
+            return run_bytes(["grim", "-"])
+        if b == "portal":
+            raise NotImplementedError("Screenshot lewat XDG portal belum didukung, pakai grim")
+        return grab_screen_png()
+
+    def type_text(self, text: str) -> None:
+        b = self.typing_backend
+        if b == "auto":
+            b = "ydotool" if self._wayland() else "pynput"
+        if b == "ydotool":
+            if shutil.which("ydotool"):
+                run(["ydotool", "type", "--", text])
+                return
+            # Fallback Wayland: salin ke clipboard, pengguna menempel sendiri.
+            import pyperclip
+
+            pyperclip.copy(text)
+            self.notify("Jarvis", "Teks disalin. Tekan Ctrl+V untuk menempel.")
+            raise PlatformError("ydotool tidak ada; teks sudah disalin, tekan Control V")
+        if b == "xdotool":
+            run(["xdotool", "type", "--", text])
+            return
+        type_via_pynput(text, "ctrl")
+
+    def notify(self, title: str, body: str) -> None:
+        run(["notify-send", title, body])

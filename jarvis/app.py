@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import queue
 import re
 import threading
 import time
@@ -14,10 +15,12 @@ from jarvis.audio.sounds import play_confirm, play_done, play_error, play_ting
 from jarvis.audio.stream import MicStream
 from jarvis.audio.vad import VAD, record_utterance
 from jarvis.audio.wakeword import WakeWord, match_phrase
+from jarvis.brain import rules
 from jarvis.brain.actions import ActionRunner
 from jarvis.brain.llm import LLM
+from jarvis.brain.memory import Memory
 from jarvis.brain.router import Plan, Router
-from jarvis.brain.rules import parse_yes_no
+from jarvis.brain.rules import Intent, parse_yes_no
 from jarvis.config import Config, VADConfig
 from jarvis.platform import get_adapter
 from jarvis.stt.whisper import WhisperSTT
@@ -52,8 +55,14 @@ class Jarvis:
         self.listeners: list[Callable[[State], None]] = []
         self.mic_muted = False
         self._running = False
+        self._interrupted = False
+        self._speaker: SentenceSpeaker | None = None
+        self._monitor: threading.Thread | None = None
+        self._monitor_stop = threading.Event()
+        self._reminders: queue.Queue[str] = queue.Queue()
         logger.info("Memuat model (wake word, VAD, STT, TTS)…")
-        context.configure(get_adapter(cfg), cfg)
+        self.memory = Memory(cfg.memory)
+        context.configure(get_adapter(cfg), cfg, self.memory)
         load_tools(cfg)
         self.mic = MicStream(cfg.audio)
         self.wake = WakeWord(cfg.wakeword) if cfg.wakeword.engine == "openwakeword" else None
@@ -61,7 +70,8 @@ class Jarvis:
         self.stt = WhisperSTT(cfg.stt)
         wake_cfg = cfg.stt.model_copy(update={"model": cfg.stt.wake_model, "beam_size": 1})
         self.wake_stt = self.stt if wake_cfg.model == cfg.stt.model else WhisperSTT(wake_cfg)
-        self.llm = LLM(cfg)
+        self.llm = LLM(cfg, facts=self.memory.facts_text)
+        self.llm.history = self.memory.recent(cfg.llm.history_turns)  # ingat percakapan terakhir
         self.router = Router(cfg)
         self.tts: TTS = build_tts(cfg)
         self.actions = ActionRunner(
@@ -73,6 +83,8 @@ class Jarvis:
     def _set(self, state: State) -> None:
         self.state = state
         logger.debug(f"state → {state.value}")
+        if state is State.SPEAKING and self.cfg.audio.interruptible:
+            self._start_monitor()
         for fn in self.listeners:
             fn(state)
 
@@ -81,8 +93,67 @@ class Jarvis:
             play_error(self.cfg.audio.output_device)
 
     def _stop_speaking(self, _args: dict) -> str:
-        self.tts.stop()
+        self.interrupt()
         return ""
+
+    # ── interupsi saat Jarvis bicara ──
+    def interrupt(self) -> None:
+        self._interrupted = True
+        if self._speaker:
+            self._speaker.cancel()
+        self.tts.stop()
+
+    def _start_monitor(self) -> None:
+        """Selama SPEAKING, dengarkan "berhenti"/kata pemanggil untuk memotong ucapan."""
+        if self._monitor and self._monitor.is_alive():
+            return
+        self._monitor_stop.clear()
+        self._monitor = threading.Thread(target=self._monitor_loop, daemon=True, name="interrupt")
+        self._monitor.start()
+
+    def _stop_monitor(self) -> None:
+        self._monitor_stop.set()
+        if (
+            self._monitor
+            and self._monitor.is_alive()
+            and self._monitor is not threading.current_thread()
+        ):
+            self._monitor.join(timeout=3)
+        self._monitor = None
+
+    def _is_interrupt(self, text: str) -> bool:
+        if match_phrase(text, self.cfg.wakeword.phrase) is not None:
+            return True
+        intents = rules.match(text) or []
+        return any(i.tool == "stop_speaking" for i in intents)
+
+    def _monitor_loop(self) -> None:
+        sr, ms = self.cfg.audio.sample_rate, self.cfg.audio.chunk_ms
+        vad = VAD(self.cfg.vad)
+        cfg = VADConfig(
+            threshold=self.cfg.vad.threshold, silence_ms=400, max_record_s=2, listen_timeout_s=1
+        )
+
+        def chunks():
+            while not self._monitor_stop.is_set() and self._running:
+                yield self.mic.read(timeout=0.3)
+
+        while not self._monitor_stop.is_set() and self._running:
+            seg = record_utterance(chunks(), vad.is_speech, cfg, sr, ms)
+            # Ucapan pendek yang berakhir karena diam. Segmen yang mentok batas = gema suara
+            # Jarvis sendiri (tidak ada pembatalan gema) → abaikan, hemat CPU.
+            if (
+                seg is None
+                or len(seg) < sr * 0.3
+                or len(seg) >= sr * cfg.max_record_s - sr * ms // 1000
+            ):
+                continue
+            text = self.wake_stt.transcribe(seg, fast=True)
+            logger.debug(f"[interupsi?] '{text}'")
+            if text and self._is_interrupt(text):
+                logger.info("Diinterupsi oleh pengguna")
+                self.interrupt()
+                return
 
     def _chunks(self):
         while self._running:
@@ -94,10 +165,13 @@ class Jarvis:
             return
         print(f"{self.cfg.general.name}: {text}")
         self._set(State.SPEAKING)
+        self._start_monitor()
         try:
             self.tts.speak(text)
         except Exception as e:  # noqa: BLE001 — TTS gagal tidak boleh mematikan app
             logger.error(f"TTS gagal: {e}")
+        finally:
+            self._stop_monitor()
 
     def _record(self, vad_cfg: VADConfig):
         self.mic.flush()
@@ -124,6 +198,7 @@ class Jarvis:
     def handle_text(self, text: str, t0: float | None = None) -> str | None:
         """Router: Tier 0 (aturan) → tool, atau Tier 1/2 (LLM, bicara per kalimat)."""
         self._set(State.THINKING)
+        self._interrupted = False
         t0 = t0 or time.perf_counter()
         t_start = time.perf_counter()
         print(f"Kamu: {text}")
@@ -133,16 +208,21 @@ class Jarvis:
             reply = self.actions.run(plan.intents)
             self._say(reply)
             logger.debug(f"[latency] rule total={time.perf_counter() - t0:.2f}s")
-            return reply or None
-        reply = self._ask_llm(text, plan, t0, t_start)
-        return reply
+        else:
+            reply = self._ask_llm(text, plan, t0, t_start)
+        self.memory.add_message("user", text)
+        self.memory.add_message("assistant", reply or "")
+        return reply or None
 
     def _ask_llm(self, text: str, plan: Plan, t0: float, t_start: float) -> str | None:
         print(f"{self.cfg.general.name}: ", end="", flush=True)
         speaker = SentenceSpeaker(self.tts, self.cfg.tts.max_spoken_chars)
+        self._speaker = speaker
         reply, buf, t_first = "", "", None
         try:
             for piece in self.llm.ask(text, model=plan.model, tools=plan.tools):
+                if self._interrupted:
+                    break
                 t_first = t_first or time.perf_counter()
                 print(piece, end="", flush=True)
                 reply += piece
@@ -165,7 +245,11 @@ class Jarvis:
             speaker.say(buf)
         t_llm = time.perf_counter()
         speaker.finish()
+        self._speaker = None
+        self._stop_monitor()
         t_end = time.perf_counter()
+        if self._interrupted:
+            return reply.strip() or None
         first = (speaker.first_audio_at or t_end) - t0
         logger.debug(
             f"[latency] tier={plan.tier} llm_first_token={((t_first or t_llm) - t_start):.2f}s "
@@ -178,8 +262,6 @@ class Jarvis:
             self._say("Sebentar, saya pikirkan dulu.")
             return self._ask_llm(text, self.router.escalated(text), t0, t_start)
         if calls:
-            from jarvis.brain.rules import Intent
-
             result = self.actions.run([Intent(n, a) for n, a in calls])
             self.llm.replace_last_reply(result or "(selesai)")
             self._say(result)
@@ -227,6 +309,30 @@ class Jarvis:
         )
         return rest
 
+    def _reminder_loop(self) -> None:
+        mem = Memory(self.cfg.memory, path=self.memory.path)  # koneksi sendiri untuk thread ini
+        while self._running:
+            for r in mem.due_reminders():
+                mem.mark_done(r.id)
+                self._reminders.put(r.text)
+            time.sleep(3)
+        mem.close()
+
+    def _deliver_reminders(self) -> None:
+        while not self._reminders.empty():
+            text = self._reminders.get()
+            logger.info(f"Pengingat: {text}")
+            try:
+                context.adapter.notify("Pengingat Jarvis", text)
+            except Exception as e:  # noqa: BLE001
+                logger.warning(f"Notifikasi gagal: {e}")
+            if self.cfg.audio.sounds:
+                play_ting(self.cfg.audio.output_device)
+                time.sleep(0.3)
+            self._say(f"Pengingat dari {self.cfg.general.user_title}: {text}")
+            self.mic.flush()
+            self._set(State.IDLE)
+
     def stop(self) -> None:
         self._running = False
 
@@ -237,11 +343,13 @@ class Jarvis:
     def run(self) -> None:
         phrase_mode = self.wake is None
         self._running = True
+        threading.Thread(target=self._reminder_loop, daemon=True, name="reminders").start()
         self.mic.start()
         name = self.cfg.wakeword.phrase if phrase_mode else self.cfg.wakeword.model
         print(f'🎙️  Katakan "{name}" (Ctrl+C untuk berhenti)')
         try:
             while self._running:
+                self._deliver_reminders()
                 if self.mic_muted:
                     self.mic.flush()
                     time.sleep(0.2)

@@ -163,3 +163,21 @@ Angka yang ditulis Whisper sebagai kata ("tiga puluh") dikonversi ke digit.
 - **Konfirmasi suara:** tool `high` → Jarvis bertanya "Yakin …? Bilang ya atau tidak.", mendengar
   `tools.confirm_timeout_s` detik. Kata "tidak/jangan/batal" selalu menang; diam atau tidak jelas =
   batal. Tool call dari LLM juga lewat jalur yang sama (tidak bisa melewati konfirmasi).
+
+### Fase 4: layar, ketik, memori, pengingat, interupsi
+
+- **read_screen:** screenshot (`mss`; Wayland: `grim`) → diperkecil 960 px → model vision Ollama
+  (`llm.vision_model`). Prompt vision menyatakan isi layar sebagai DATA (tidak boleh dituruti), dan
+  hasilnya hanya dibacakan; tidak pernah diteruskan ke tool lain. macOS: wajib izin *Screen Recording*
+  (tanpa izin hanya wallpaper yang tertangkap; Jarvis mengecek dan meminta izin).
+- **type_text:** satu baris saja (Enter/Tab/karakter kontrol dibuang, maks 500 karakter) agar teks
+  tidak bisa mengeksekusi perintah di terminal. macOS butuh izin *Accessibility*. Teks panjang/emoji
+  lewat clipboard + paste. Wayland: `ydotool`, fallback clipboard + notifikasi "tekan Ctrl+V".
+- **Memori (SQLite, folder data pengguna):** riwayat percakapan (dipertahankan `memory.retention_days`),
+  fakta (masuk system prompt), catatan (juga ditambahkan ke `notes.md`), pengingat.
+  Perintah: "catat …", "bacakan catatan", "nama saya …", "ingatkan saya 10 menit lagi …".
+- **Pengingat:** thread penjadwal memeriksa tiap 3 detik; saat jatuh tempo → notifikasi + bunyi ting +
+  diucapkan (saat Jarvis idle).
+- **Interupsi:** selama Jarvis bicara, ucapan pendek yang terdengar ditranskripsi (model wake);
+  "berhenti/stop/cukup/diam" atau kata pemanggil memotong suara dan menghentikan LLM. Tanpa peredam
+  gema: segmen yang terus-menerus (gema suara Jarvis sendiri) diabaikan, jadi lebih andal dengan headset.

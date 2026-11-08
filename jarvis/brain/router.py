@@ -35,6 +35,14 @@ TOOL_HINTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "open_url",
         "web_search",
     ),
+    ("layar", "screen", "rangkum", "error"): ("read_screen",),
+    ("ketik", "tulis"): ("type_text",),
+    ("catat", "catatan", "ingat", "pengingat", "nama"): (
+        "add_note",
+        "list_notes",
+        "set_reminder",
+        "remember_fact",
+    ),
     ("jam", "tanggal", "hari", "baterai", "batre", "ram", "cpu", "memori"): (
         "get_time",
         "system_info",

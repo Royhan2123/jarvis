@@ -52,17 +52,25 @@ def _word_match(heard: str, target: str) -> bool:
 def match_phrase(text: str, phrase: str) -> str | None:
     """Cari `phrase` (toleran salah dengar) di awal `text`.
 
-    Mengembalikan sisa ucapan setelah frasa ("" jika tidak ada), atau None jika tidak cocok.
+    Mengembalikan sisa ucapan ASLI setelah frasa ("" jika tidak ada), atau None jika tidak cocok.
     """
-    words, target = _norm(text), _norm(phrase)
+    spans = [(m.group().lower(), m.end()) for m in re.finditer(r"\w+", text)]
+    words = [w for w, _ in spans]
+    target = _norm(phrase)
     n = len(target)
-    # frasa harus muncul di awal ucapan (maks 1 kata sebelumnya, mis. "oke hey teman")
+
+    def rest(k: int) -> str:
+        """Teks asli setelah k kata pertama."""
+        if k >= len(spans):
+            return ""
+        return text[spans[k - 1][1] :].lstrip(" \t,.:;!?-")
+
     # frasa 1 kata yang sangat umum ("hello") hanya sah di kata pertama → kurangi salah picu
     for i in range(min(1 if n == 1 else 2, len(words) - n + 1)):
         if all(_word_match(w, t) for w, t in zip(words[i : i + n], target, strict=True)):
-            return " ".join(words[i + n :])
+            return rest(i + n)
     want = "".join(target)
     for k in range(1, n + 1) if n > 1 else []:  # Whisper kadang menyambung: "heyteman"
         if SequenceMatcher(None, "".join(words[:k]), want).ratio() >= 0.85:
-            return " ".join(words[k:])
+            return rest(k)
     return None

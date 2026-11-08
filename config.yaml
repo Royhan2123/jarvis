@@ -13,6 +13,7 @@ audio:
   sample_rate: 16000
   chunk_ms: 80
   sounds: true
+  interruptible: true         # bisa dipotong dengan "berhenti" / kata pemanggil saat Jarvis bicara
 
 wakeword:
   engine: "phrase"            # phrase = kenali frasa lewat Whisper | openwakeword = model hey_jarvis

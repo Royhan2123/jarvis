@@ -25,12 +25,15 @@ class SentenceSpeaker:
         self.tts = tts
         self.budget = max_chars
         self.first_audio_at: float | None = None
+        self._cancelled = False
         self._q: queue.Queue[str | None] = queue.Queue()
         self._t = threading.Thread(target=self._worker, daemon=True)
         self._t.start()
 
     def _worker(self) -> None:
         while (s := self._q.get()) is not None:
+            if self._cancelled:
+                continue
             if self.first_audio_at is None:
                 self.first_audio_at = time.perf_counter()
             try:
@@ -38,9 +41,14 @@ class SentenceSpeaker:
             except Exception as e:  # noqa: BLE001 — TTS gagal tidak boleh mematikan app
                 logger.error(f"TTS gagal: {e}")
 
+    def cancel(self) -> None:
+        """Interupsi: hentikan kalimat yang sedang diucapkan dan buang antrean."""
+        self._cancelled = True
+        self.tts.stop()
+
     def say(self, sentence: str) -> None:
         sentence = sentence.strip()
-        if not sentence or self.budget <= 0:
+        if not sentence or self.budget <= 0 or self._cancelled:
             return
         self.budget -= len(sentence)
         self._q.put(sentence)

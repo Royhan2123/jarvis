@@ -16,6 +16,7 @@ from typing import Any
 from loguru import logger
 from pydantic import BaseModel, ConfigDict, ValidationError, create_model
 
+from jarvis.brain.memory import Memory
 from jarvis.config import Config
 from jarvis.platform import get_adapter
 from jarvis.platform.base import PlatformAdapter, PlatformError
@@ -45,6 +46,7 @@ class Context:
 
     def __init__(self) -> None:
         self._adapter: PlatformAdapter | None = None
+        self._memory: Memory | None = None
         self.cfg: Config = Config()
 
     @property
@@ -53,8 +55,16 @@ class Context:
             self._adapter = get_adapter(self.cfg)
         return self._adapter
 
-    def configure(self, adapter: PlatformAdapter | None, cfg: Config) -> None:
-        self._adapter, self.cfg = adapter, cfg
+    @property
+    def memory(self) -> Memory:
+        if self._memory is None:
+            self._memory = Memory(self.cfg.memory)
+        return self._memory
+
+    def configure(
+        self, adapter: PlatformAdapter | None, cfg: Config, memory: Memory | None = None
+    ) -> None:
+        self._adapter, self.cfg, self._memory = adapter, cfg, memory
 
 
 context = Context()

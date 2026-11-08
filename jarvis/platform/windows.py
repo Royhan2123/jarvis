@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from jarvis.platform._util import run, terminate_user_processes
+from jarvis.platform._util import grab_screen_png, run, terminate_user_processes, type_via_pynput
 from jarvis.platform.base import AppNotFound, MediaAction, PlatformAdapter, PlatformError
 
 
@@ -104,3 +104,14 @@ class WindowsAdapter(PlatformAdapter):
 
     def open_path(self, path: str) -> None:
         os.startfile(path)  # type: ignore[attr-defined]  # noqa: S606
+
+    def screenshot(self) -> bytes:
+        return grab_screen_png()
+
+    def type_text(self, text: str) -> None:
+        type_via_pynput(text, "ctrl")
+
+    def notify(self, title: str, body: str) -> None:
+        from win11toast import notify  # dependensi khusus Windows
+
+        notify(title, body)

@@ -77,11 +77,16 @@
 
 - [ ] `read_screen` dengan vision model
 - [ ] `type_text` (termasuk fallback Wayland & clipboard)
-- [ ] Memori SQLite: fakta pengguna + riwayat percakapan
-- [ ] Catatan & pengingat (scheduler internal)
+- [x] Memori SQLite: fakta pengguna + riwayat percakapan
+- [x] Catatan & pengingat (scheduler internal)
 - [ ] **Interupsi**: wake word / "berhenti" saat Jarvis bicara
-- [ ] Streaming: TTS mulai bicara saat kalimat pertama LLM selesai (latensi terasa jauh lebih cepat)
+- [x] Streaming: TTS mulai bicara saat kalimat pertama LLM selesai (latensi terasa jauh lebih cepat)
 - [ ] Benchmark & tuning latensi di hardware minimum
+
+> Status: kode + 127 unit test selesai. **Belum terverifikasi sungguhan:** `read_screen` (perlu izin Screen
+> Recording; tanpa izin macOS hanya memberi wallpaper; vision 4B ±56 s di CPU), `type_text` (perlu izin
+> Accessibility; belum diuji mengetik), interupsi (tanpa peredam gema, segmen panjang diabaikan), dan
+> benchmark di hardware minimum (hanya ada Mac i9).
 
 **🚀 Rilis v1.0**
 

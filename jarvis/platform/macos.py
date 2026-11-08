@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 
-from jarvis.platform._util import run
+from jarvis.platform._util import grab_screen_png, is_blank, run, type_via_pynput
 from jarvis.platform.base import AppNotFound, MediaAction, PlatformAdapter, PlatformError
 
 _PLAYERS = ("Spotify", "Music")
@@ -77,3 +77,45 @@ class MacAdapter(PlatformAdapter):
 
     def open_path(self, path: str) -> None:
         run(["open", path])
+
+    @staticmethod
+    def _screen_permission() -> bool:
+        """Tanpa izin Screen Recording macOS hanya memberi wallpaper (tanpa error) → cek dulu."""
+        try:
+            import Quartz
+        except ImportError:  # pyobjc tidak ada: biarkan pengecekan gambar kosong yang bekerja
+            return True
+        if Quartz.CGPreflightScreenCaptureAccess():
+            return True
+        Quartz.CGRequestScreenCaptureAccess()  # memunculkan dialog izin sistem
+        return False
+
+    def screenshot(self) -> bytes:
+        if not self._screen_permission():
+            raise PlatformError(
+                "Izin Screen Recording belum diberikan. Aktifkan untuk aplikasi ini di System "
+                "Settings, Privacy dan Security, lalu buka ulang aplikasinya"
+            )
+        png = grab_screen_png()
+        if is_blank(png):
+            raise PlatformError(
+                "Layar tidak bisa dibaca. Izinkan Screen Recording untuk aplikasi ini di "
+                "System Settings, Privacy dan Security"
+            )
+        return png
+
+    def type_text(self, text: str) -> None:
+        try:
+            type_via_pynput(text, "cmd")
+        except Exception as e:  # noqa: BLE001 — izin Accessibility belum diberikan, dll
+            raise PlatformError(
+                "Tidak bisa mengetik. Izinkan Accessibility untuk aplikasi ini di System Settings"
+            ) from e
+
+    def notify(self, title: str, body: str) -> None:
+        self._osascript(
+            "on run argv\ndisplay notification (item 1 of argv) "
+            "with title (item 2 of argv)\nend run",
+            body,
+            title,
+        )

@@ -19,4 +19,7 @@ def get_adapter(cfg: Config | None = None) -> PlatformAdapter:
         return WindowsAdapter()
     from jarvis.platform.linux import LinuxAdapter
 
-    return LinuxAdapter(cfg.platform.linux.volume_backend if cfg else "auto")
+    if cfg is None:
+        return LinuxAdapter()
+    lc = cfg.platform.linux
+    return LinuxAdapter(lc.volume_backend, lc.typing_backend, lc.screenshot_backend)

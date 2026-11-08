@@ -27,6 +27,7 @@ class AudioConfig(_Section):
     sample_rate: int = 16000
     chunk_ms: int = 80
     sounds: bool = True
+    interruptible: bool = True
 
 
 class WakewordConfig(_Section):

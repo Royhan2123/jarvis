@@ -99,3 +99,30 @@ def test_parse_yes_no(said, ans) -> None:
 )
 def test_info_rules_do_not_hijack_questions(said) -> None:
     assert match(said) is None
+
+
+def test_type_and_note_keep_exact_text() -> None:
+    assert match("Ketik: Halo, Meeting diundur jam 3.") == [
+        Intent("type_text", {"text": "Halo, Meeting diundur jam 3."})
+    ]
+    assert match("tolong catat beli kopi besok") == [
+        Intent("add_note", {"text": "beli kopi besok"})
+    ]
+    assert match("catatan saya apa saja") == [Intent("list_notes")]
+
+
+def test_reminder_rules() -> None:
+    assert match("ingatkan saya 10 menit lagi minum obat") == [
+        Intent("set_reminder", {"text": "minum obat", "minutes": 10.0})
+    ]
+    assert match("ingatkan saya untuk minum obat 2 jam lagi") == [
+        Intent("set_reminder", {"text": "minum obat", "minutes": 120.0})
+    ]
+    assert match("ingatkan saya tiga puluh detik lagi cek oven")[0].args["minutes"] == 0.5
+
+
+def test_memory_and_screen_rules() -> None:
+    assert match("nama saya Roy") == [Intent("remember_fact", {"key": "nama", "value": "Roy"})]
+    assert match("rangkum isi layar ini")[0].tool == "read_screen"
+    assert match("ini error apa")[0].tool == "read_screen"
+    assert match("jelaskan cara kerja layar sentuh") is None

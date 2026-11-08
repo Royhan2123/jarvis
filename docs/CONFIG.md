@@ -27,6 +27,7 @@ audio:
   sample_rate: 16000          # wajib 16 kHz untuk wakeword, VAD, dan Whisper
   chunk_ms: 80                # ukuran potongan audio (80 ms = 1280 sampel)
   sounds: true                # bunyi "ting" saat aktif
+  interruptible: true         # dipotong dengan "berhenti" / kata pemanggil saat Jarvis bicara
 
 # ─────────────────────────────────────────────
 # WAKE WORD

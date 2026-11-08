@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 import ollama
 
@@ -11,7 +11,13 @@ from jarvis.config import Config
 
 
 class LLM:
-    def __init__(self, cfg: Config, client: ollama.Client | None = None) -> None:
+    def __init__(
+        self,
+        cfg: Config,
+        client: ollama.Client | None = None,
+        facts: Callable[[], str] | None = None,
+    ) -> None:
+        self.facts = facts or (lambda: "belum ada")
         self.cfg = cfg
         self.client = client or ollama.Client(host=cfg.llm.host)
         self.history: list[dict[str, str]] = []
@@ -43,7 +49,10 @@ class LLM:
         self.history.append({"role": "user", "content": text})
         self._trim()
         messages = [
-            {"role": "system", "content": build_system_prompt(self.cfg.general.user_title)},
+            {
+                "role": "system",
+                "content": build_system_prompt(self.cfg.general.user_title, self.facts()),
+            },
             *self.history,
         ]
         reply = ""
