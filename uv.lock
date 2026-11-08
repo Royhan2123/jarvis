@@ -448,6 +448,8 @@ dependencies = [
     { name = "pydantic" },
     { name = "pyttsx3", marker = "sys_platform == 'win32'" },
     { name = "pyyaml" },
+    { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "sounddevice" },
 ]
 
@@ -472,6 +474,7 @@ requires-dist = [
     { name = "pyttsx3", marker = "sys_platform == 'win32'", specifier = ">=2.90" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
+    { name = "scipy", specifier = ">=1.11" },
     { name = "sounddevice", specifier = ">=0.4" },
 ]
 provides-extras = ["dev"]

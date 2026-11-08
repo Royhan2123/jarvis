@@ -52,7 +52,7 @@ class STTConfig(_Section):
     compute_type: str = "int8"
     language: str | None = "id"
     beam_size: int = 1
-    initial_prompt: str = "Jarvis, buka, tutup, volume, Spotify, Chrome, VS Code"
+    initial_prompt: str = "Hey teman, buka, tutup, volume, Spotify, Chrome, VS Code"
     cpu_threads: int = 8
 
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import numpy as np
 
 from jarvis.config import STTConfig
@@ -31,4 +33,11 @@ class WhisperSTT:
             vad_parameters={"min_silence_duration_ms": 300},
             condition_on_previous_text=False,
         )
-        return " ".join(s.text.strip() for s in segments).strip()
+        text = " ".join(s.text.strip() for s in segments).strip()
+        return "" if self._is_prompt_echo(text) else text
+
+    def _is_prompt_echo(self, text: str) -> bool:
+        """Whisper kadang mengulang initial_prompt saat hening/noise → buang."""
+        words = set(re.findall(r"\w+", text.lower()))
+        prompt = set(re.findall(r"\w+", (self.cfg.initial_prompt or "").lower()))
+        return bool(words) and len(words) >= 3 and len(words - prompt) <= 1

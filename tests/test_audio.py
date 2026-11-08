@@ -59,3 +59,14 @@ def test_split_sentences() -> None:
 
     assert split_sentences("Halo. Apa kabar? Baik") == (["Halo.", "Apa kabar?"], "Baik")
     assert split_sentences("Belum selesai") == ([], "Belum selesai")
+
+
+def test_prompt_echo_filter() -> None:
+    from jarvis.config import STTConfig
+    from jarvis.stt.whisper import WhisperSTT
+
+    stt = object.__new__(WhisperSTT)
+    stt.cfg = STTConfig()
+    assert stt._is_prompt_echo("Teman, buka, utup, volume, Spotify, Chrome, VS Code")
+    assert not stt._is_prompt_echo("buka spotify dan putar musik santai")
+    assert not stt._is_prompt_echo("hey teman")
