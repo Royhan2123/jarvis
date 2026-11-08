@@ -115,6 +115,32 @@ class MemoryConfig(_Section):
     retention_days: int = 30
 
 
+class AppsConfig(_Section):
+    allowed: list[str] = []  # kosong = semua app boleh
+    aliases: dict[str, str] = {
+        "vs code": "Visual Studio Code",
+        "browser": "Google Chrome",
+        "musik": "Spotify",
+    }
+
+
+class ToolsConfig(_Section):
+    enabled: list[str] = ["system", "apps", "media", "web", "screen", "keyboard", "notes"]
+    confirm_risk_level: Literal["low", "medium", "high"] = "high"
+    confirm_timeout_s: int = 6
+    apps: AppsConfig = AppsConfig()
+
+
+class LinuxPlatformConfig(_Section):
+    typing_backend: Literal["auto", "pynput", "ydotool", "xdotool"] = "auto"
+    screenshot_backend: Literal["auto", "mss", "grim", "portal"] = "auto"
+    volume_backend: Literal["auto", "pactl", "wpctl", "amixer"] = "auto"
+
+
+class PlatformConfig(_Section):
+    linux: LinuxPlatformConfig = LinuxPlatformConfig()
+
+
 class Config(_Section):
     general: GeneralConfig = GeneralConfig()
     audio: AudioConfig = AudioConfig()
@@ -124,7 +150,9 @@ class Config(_Section):
     llm: LLMConfig = LLMConfig()
     router: RouterConfig = RouterConfig()
     tts: TTSConfig = TTSConfig()
+    tools: ToolsConfig = ToolsConfig()
     memory: MemoryConfig = MemoryConfig()
+    platform: PlatformConfig = PlatformConfig()
 
 
 def load_config(path: str | Path = "config.yaml") -> Config:

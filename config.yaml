@@ -79,7 +79,24 @@ tts:
   volume: 1.0
   max_spoken_chars: 400
 
+tools:
+  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes"]
+  confirm_risk_level: "high"
+  confirm_timeout_s: 6
+  apps:
+    allowed: []               # kosong = semua app boleh; isi untuk membatasi
+    aliases:
+      "vs code": "Visual Studio Code"
+      "browser": "Google Chrome"
+      "musik": "Spotify"
+
 memory:
   enabled: true
   save_conversations: true
   retention_days: 30
+
+platform:
+  linux:
+    typing_backend: "auto"
+    screenshot_backend: "auto"
+    volume_backend: "auto"

@@ -123,3 +123,30 @@ RULES = [
 
 Teks dinormalisasi dulu: huruf kecil, hapus "jarvis", "tolong", "dong", "ya", tanda baca.
 Angka yang ditulis Whisper sebagai kata ("tiga puluh") dikonversi ke digit.
+
+---
+
+## 4. Catatan Implementasi (Fase 2)
+
+- **Keamanan nama aplikasi:** hanya huruf/angka/spasi dan `. + ( ) ' -` (maks 60 karakter). macOS
+  mengirim nama lewat `argv` AppleScript (tidak disisipkan ke teks script). Windows & Linux hanya
+  membuka aplikasi yang punya **shortcut Start Menu / file `.desktop`**; tidak pernah menjalankan
+  binary acak dari `PATH` (mencegah `open_app "shutdown"` melewati konfirmasi tool `high`).
+- **close_app (Windows/Linux fallback):** hanya proses milik user saat ini, nama persis.
+- **open_url / web_search:** hanya `http`/`https`; yang melakukan request jaringan adalah browser
+  pengguna, bukan Jarvis, jadi tetap diizinkan saat `offline_only: true`.
+- **Konfirmasi:** `registry.call()` menolak tool dengan risk >= `tools.confirm_risk_level`
+  kecuali `confirmed=True` (alur konfirmasi suara dibuat di Fase 3).
+- **Uji manual cepat:** `uv run python -m jarvis.tools list` dan
+  `uv run python -m jarvis.tools call set_volume percent=30`.
+
+### Checklist uji manual per OS
+
+| Tool | macOS | Windows | Linux X11 | Linux Wayland |
+|---|---|---|---|---|
+| `open_app` / `close_app` | ✅ diuji (Calculator) | ⬜ belum | ⬜ belum | ⬜ belum |
+| `set_volume` / `mute` | ✅ diuji | ⬜ belum | ⬜ belum | ⬜ belum |
+| `media` | ⚠️ hanya jalur error (tanpa pemutar) | ⬜ belum | ⬜ belum | ⬜ belum |
+| `open_url` / `web_search` | ⚠️ validasi URL saja | ⬜ belum | ⬜ belum | ⬜ belum |
+| `get_time` / `system_info` | ✅ diuji | ⬜ belum | ⬜ belum | ⬜ belum |
+| `lock_screen` | ⬜ belum (mematikan layar) | ⬜ belum | ⬜ belum | ⬜ belum |

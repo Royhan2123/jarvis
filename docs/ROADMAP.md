@@ -45,11 +45,13 @@
 
 ## Fase 2 — Tools & Platform (Minggu 3)
 
-- [ ] `tools/registry.py`: decorator `@tool`, schema JSON untuk Ollama, level risk
-- [ ] `platform/base.py` + `macos.py`, `windows.py`, `linux.py`
-- [ ] Tools: `open_app`, `close_app`, `set_volume`, `mute`, `media`, `open_url`, `web_search`, `get_time`, `system_info`, `lock_screen`
-- [ ] Unit test tool dengan adapter palsu (mock)
+- [x] `tools/registry.py`: decorator `@tool`, schema JSON untuk Ollama, level risk
+- [x] `platform/base.py` + `macos.py`, `windows.py`, `linux.py`
+- [x] Tools: `open_app`, `close_app`, `set_volume`, `mute`, `media`, `open_url`, `web_search`, `get_time`, `system_info`, `lock_screen`
+- [x] Unit test tool dengan adapter palsu (mock)
 - [ ] Uji manual di 3 OS (checklist di [`COMMANDS.md`](COMMANDS.md))
+
+> Status: unit test lulus & uji manual di Mac OK; Windows/Linux belum diuji (lihat checklist di COMMANDS.md §4).
 
 **Definition of Done:** semua tool P0 jalan di Mac, Windows, Linux (X11 + Wayland).
 

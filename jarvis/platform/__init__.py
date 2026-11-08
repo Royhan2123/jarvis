@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import sys
 
+from jarvis.config import Config
 from jarvis.platform.base import PlatformAdapter
 
 
-def get_adapter() -> PlatformAdapter:
+def get_adapter(cfg: Config | None = None) -> PlatformAdapter:
     if sys.platform == "darwin":
         from jarvis.platform.macos import MacAdapter
 
@@ -18,4 +19,4 @@ def get_adapter() -> PlatformAdapter:
         return WindowsAdapter()
     from jarvis.platform.linux import LinuxAdapter
 
-    return LinuxAdapter()
+    return LinuxAdapter(cfg.platform.linux.volume_backend if cfg else "auto")

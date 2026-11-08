@@ -1,6 +1,35 @@
+"""Adapter Windows. CATATAN: belum diuji di mesin Windows (dev di macOS)."""
+
 from __future__ import annotations
 
-from jarvis.platform.base import PlatformAdapter
+import os
+from pathlib import Path
+
+from jarvis.platform._util import terminate_user_processes
+from jarvis.platform.base import AppNotFound, MediaAction, PlatformAdapter, PlatformError
+
+
+def _start_menu_dirs() -> list[Path]:
+    dirs = []
+    for env in ("ProgramData", "AppData"):
+        base = os.environ.get(env)
+        if base:
+            dirs.append(Path(base) / "Microsoft" / "Windows" / "Start Menu" / "Programs")
+    return dirs
+
+
+def find_shortcut(name: str) -> Path | None:
+    """Cari shortcut .lnk di Start Menu: nama persis dulu, lalu yang mengandung nama."""
+    want = name.lower()
+    best: Path | None = None
+    for d in _start_menu_dirs():
+        for lnk in d.rglob("*.lnk"):
+            stem = lnk.stem.lower()
+            if stem == want:
+                return lnk
+            if want in stem and best is None:
+                best = lnk
+    return best
 
 
 class WindowsAdapter(PlatformAdapter):
@@ -24,3 +53,45 @@ class WindowsAdapter(PlatformAdapter):
     def stop_say(self) -> None:
         if self._engine is not None:
             self._engine.stop()
+
+    def open_app(self, name: str) -> None:
+        # Hanya shortcut Start Menu: tidak menjalankan sembarang executable dari PATH.
+        lnk = find_shortcut(name)
+        if lnk is None:
+            raise AppNotFound(f"Aplikasi {name} tidak ditemukan di Start Menu")
+        os.startfile(lnk)  # type: ignore[attr-defined]  # noqa: S606
+
+    def close_app(self, name: str) -> None:
+        terminate_user_processes(name)
+
+    def _endpoint(self):
+        from ctypes import POINTER, cast
+
+        from comtypes import CLSCTX_ALL
+        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
+        dev = AudioUtilities.GetSpeakers()
+        iface = dev.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        return cast(iface, POINTER(IAudioEndpointVolume))
+
+    def set_volume(self, percent: int) -> None:
+        self._endpoint().SetMasterVolumeLevelScalar(percent / 100, None)
+
+    def mute(self, on: bool) -> None:
+        self._endpoint().SetMute(1 if on else 0, None)
+
+    def media(self, action: MediaAction) -> None:
+        from pynput.keyboard import Controller, Key
+
+        key = {
+            "play_pause": Key.media_play_pause,
+            "next": Key.media_next,
+            "prev": Key.media_previous,
+        }[action]
+        Controller().tap(key)
+
+    def lock_screen(self) -> None:
+        import ctypes
+
+        if not ctypes.windll.user32.LockWorkStation():  # type: ignore[attr-defined]
+            raise PlatformError("Gagal mengunci layar")
