@@ -46,14 +46,14 @@ class VADConfig(_Section):
 
 
 class STTConfig(_Section):
-    model: str = "medium"
+    model: str = "small"
     wake_model: str = "small"
     device: Literal["auto", "cpu", "cuda"] = "auto"
     compute_type: str = "int8"
     language: str | None = "id"
     beam_size: int = 1
     initial_prompt: str = "Hey teman, buka, tutup, volume, Spotify, Chrome, VS Code"
-    cpu_threads: int = 8
+    cpu_threads: int = 6
 
 
 class LLMConfig(_Section):
@@ -64,7 +64,7 @@ class LLMConfig(_Section):
     temperature: float = 0.3
     top_p: float = 0.8
     top_k: int = 20
-    num_ctx: int = 4096
+    num_ctx: int = 2048
     num_predict: int = 200
     num_thread: int = 8
     keep_alive: int | str = -1

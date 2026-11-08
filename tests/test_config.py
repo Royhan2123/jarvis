@@ -16,7 +16,7 @@ def test_missing_file_gives_defaults(tmp_path: Path) -> None:
 
 def test_repo_config_is_valid() -> None:
     cfg = load_config(Path(__file__).parent.parent / "config.yaml")
-    assert cfg.llm.num_ctx == 4096
+    assert cfg.llm.num_ctx == 2048
 
 
 def test_override(tmp_path: Path) -> None:

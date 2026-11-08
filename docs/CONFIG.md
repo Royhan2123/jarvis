@@ -52,14 +52,14 @@ vad:
 # SPEECH-TO-TEXT
 # ─────────────────────────────────────────────
 stt:
-  model: "medium"            # model untuk perintah: tiny | base | small | medium | large-v3-turbo
+  model: "small"             # model untuk perintah (medium ±2.5x lebih lambat di CPU): tiny | base | small | medium | large-v3-turbo
   wake_model: "small"        # model untuk mengenali frasa pemanggil (dipanggil sering → pakai yang cepat)
   device: "auto"              # auto | cpu | cuda
   compute_type: "int8"        # CPU: int8 | GPU: float16
   language: "id"              # null = deteksi otomatis (lebih lambat)
   beam_size: 1                # 1 = tercepat; 5 = lebih akurat
   initial_prompt: "Hey teman, buka, tutup, volume, Spotify, Chrome, VS Code"
-  cpu_threads: 8
+  cpu_threads: 6              # hasil bench Mac i9: 6 lebih cepat dari 8 (sisakan core untuk audio)
 
 # ─────────────────────────────────────────────
 # LLM (OTAK)
@@ -73,7 +73,7 @@ llm:
   temperature: 0.3            # 0.2–0.4 = konsisten; 0.7+ = kreatif
   top_p: 0.8
   top_k: 20
-  num_ctx: 4096               # panjang konteks (token)
+  num_ctx: 2048               # panjang konteks (token); bench: 2048 lebih cepat dari 4096
   num_predict: 200            # panjang maksimal jawaban (token)
   num_thread: 8               # = jumlah CORE FISIK CPU
   keep_alive: -1              # -1 = model tetap di RAM; "10m" = lepas setelah 10 menit

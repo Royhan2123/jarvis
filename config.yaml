@@ -29,14 +29,14 @@ vad:
   listen_timeout_s: 8
 
 stt:
-  model: "medium"             # untuk perintah (lebih akurat, lebih lambat)
+  model: "small"              # untuk perintah. medium lebih akurat tapi ±2.5x lebih lambat di CPU
   wake_model: "small"         # untuk mengenali frasa pemanggil (cepat)
   device: "auto"
   compute_type: "int8"
   language: "id"
   beam_size: 1
   initial_prompt: "Hey teman, buka, tutup, volume, Spotify, Chrome, VS Code"
-  cpu_threads: 8
+  cpu_threads: 6
 
 llm:
   host: "http://localhost:11434"
@@ -46,7 +46,7 @@ llm:
   temperature: 0.3
   top_p: 0.8
   top_k: 20
-  num_ctx: 4096
+  num_ctx: 2048
   num_predict: 200
   num_thread: 8
   keep_alive: -1

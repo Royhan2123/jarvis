@@ -39,6 +39,8 @@
 
 **Definition of Done:** "Hey Jarvis, apa ibu kota Jepang?" → dijawab dengan suara di 3 OS, total latensi ≤ 5 detik di CPU.
 
+> Status: Mac Intel i9 ✅ mulai bicara ±4,5 detik (`uv run python -m jarvis.bench`: STT 1,6 + LLM kalimat pertama 2,6 + TTS 0,2). Windows & Linux belum diuji → belum dicentang.
+
 ---
 
 ## Fase 2 — Tools & Platform (Minggu 3)
