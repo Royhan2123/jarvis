@@ -67,7 +67,7 @@
 - [ ] Build PyInstaller 3 OS di CI, upload ke GitHub Releases
 - [ ] Uji dengan 3 pengguna nyata, perbaiki SETUP.md
 
-> Status: kode & unit test selesai (106 test); alur suara (aturan, konfirmasi, tray) dikonfirmasi berhasil oleh pengguna di Mac. Belum: `jarvis.spec` + `release.yml` belum pernah dijalankan (build 3 OS), model 9B belum diunduh, belum diuji 3 pengguna nyata.
+> Status: kode & unit test selesai (106 test); alur suara (aturan, konfirmasi, tray) dikonfirmasi berhasil oleh pengguna di Mac. Build lokal PyInstaller di Mac OK (`dist/Jarvis.app` ±385 MB; `--check`, mode teks, mode suara jalan; muat pertama ±75 detik). Tier 2 diuji dengan Qwen 9B asli (token pertama ±6 s, jawaban ±13 s). Belum: `release.yml` belum pernah jalan di GitHub (build Windows/Linux/Intel/ARM + rilis), belum diuji 3 pengguna nyata.
 
 **🚀 Rilis MVP v0.1**
 

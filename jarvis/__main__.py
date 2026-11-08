@@ -118,6 +118,9 @@ def run_listen(cfg: Config, tray: bool, config_path: str) -> None:
 
 
 def main() -> None:
+    import multiprocessing
+
+    multiprocessing.freeze_support()  # wajib di app PyInstaller
     ap = argparse.ArgumentParser(prog="jarvis")
     ap.add_argument("--check", action="store_true", help="cek mic & Ollama")
     ap.add_argument("--text", action="store_true", help="mode teks (default)")
