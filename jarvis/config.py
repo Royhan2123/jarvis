@@ -138,9 +138,7 @@ class RagConfig(_Section):
     chunk_chars: int = 800
     chunk_overlap: int = 100
     top_k: int = 3
-    min_score: float = (
-        0.45  # di bawah ini dianggap tidak relevan (uji: relevan 0.48–0.63, bukan ≈0.35)
-    )
+    min_score: float = 0.4  # skor relevan 0.47–0.63; tidak relevan ≤ 0.35
     auto_context: bool = True  # pertanyaan ke LLM otomatis dibekali kutipan dokumen yang relevan
     max_file_mb: int = 5
     extensions: list[str] = [".txt", ".md", ".pdf"]
