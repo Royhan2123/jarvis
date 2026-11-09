@@ -232,5 +232,5 @@ Default mati (`smarthome.enabled: false`). Tool: `device_control` (risk medium),
 - **Jaringan:** saat `general.offline_only: true`, host harus alamat lokal (localhost, 10.x/172.16.x/
   192.168.x, link-local, atau `.local`). Alamat internet publik baru diizinkan jika
   `offline_only: false`. Ini pelonggaran terbatas dari aturan "tidak ada request keluar" untuk LAN
-  rumah; perubahan aturan ini sebaiknya dicatat juga di CLAUDE.md.
+  rumah (aturan ini sudah dicatat di CLAUDE.md).
 - Token/password tidak boleh ditulis di `config.yaml`.
