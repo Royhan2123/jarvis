@@ -22,7 +22,7 @@ Jujur per fase: ✅ terbukti di mesin dev (Mac Intel i9) · 🟡 sebagian · ❌
 | 0 | Ngobrol dengan Qwen 4B lewat terminal di 3 OS | 🟡 Mac ✅; CI hijau di 3 OS (unit test) | Ngobrol sungguhan dengan Ollama di Windows/Linux belum diuji |
 | 1 | Panggil → jawab dengan suara di 3 OS, ≤ 5 s | 🟡 Mac ✅ (±4,5 s sederhana; 8–13 s jika CPU berebut) | Windows/Linux; kata panggil sekarang "Hello" (bukan "Hey Jarvis") |
 | 2 | Semua tool P0 jalan di Mac, Windows, Linux | 🟡 Mac ✅ | Windows/Linux (X11 + Wayland) belum diuji, checklist di COMMANDS.md §4 |
-| 3 | MVP: router, konfirmasi, tray, installer | 🟡 Mac ✅ (`Jarvis.app` ±385 MB) | Build 3 OS lewat `release.yml` belum jalan; belum diuji 3 pengguna nyata |
+| 3 | MVP: router, konfirmasi, tray, installer | 🟡 Mac ✅; rilis v0.1.0 terbit (4 target) | Installer Windows/Linux/ARM belum pernah dijalankan; belum diuji 3 pengguna nyata |
 | 4 | Baca layar, ketik, memori, pengingat, interupsi | 🟡 memori, catatan, pengingat, streaming, interupsi ✅ | `read_screen` & `type_text` butuh izin macOS; benchmark hardware minimum |
 | 5 | Plugin, dashboard, RAG, online, smart home, wake word kustom | 🟡 kode + tes ✅ | Calendar/Gmail (butuh akun Google), Home Assistant/MQTT (butuh perangkat), RAG lewat mic, bahasa daerah (hanya dikaji) |
 
@@ -81,7 +81,7 @@ Rilis (v0.1, v1.0, v2.0) belum dibuat: tidak ada push atau tag ke remote tanpa i
 - [x] Alur konfirmasi untuk tool risk `high`
 - [x] `ui/tray.py`: ikon state, toggle mic, buka config, keluar
 - [x] Bunyi notifikasi (ting / selesai / error)
-- [ ] Build PyInstaller 3 OS di CI, upload ke GitHub Releases
+- [x] Build PyInstaller 3 OS di CI, upload ke GitHub Releases (v0.1.0: Windows, Linux, macOS Intel & ARM terbit; hanya build yang diverifikasi, belum dijalankan di Windows/Linux/ARM)
 - [ ] Uji dengan 3 pengguna nyata, perbaiki SETUP.md
 
 > Status: kode & unit test selesai (106 test); alur suara (aturan, konfirmasi, tray) dikonfirmasi berhasil oleh pengguna di Mac. Build lokal PyInstaller di Mac OK (`dist/Jarvis.app` ±385 MB; `--check`, mode teks, mode suara jalan; muat pertama ±75 detik). Tier 2 diuji dengan Qwen 9B asli (token pertama ±6 s, jawaban ±13 s). Belum: `release.yml` belum pernah jalan di GitHub (build Windows/Linux/Intel/ARM + rilis), belum diuji 3 pengguna nyata.
