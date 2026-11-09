@@ -126,3 +126,9 @@ def test_memory_and_screen_rules() -> None:
     assert match("rangkum isi layar ini")[0].tool == "read_screen"
     assert match("ini error apa")[0].tool == "read_screen"
     assert match("jelaskan cara kerja layar sentuh") is None
+
+
+def test_search_in_documents_is_not_web_search() -> None:
+    assert match("cari di dokumen saya tentang uang jaminan") is None
+    assert match("carikan berkas kontrak sewa") is None
+    assert match("cari resep nasi goreng")[0].tool == "web_search"

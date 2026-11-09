@@ -223,6 +223,8 @@ def match(text: str) -> list[Intent] | None:
         return [Intent("stop_speaking")]
 
     if m := re.fullmatch(r"(?:cari|carikan|googling)(?: di google)?\s+(.+)", t):
+        if re.match(r"(?:di |dalam )?(?:dokumen|berkas|arsip|file)\b", m.group(1)):
+            return None  # pencarian dokumen pribadi → LLM + tool search_docs, bukan web
         return [Intent("web_search", {"query": m.group(1)})]
     if m := re.fullmatch(r"(?:tutup|quit|matikan aplikasi)\s+(.+)", t):
         return [
