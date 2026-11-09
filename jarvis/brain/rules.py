@@ -256,3 +256,21 @@ def parse_yes_no(text: str) -> bool | None:
     if toks & YES:
         return True
     return None
+
+
+_DEVICE_VERBS = {
+    "nyalakan": "on", "hidupkan": "on", "nyalain": "on", "matikan": "off", "matiin": "off",
+}  # fmt: skip
+
+
+def match_devices(text: str, names: list[str]) -> list[Intent] | None:
+    """'nyalakan lampu ruang tamu' → device_control, hanya jika nama cocok perangkat terdaftar."""
+    t = normalize(text)
+    for name in sorted(names, key=len, reverse=True):
+        n = " ".join(name.lower().split())
+        for verb, action in _DEVICE_VERBS.items():
+            if re.fullmatch(rf"{verb} {re.escape(n)}", t):
+                return [Intent("device_control", {"name": name, "action": action})]
+        if re.fullmatch(rf"(?:apakah |apa )?{re.escape(n)} (?:sedang )?(?:menyala|nyala|mati)", t):
+            return [Intent("device_state", {"name": name})]
+    return None

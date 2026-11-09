@@ -121,7 +121,7 @@ tts:
 # TOOLS & KEAMANAN
 # ─────────────────────────────────────────────
 tools:
-  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online"]
+  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome"]
   confirm_risk_level: "high"          # low | medium | high — level minimal yang butuh konfirmasi
   confirm_timeout_s: 6
   apps:
@@ -167,6 +167,23 @@ online:
   google_token: null                  # null = <folder data>/google_token.json (izin 0600)
   calendar_id: "primary"
   max_items: 5
+
+# ─────────────────────────────────────────────
+# SMART HOME (opsional, default mati)
+# ─────────────────────────────────────────────
+smarthome:
+  enabled: false
+  home_assistant:
+    url: "http://homeassistant.local:8123"
+    token_file: null                  # file berisi long-lived token (atau env JARVIS_HA_TOKEN)
+  mqtt:
+    host: null                        # mis. "192.168.1.10"
+    port: 1883
+    username: null
+    password_file: null               # atau env JARVIS_MQTT_PASSWORD
+  devices:                            # HANYA perangkat di sini yang bisa dikontrol
+    "lampu ruang tamu": { type: ha, entity: "light.ruang_tamu" }
+    "kipas":            { type: mqtt, topic: "home/kipas/set", on: "ON", off: "OFF" }
 
 # ─────────────────────────────────────────────
 # PLATFORM KHUSUS

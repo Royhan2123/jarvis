@@ -50,6 +50,11 @@ TOOL_HINTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "add_calendar_event",
     ),
     ("email", "gmail", "surel", "surat"): ("unread_emails",),
+    ("lampu", "kipas", "saklar", "perangkat", "nyalakan", "hidupkan", "matikan"): (
+        "device_control",
+        "device_state",
+        "list_devices",
+    ),
     ("dokumen", "berkas", "arsip", "kontrak", "pdf"): ("search_docs", "index_docs"),
     ("jam", "tanggal", "hari", "baterai", "batre", "ram", "cpu", "memori"): (
         "get_time",
@@ -103,6 +108,9 @@ class Router:
 
     def plan(self, text: str) -> Plan:
         r, llm = self.cfg.router, self.cfg.llm
+        sh = self.cfg.smarthome
+        if sh.enabled and (intents := rules.match_devices(text, list(sh.devices))):
+            return Plan(intents=intents, tier="rule")
         if r.enable_rules and (intents := rules.match(text)):
             return Plan(intents=intents, tier="rule")
         if r.enable_smart_model and self.is_complex(text):

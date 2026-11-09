@@ -152,6 +152,35 @@ class OnlineConfig(_Section):
     max_items: int = 5
 
 
+class DeviceConfig(_Section):
+    type: Literal["ha", "mqtt"] = "ha"
+    entity: str | None = None  # type ha: mis. "light.ruang_tamu" (domain: light/switch/fan/scene)
+    topic: str | None = None  # type mqtt: topik perintah
+    on: str = "ON"
+    off: str = "OFF"
+
+
+class HomeAssistantConfig(_Section):
+    url: str = "http://homeassistant.local:8123"
+    token_file: str | None = None  # file berisi long-lived token; atau env JARVIS_HA_TOKEN
+
+
+class MQTTConfig(_Section):
+    host: str | None = None
+    port: int = 1883
+    username: str | None = None
+    password_file: str | None = None  # file berisi password; atau env JARVIS_MQTT_PASSWORD
+
+
+class SmartHomeConfig(_Section):
+    """Smart home. Default mati. Perangkat HANYA yang terdaftar di `devices` (nama → target)."""
+
+    enabled: bool = False
+    home_assistant: HomeAssistantConfig = HomeAssistantConfig()
+    mqtt: MQTTConfig = MQTTConfig()
+    devices: dict[str, DeviceConfig] = {}
+
+
 class AppsConfig(_Section):
     allowed: list[str] = []  # kosong = semua app boleh
     aliases: dict[str, str] = {
@@ -171,7 +200,8 @@ class PluginsConfig(_Section):
 
 class ToolsConfig(_Section):
     enabled: list[str] = [
-        "system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online"
+        "system", "apps", "media", "web", "screen", "keyboard",
+        "notes", "docs", "online", "smarthome",
     ]  # fmt: skip
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
     confirm_timeout_s: int = 6
@@ -212,6 +242,7 @@ class Config(_Section):
     memory: MemoryConfig = MemoryConfig()
     rag: RagConfig = RagConfig()
     online: OnlineConfig = OnlineConfig()
+    smarthome: SmartHomeConfig = SmartHomeConfig()
     platform: PlatformConfig = PlatformConfig()
     ui: UIConfig = UIConfig()
 

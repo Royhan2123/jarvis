@@ -216,3 +216,21 @@ jalan selama `general.offline_only: true`. Untuk memakai:
 4. Selama aplikasi berstatus *Testing*, token Google kedaluwarsa tiap ±7 hari → ulangi `google-login`.
 5. Tanpa pustaka `google-auth` (butuh `cryptography`, tidak ada paket siap pakai untuk Mac Intel);
    OAuth loopback + PKCE dan REST ditulis dengan pustaka standar (`jarvis/online/google.py`).
+
+---
+
+## 8. Smart home (Fase 5, opsional)
+
+Default mati (`smarthome.enabled: false`). Tool: `device_control` (risk medium), `device_state`,
+`list_devices`. Suara: "nyalakan/matikan <nama perangkat>", "apakah <nama> menyala".
+
+- **Hanya perangkat di `smarthome.devices`** yang bisa disentuh; nama diucapkan = kunci di config.
+- **Home Assistant:** REST API dengan long-lived token (buat di profil HA; simpan di file, isi
+  `token_file`, atau env `JARVIS_HA_TOKEN`). Domain dibatasi ke `light`, `switch`, `fan`, `scene`:
+  kunci pintu, alarm, dan garasi sengaja ditolak.
+- **MQTT:** publish `on`/`off` ke topik perangkat (paho-mqtt). Status tidak tersedia untuk MQTT.
+- **Jaringan:** saat `general.offline_only: true`, host harus alamat lokal (localhost, 10.x/172.16.x/
+  192.168.x, link-local, atau `.local`). Alamat internet publik baru diizinkan jika
+  `offline_only: false`. Ini pelonggaran terbatas dari aturan "tidak ada request keluar" untuk LAN
+  rumah; perubahan aturan ini sebaiknya dicatat juga di CLAUDE.md.
+- Token/password tidak boleh ditulis di `config.yaml`.
