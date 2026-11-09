@@ -115,8 +115,22 @@ class TTSVoices(_Section):
     edge: VoicePair = VoicePair(male="id-ID-ArdiNeural", female="id-ID-GadisNeural")
 
 
+class FishConfig(_Section):
+    """Fish Audio (ONLINE). Setiap kalimat yang diucapkan dikirim ke server Fish Audio."""
+
+    voice_id: str | None = None  # reference_id dari https://fish.audio/app/discovery
+    model: str = (
+        "s2.1-pro-free"  # s2.1-pro-free = gratis (batas pemakaian wajar); s2.1-pro = berbayar
+    )
+    api_key_file: str | None = None  # file berisi API key; atau env FISH_API_KEY
+    sample_rate: int = 24000
+    speed: float = 1.0
+    timeout_s: float = 15.0
+
+
 class TTSConfig(_Section):
-    engine: Literal["piper", "system", "edge"] = "piper"
+    engine: Literal["piper", "system", "edge", "fish"] = "piper"
+    fish: FishConfig = FishConfig()
     gender: Literal["male", "female"] = "male"
     voices: TTSVoices = TTSVoices()
     length_scale: float = 1.0

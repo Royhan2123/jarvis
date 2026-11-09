@@ -25,6 +25,23 @@ def resolve_voice(name: str) -> Path:
     return voices_dir() / f"{name}.onnx"
 
 
+def play_int16(audio: np.ndarray, rate: int, device, stop: threading.Event) -> None:  # noqa: ANN001
+    """Putar audio mono int16 pada sample rate native perangkat, buffer besar (300 ms)."""
+    out_rate = int(sd.query_devices(device, "output")["default_samplerate"])
+    if out_rate != rate:
+        g = np.gcd(out_rate, rate)
+        audio = resample_poly(audio.astype(np.float32), out_rate // g, rate // g)
+        audio = np.clip(audio, -32768, 32767).astype(np.int16)
+    with sd.OutputStream(
+        samplerate=out_rate, channels=1, dtype="int16", device=device, latency=0.3
+    ) as stream:
+        block = out_rate // 10
+        for i in range(0, len(audio), block):
+            if stop.is_set():
+                break
+            stream.write(audio[i : i + block].reshape(-1, 1))
+
+
 class PiperTTS:
     def __init__(self, cfg: Config) -> None:
         from piper import PiperVoice, SynthesisConfig
@@ -55,21 +72,8 @@ class PiperTTS:
         audio, rate = self.synthesize(text)
         if not audio.size:
             return
-        dev = sd.query_devices(self.device, "output")
-        out_rate = int(dev["default_samplerate"])
-        if out_rate != rate:
-            g = np.gcd(out_rate, rate)
-            audio = resample_poly(audio.astype(np.float32), out_rate // g, rate // g)
-            audio = np.clip(audio, -32768, 32767).astype(np.int16)
         self._stop.clear()
-        with sd.OutputStream(
-            samplerate=out_rate, channels=1, dtype="int16", device=self.device, latency=0.3
-        ) as stream:
-            block = out_rate // 10
-            for i in range(0, len(audio), block):
-                if self._stop.is_set():
-                    break
-                stream.write(audio[i : i + block].reshape(-1, 1))
+        play_int16(audio, rate, self.device, self._stop)
 
     def stop(self) -> None:
         self._stop.set()

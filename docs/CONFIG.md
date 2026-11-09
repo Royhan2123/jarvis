@@ -99,7 +99,7 @@ router:
 # TEXT-TO-SPEECH
 # ─────────────────────────────────────────────
 tts:
-  engine: "piper"                     # piper | system | edge (online)
+  engine: "piper"                     # piper | system | edge (belum ada) | fish (online)
   gender: "male"                      # male | female — bisa diganti lewat suara: "ganti suara cewek"
   voices:
     piper:                            # offline; isi dengan file .onnx suara Piper
@@ -112,6 +112,13 @@ tts:
     edge:                             # ONLINE, paling natural; hanya aktif jika general.offline_only = false
       male: "id-ID-ArdiNeural"
       female: "id-ID-GadisNeural"
+  fish:                               # engine: "fish" — ONLINE (Fish Audio), butuh general.offline_only: false
+    voice_id: null                    # reference_id dari https://fish.audio/app/discovery
+    model: "s2.1-pro-free"            # gratis (batas wajar); "s2.1-pro" berbayar ($15 per juta byte teks)
+    api_key_file: null                # file berisi API key (atau env FISH_API_KEY); JANGAN tulis key di config
+    sample_rate: 24000
+    speed: 1.0
+    timeout_s: 15
   length_scale: 1.0                   # < 1.0 = lebih cepat, > 1.0 = lebih lambat
   noise_scale: 0.667
   volume: 1.0
