@@ -95,7 +95,7 @@
 ## Fase 5 — v2.0 (Bulan 3+)
 
 - [x] Plugin system (folder `plugins/`, auto-load tool baru)
-- [ ] Dashboard web lokal (FastAPI): log, config, plugin
+- [x] Dashboard web lokal (FastAPI): log, config, plugin
 - [ ] RAG dokumen pribadi (embedding lokal + vector DB)
 - [ ] Integrasi opsional online: Google Calendar, Gmail, cuaca
 - [ ] Smart home: Home Assistant / MQTT

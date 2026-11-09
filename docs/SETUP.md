@@ -190,6 +190,7 @@ uv run python -m jarvis
 python -m jarvis                     # mode normal (tray + suara)
 python -m jarvis --listen            # pipeline suara penuh (wake word "Hey Jarvis")
 python -m jarvis --text              # mode teks di terminal (tanpa mic) — untuk debugging
+# Dashboard: set ui.dashboard.enabled: true, lalu buka URL ber-token dari log (127.0.0.1:8765)
 python -m jarvis --no-tray           # tanpa ikon tray (server / headless)
 python -m jarvis --config my.yaml    # pakai config lain
 python -m jarvis --log-level DEBUG   # log detail (latensi tiap tahap)

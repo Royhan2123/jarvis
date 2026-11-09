@@ -151,8 +151,14 @@ class PlatformConfig(_Section):
     linux: LinuxPlatformConfig = LinuxPlatformConfig()
 
 
+class DashboardConfig(_Section):
+    enabled: bool = False
+    port: int = 8765  # selalu hanya di 127.0.0.1
+
+
 class UIConfig(_Section):
     tray: bool = True
+    dashboard: DashboardConfig = DashboardConfig()
 
 
 class Config(_Section):

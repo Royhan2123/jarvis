@@ -156,6 +156,9 @@ platform:
 # ─────────────────────────────────────────────
 ui:
   tray: true
+  dashboard:
+    enabled: false                    # dashboard web lokal (log, config, tool & plugin)
+    port: 8765                        # hanya di 127.0.0.1; URL + token tampil di log saat start
   show_transcript_notification: true  # tampilkan teks hasil STT
 ```
 

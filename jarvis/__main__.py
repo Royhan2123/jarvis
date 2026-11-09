@@ -88,6 +88,10 @@ def run_listen(cfg: Config, tray: bool, config_path: str) -> None:
 
     from jarvis.app import Jarvis
 
+    if cfg.ui.dashboard.enabled:
+        from jarvis.ui.dashboard import start_dashboard
+
+        start_dashboard(cfg, config_path)
     if tray:
         try:
             from jarvis.app import start_in_thread

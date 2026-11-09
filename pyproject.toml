@@ -26,6 +26,8 @@ dependencies = [
   "pycaw>=20240210 ; sys_platform == 'win32'",
   "comtypes>=1.2 ; sys_platform == 'win32'",
   "win11toast>=0.34 ; sys_platform == 'win32'",
+  "fastapi>=0.162.2",
+  "uvicorn>=0.30",
 ]
 
 [project.optional-dependencies]
