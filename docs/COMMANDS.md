@@ -265,7 +265,7 @@ Piper sebagai cadangan.
 1. Buat API key di https://fish.audio/app/api-keys (tampil sekali). Simpan di file, bukan di config/chat:
    `read -s K && printf '%s' "$K" > ~/.jarvis-fish-key && chmod 600 ~/.jarvis-fish-key`
 2. Pilih suara di https://fish.audio/app/discovery, salin ID-nya (bagian akhir URL `fish.audio/m/<id>`).
-3. Isi `tts.engine: fish`, `tts.fish.voice_id`, `tts.fish.api_key_file: ~/.jarvis-fish-key`.
+3. Isi `tts.engine: fish`, `tts.fish.voice_id` (pria, default), `tts.fish.female_voice_id` (wanita, dipakai bila `tts.gender: female`), `tts.fish.api_key_file: ~/.jarvis-fish-key`.
 4. Dokumentasi Fish: bahasa Indonesia **belum dikonfirmasi** didukung; uji kualitasnya dulu. Model gratis
    `s2.1-pro-free` tanpa jaminan latensi; model berbayar perlu saldo (kalau kosong → HTTP 402 → Piper).
 

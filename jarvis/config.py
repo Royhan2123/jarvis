@@ -118,7 +118,10 @@ class TTSVoices(_Section):
 class FishConfig(_Section):
     """Fish Audio (ONLINE). Setiap kalimat yang diucapkan dikirim ke server Fish Audio."""
 
-    voice_id: str | None = None  # reference_id dari https://fish.audio/app/discovery
+    voice_id: str | None = (
+        None  # suara pria (tts.gender: male); reference_id dari fish.audio/app/discovery
+    )
+    female_voice_id: str | None = None  # suara wanita (tts.gender: female); kosong = pakai voice_id
     model: str = (
         "s2.1-pro-free"  # s2.1-pro-free = gratis (batas pemakaian wajar); s2.1-pro = berbayar
     )

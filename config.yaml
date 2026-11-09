@@ -79,6 +79,10 @@ tts:
   noise_scale: 0.667
   volume: 1.0
   max_spoken_chars: 400
+  fish:                       # dipakai bila engine: "fish" (ONLINE, butuh offline_only: false)
+    voice_id: "248cf6d6ff744c2ba09d379de5c118ae"          # pria: Toren
+    female_voice_id: "6ef10a3839594c6bbf20704470c84086"   # wanita: Anindya
+    api_key_file: "~/.jarvis-fish-key"
 
 tools:
   enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent"]

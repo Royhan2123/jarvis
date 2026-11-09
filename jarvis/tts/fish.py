@@ -58,7 +58,10 @@ class FishTTS:
         fish = cfg.tts.fish
         if cfg.general.offline_only:
             raise FishError("Fish Audio butuh internet: set general.offline_only: false")
-        if not fish.voice_id:
+        self.voice_id = (
+            fish.female_voice_id if cfg.tts.gender == "female" else None
+        ) or fish.voice_id
+        if not self.voice_id:
             raise FishError("tts.fish.voice_id belum diisi (ambil dari fish.audio/app/discovery)")
         self.key = api_key(cfg)
         if not self.key:
@@ -72,7 +75,7 @@ class FishTTS:
     def synthesize(self, text: str) -> tuple[np.ndarray, int]:
         body = {
             "text": text,
-            "reference_id": self.fish.voice_id,
+            "reference_id": self.voice_id,
             "format": "wav",
             "sample_rate": self.fish.sample_rate,
             "latency": "balanced",

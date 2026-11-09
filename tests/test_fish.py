@@ -126,3 +126,15 @@ def test_build_tts_falls_back_when_offline_only(monkeypatch) -> None:
 def test_parse_wav_rejects_garbage() -> None:
     with pytest.raises(fish.FishError):
         fish.parse_wav(b'{"status":"error"}')
+
+
+def test_voice_follows_gender_and_falls_back_to_male(server, cfg) -> None:
+    cfg.tts.fish.female_voice_id = "cewek99"
+    fish.FishTTS(cfg).synthesize("a")
+    assert SEEN[-1]["body"]["reference_id"] == "abc123"  # default pria
+    cfg.tts.gender = "female"
+    fish.FishTTS(cfg).synthesize("b")
+    assert SEEN[-1]["body"]["reference_id"] == "cewek99"
+    cfg.tts.fish.female_voice_id = None
+    fish.FishTTS(cfg).synthesize("c")
+    assert SEEN[-1]["body"]["reference_id"] == "abc123"  # belum diisi → pakai suara pria

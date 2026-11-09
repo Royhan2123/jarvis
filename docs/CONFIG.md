@@ -113,7 +113,8 @@ tts:
       male: "id-ID-ArdiNeural"
       female: "id-ID-GadisNeural"
   fish:                               # engine: "fish" — ONLINE (Fish Audio), butuh general.offline_only: false
-    voice_id: null                    # reference_id dari https://fish.audio/app/discovery
+    voice_id: null                    # suara PRIA (tts.gender: male), reference_id dari fish.audio/app/discovery
+    female_voice_id: null             # suara WANITA (tts.gender: female); kosong = pakai voice_id
     model: "s2.1-pro-free"            # gratis (batas wajar); "s2.1-pro" berbayar ($15 per juta byte teks)
     api_key_file: null                # file berisi API key (atau env FISH_API_KEY); JANGAN tulis key di config
     sample_rate: 24000
