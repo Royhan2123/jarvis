@@ -13,6 +13,23 @@
 
 ---
 
+## Status Definition of Done (per 2026-11-09)
+
+Jujur per fase: ✅ terbukti di mesin dev (Mac Intel i9) · 🟡 sebagian · ❌ belum.
+
+| Fase | Definition of Done | Status | Yang masih kurang |
+|---|---|---|---|
+| 0 | Ngobrol dengan Qwen 4B lewat terminal di 3 OS | 🟡 Mac ✅ | Windows/Linux belum diuji; CI GitHub belum pernah jalan (repo belum di-push) |
+| 1 | Panggil → jawab dengan suara di 3 OS, ≤ 5 s | 🟡 Mac ✅ (±4,5 s sederhana; 8–13 s jika CPU berebut) | Windows/Linux; kata panggil sekarang "Hello" (bukan "Hey Jarvis") |
+| 2 | Semua tool P0 jalan di Mac, Windows, Linux | 🟡 Mac ✅ | Windows/Linux (X11 + Wayland) belum diuji, checklist di COMMANDS.md §4 |
+| 3 | MVP: router, konfirmasi, tray, installer | 🟡 Mac ✅ (`Jarvis.app` ±385 MB) | Build 3 OS lewat `release.yml` belum jalan; belum diuji 3 pengguna nyata |
+| 4 | Baca layar, ketik, memori, pengingat, interupsi | 🟡 memori, catatan, pengingat, streaming, interupsi ✅ | `read_screen` & `type_text` butuh izin macOS; benchmark hardware minimum |
+| 5 | Plugin, dashboard, RAG, online, smart home, wake word kustom | 🟡 kode + tes ✅ | Calendar/Gmail (butuh akun Google), Home Assistant/MQTT (butuh perangkat), RAG lewat mic, bahasa daerah (hanya dikaji) |
+
+Rilis (v0.1, v1.0, v2.0) belum dibuat: tidak ada push atau tag ke remote tanpa izin.
+
+---
+
 ## Fase 0 — Fondasi (Minggu 1)
 
 - [x] Init repo, `pyproject.toml`, `uv`, `ruff`, `pytest`
@@ -20,7 +37,7 @@
 - [x] `config.py` + `config.yaml` dengan validasi pydantic
 - [x] Wrapper Ollama (`brain/llm.py`) + system prompt
 - [x] **Mode teks** (`python -m jarvis --text`): ketik pertanyaan → jawaban LLM di terminal
-- [x] GitHub Actions: lint + test di `macos-latest`, `windows-latest`, `ubuntu-latest`
+- [ ] GitHub Actions: lint + test di `macos-latest`, `windows-latest`, `ubuntu-latest` (workflow ditulis, belum pernah jalan di GitHub karena repo belum di-push)
 
 **Definition of Done:** bisa ngobrol dengan Qwen 4B lewat terminal di 3 OS.
 
@@ -79,14 +96,14 @@
 - [ ] `type_text` (termasuk fallback Wayland & clipboard)
 - [x] Memori SQLite: fakta pengguna + riwayat percakapan
 - [x] Catatan & pengingat (scheduler internal)
-- [ ] **Interupsi**: wake word / "berhenti" saat Jarvis bicara
+- [x] **Interupsi**: wake word / "berhenti" saat Jarvis bicara (terbukti di Mac: ucapan "Hello" memotong jawaban; tanpa peredam gema, segmen panjang diabaikan)
 - [x] Streaming: TTS mulai bicara saat kalimat pertama LLM selesai (latensi terasa jauh lebih cepat)
 - [ ] Benchmark & tuning latensi di hardware minimum
 
-> Status: kode + 127 unit test selesai. **Belum terverifikasi sungguhan:** `read_screen` (perlu izin Screen
-> Recording; tanpa izin macOS hanya memberi wallpaper; vision 4B ±56 s di CPU), `type_text` (perlu izin
-> Accessibility; belum diuji mengetik), interupsi (tanpa peredam gema, segmen panjang diabaikan), dan
-> benchmark di hardware minimum (hanya ada Mac i9).
+> Status: kode + unit test selesai; interupsi terbukti live. **Belum terverifikasi sungguhan:** `read_screen`
+> (perlu izin Screen Recording; tanpa izin macOS hanya memberi wallpaper; vision 4B ±56 s di CPU),
+> `type_text` (perlu izin Accessibility; belum diuji mengetik), dan benchmark di hardware minimum
+> (hanya ada Mac i9).
 
 **🚀 Rilis v1.0**
 
