@@ -52,6 +52,50 @@ def download_models(config: str) -> None:
     print("✅ Model siap")
 
 
+def test_wake(config: str, phrase: str | None, tries: int) -> None:
+    """Ucapkan frasa pemanggil beberapa kali; tampilkan apa yang didengar Whisper & cocok/tidak."""
+    from jarvis.audio.stream import MicStream
+    from jarvis.audio.vad import VAD, record_utterance
+    from jarvis.audio.wakeword import match_any
+    from jarvis.config import VADConfig
+    from jarvis.stt.whisper import WhisperSTT
+
+    cfg = load_config(config)
+    phrases = [phrase] if phrase else cfg.wakeword.all_phrases
+    stt = WhisperSTT(cfg.stt.model_copy(update={"model": cfg.stt.wake_model, "beam_size": 1}))
+    mic, vad = MicStream(cfg.audio), VAD(cfg.vad)
+    short = VADConfig(
+        threshold=cfg.vad.threshold, silence_ms=400, max_record_s=3, listen_timeout_s=6
+    )
+    mic.start()
+    hits = 0
+    try:
+        for i in range(1, tries + 1):
+            print(f"[{i}/{tries}] Ucapkan: {' / '.join(phrases)} ...")
+            mic.flush()
+            vad.reset()
+            seg = record_utterance(
+                iter(mic.read, object()),
+                vad.is_speech,
+                short,
+                cfg.audio.sample_rate,
+                cfg.audio.chunk_ms,
+            )
+            if seg is None:
+                print("   (tidak ada suara)")
+                continue
+            text = stt.transcribe(seg, fast=True)
+            ok = match_any(text, phrases) is not None
+            hits += ok
+            print(f"   terdengar: '{text}' → {'COCOK ✅' if ok else 'tidak cocok ❌'}")
+    finally:
+        mic.stop()
+    print(
+        f"\nBerhasil {hits}/{tries}. Di bawah 4/5? Coba frasa 2 kata atau "
+        "tambah variasi di wakeword.phrases."
+    )
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="jarvis.setup")
     ap.add_argument("--config", default="config.yaml")
@@ -61,12 +105,17 @@ def main() -> None:
     sub.add_parser("download-models")
     v = sub.add_parser("download-voice")
     v.add_argument("name", nargs="?", default="id_ID-news_tts-medium")
+    w = sub.add_parser("test-wake")
+    w.add_argument("phrase", nargs="?", help="frasa yang diuji (default: dari config)")
+    w.add_argument("-n", "--tries", type=int, default=5)
     args = ap.parse_args()
 
     if args.cmd == "list-mics":
         list_mics()
     elif args.cmd == "download-voice":
         download_voice(args.name)
+    elif args.cmd == "test-wake":
+        test_wake(args.config, args.phrase, args.tries)
     elif args.cmd == "download-models":
         download_models(args.config)
     else:

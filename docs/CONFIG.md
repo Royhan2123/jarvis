@@ -35,6 +35,7 @@ audio:
 wakeword:
   engine: "phrase"            # phrase = kenali frasa lewat Whisper (bebas kata) | openwakeword
   phrase: "hello"         # frasa pemanggil (engine: phrase)
+  phrases: []                 # nama panggilan tambahan, mis. ["hey teman", "halo bro"]; uji: `setup test-wake`
   model: "hey_jarvis"
   threshold: 0.5              # 0.0–1.0; naikkan jika sering terpanggil sendiri
   cooldown_s: 2.0             # jeda minimal antar aktivasi

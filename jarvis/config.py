@@ -33,10 +33,17 @@ class AudioConfig(_Section):
 class WakewordConfig(_Section):
     engine: Literal["phrase", "openwakeword"] = "phrase"
     phrase: str = "hello"
+    phrases: list[str] = []  # nama panggilan tambahan, mis. ["hey teman", "halo jarvis"]
     model: str = "hey_jarvis"
     threshold: float = 0.5
     cooldown_s: float = 2.0
     inference_framework: Literal["onnx", "tflite"] = "onnx"
+
+    @property
+    def all_phrases(self) -> list[str]:
+        """Frasa utama + tambahan, tanpa duplikat; yang lebih panjang dicoba lebih dulu."""
+        seen = dict.fromkeys(p.strip() for p in [self.phrase, *self.phrases] if p.strip())
+        return sorted(seen, key=lambda p: -len(p.split()))
 
 
 class VADConfig(_Section):

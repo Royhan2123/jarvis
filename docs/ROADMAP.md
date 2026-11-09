@@ -99,7 +99,7 @@
 - [ ] RAG dokumen pribadi (embedding lokal + vector DB)
 - [ ] Integrasi opsional online: Google Calendar, Gmail, cuaca
 - [ ] Smart home: Home Assistant / MQTT
-- [ ] Custom wake word (latih nama panggilan sendiri)
+- [x] Custom wake word (nama panggilan sendiri lewat `wakeword.phrases`, uji dengan `setup test-wake`)
 - [ ] Multi-bahasa daerah (Jawa/Sunda) — eksperimen fine-tune
 
 ---

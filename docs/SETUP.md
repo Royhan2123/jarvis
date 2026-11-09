@@ -195,6 +195,7 @@ python -m jarvis --no-tray           # tanpa ikon tray (server / headless)
 python -m jarvis --config my.yaml    # pakai config lain
 python -m jarvis --log-level DEBUG   # log detail (latensi tiap tahap)
 python -m jarvis.setup check         # cek semua dependensi
+python -m jarvis.setup test-wake     # uji frasa pemanggil dengan suaramu (5 percobaan)
 python -m jarvis.setup list-mics     # lihat daftar mikrofon
 python -m jarvis.setup download-models  # unduh model wake word & Whisper (sekali, butuh internet)
 ```

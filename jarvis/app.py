@@ -14,7 +14,7 @@ from loguru import logger
 from jarvis.audio.sounds import play_confirm, play_done, play_error, play_ting
 from jarvis.audio.stream import MicStream
 from jarvis.audio.vad import VAD, record_utterance
-from jarvis.audio.wakeword import WakeWord, match_phrase
+from jarvis.audio.wakeword import WakeWord, match_any
 from jarvis.brain import rules
 from jarvis.brain.actions import ActionRunner
 from jarvis.brain.llm import LLM
@@ -122,7 +122,7 @@ class Jarvis:
         self._monitor = None
 
     def _is_interrupt(self, text: str) -> bool:
-        if match_phrase(text, self.cfg.wakeword.phrase) is not None:
+        if match_any(text, self.cfg.wakeword.all_phrases) is not None:
             return True
         intents = rules.match(text) or []
         return any(i.tool == "stop_speaking" for i in intents)
@@ -302,7 +302,7 @@ class Jarvis:
             return None
         t0 = time.perf_counter()
         text = self.wake_stt.transcribe(seg, fast=True)
-        rest = match_phrase(text, c.wakeword.phrase)
+        rest = match_any(text, c.wakeword.all_phrases)
         logger.debug(
             f"[wake] '{text}' → {'COCOK' if rest is not None else 'abaikan'} "
             f"({time.perf_counter() - t0:.2f}s)"
@@ -345,7 +345,7 @@ class Jarvis:
         self._running = True
         threading.Thread(target=self._reminder_loop, daemon=True, name="reminders").start()
         self.mic.start()
-        name = self.cfg.wakeword.phrase if phrase_mode else self.cfg.wakeword.model
+        name = " / ".join(self.cfg.wakeword.all_phrases) if phrase_mode else self.cfg.wakeword.model
         print(f'🎙️  Katakan "{name}" (Ctrl+C untuk berhenti)')
         try:
             while self._running:

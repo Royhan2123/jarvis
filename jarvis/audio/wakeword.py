@@ -74,3 +74,11 @@ def match_phrase(text: str, phrase: str) -> str | None:
         if SequenceMatcher(None, "".join(words[:k]), want).ratio() >= 0.85:
             return rest(k)
     return None
+
+
+def match_any(text: str, phrases: list[str]) -> str | None:
+    """Coba semua frasa pemanggil; kembalikan sisa ucapan dari frasa pertama yang cocok."""
+    for phrase in phrases:
+        if (rest := match_phrase(text, phrase)) is not None:
+            return rest
+    return None

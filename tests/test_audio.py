@@ -125,3 +125,14 @@ def test_interrupt_detection() -> None:
         assert j._is_interrupt(said), said
     for said in ["Ibu kota Jepang adalah Tokyo", "dan itu sangat menarik sekali", "terima kasih"]:
         assert not j._is_interrupt(said), said
+
+
+def test_match_any_and_all_phrases() -> None:
+    from jarvis.audio.wakeword import match_any
+    from jarvis.config import WakewordConfig
+
+    w = WakewordConfig(phrase="hello", phrases=["hey teman", " ", "hello"])
+    assert w.all_phrases == ["hey teman", "hello"]  # tanpa duplikat/kosong, frasa panjang dulu
+    assert match_any("Hey teman, jam berapa", w.all_phrases) == "jam berapa"
+    assert match_any("hello volume 30", w.all_phrases) == "volume 30"
+    assert match_any("cuaca cerah", w.all_phrases) is None
