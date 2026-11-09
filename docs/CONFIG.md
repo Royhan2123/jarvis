@@ -205,6 +205,16 @@ workspace:
   context_chars: 3000                 # potongan file yang dikirim ke LLM
   context_num_ctx: 4096               # konteks LLM saat ada file (lebih lambat dari 2048)
 
+agent:                                # agen kerja: tugas bertahap + shell terjaga (butuh workspace.folders)
+  enabled: false                      # WAJIB true untuk memakai "kerjakan ..." / python -m jarvis.agent
+  model: ""                           # kosong = llm.smart_model (9B; 4B kurang andal memanggil tool)
+  max_steps: 12                       # batas langkah per tugas
+  num_ctx: 8192
+  command_timeout_s: 60
+  max_output_chars: 4000
+  auto_read_only: true                # ls/cat/grep/git status... jalan tanpa tanya (tanpa pipa/redirect)
+  readonly_commands: ["ls", "pwd", "cat", "grep", "git status", "git diff", ...]
+
 messaging:
   contacts: {}                        # nama panggilan → nomor, mis. { budi: "62812xxxxxxx" }
 

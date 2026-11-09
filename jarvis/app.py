@@ -85,6 +85,9 @@ class Jarvis:
         self.actions = ActionRunner(
             local={"stop_speaking": self._stop_speaking}, on_error=self._beep_error
         )
+        from jarvis.tools import agent as agent_tool
+
+        agent_tool.confirm_hook, agent_tool.say_hook = self._agent_confirm, self._say
         self._set(State.IDLE)
 
     # ── util ──
@@ -387,8 +390,8 @@ class Jarvis:
             return result or None
         return reply.strip() or None
 
-    def _confirm_dialog(self) -> None:
-        """Tanya ya/tidak untuk tool berisiko; diam/tidak jelas = batal (aman)."""
+    def _listen_yes_no(self) -> bool | None:
+        """Dengarkan jawaban ya/tidak; diam/tidak jelas = None (diperlakukan batal)."""
         self._set(State.CONFIRMING)
         if self.cfg.audio.sounds:
             play_confirm(self.cfg.audio.output_device)
@@ -403,7 +406,17 @@ class Jarvis:
         audio = self._record(vad_cfg)
         heard = self.stt.transcribe(audio) if audio is not None else ""
         logger.info(f"[konfirmasi] terdengar: '{heard}'")
-        self._say(self.actions.resolve(parse_yes_no(heard)))
+        return parse_yes_no(heard)
+
+    def _confirm_dialog(self) -> None:
+        """Tanya ya/tidak untuk tool berisiko; diam/tidak jelas = batal (aman)."""
+        self._say(self.actions.resolve(self._listen_yes_no()))
+
+    def _agent_confirm(self, what: str) -> bool:
+        """Konfirmasi satu langkah agen lewat suara; hanya 'ya' yang jelas yang mengizinkan."""
+        print(f"\n⚠️  Agen ingin {what}")
+        self._say(f"Saya ingin {what}. Boleh? Bilang ya atau tidak.")
+        return self._listen_yes_no() is True
 
     # ── wake word ──
     def _wait_wake_phrase(self) -> str | None:

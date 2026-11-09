@@ -139,7 +139,7 @@ lalu Jarvis memahami maksudnya, menjalankan aksi di komputer, dan menjawab denga
 | Kategori | Kebutuhan |
 |---|---|
 | **Privasi** | Tidak ada data suara/teks dikirim ke internet (kecuali fitur yang eksplisit online & diaktifkan pengguna) |
-| **Keamanan** | Tool hanya dari whitelist; perintah shell bebas **dilarang**; aksi destruktif wajib konfirmasi |
+| **Keamanan** | Tool hanya dari whitelist; perintah shell bebas **dilarang** (kecuali agen kerja opt-in dengan konfirmasi tiap perintah); aksi destruktif wajib konfirmasi |
 | **Kompatibilitas** | macOS 12+, Windows 10/11, Ubuntu 22.04+ / Fedora 39+ (X11 & Wayland) |
 | **Performa** | Bisa jalan di CPU saja; otomatis pakai GPU (CUDA/Metal) jika tersedia |
 | **Bahasa** | Bahasa Indonesia utama, Inggris sekunder, campuran (code-switching) didukung |

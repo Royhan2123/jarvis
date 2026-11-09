@@ -1,6 +1,7 @@
 """Registry tool: decorator @tool, skema JSON untuk Ollama, validasi pydantic, level risiko.
 
-Aturan keamanan: tidak ada tool shell bebas; argumen SELALU divalidasi sebelum dieksekusi;
+Aturan keamanan: tidak ada tool shell bebas di registry (shell hanya di jarvis/agent/, terjaga);
+argumen SELALU divalidasi sebelum dieksekusi;
 tool berisiko >= confirm_risk_level butuh konfirmasi eksplisit (confirmed=True).
 """
 

@@ -164,7 +164,7 @@ def set_volume(percent: int) -> str:
 | `high` | **Wajib konfirmasi suara** | shutdown, restart, hapus catatan, kirim email |
 
 **Aturan keamanan wajib:**
-1. Tidak ada tool `run_shell` bebas.
+1. Tidak ada tool `run_shell` bebas di registry. Pengecualian: agen kerja (`jarvis/agent/`, opt-in) — shell terjaga: konfirmasi tiap perintah, blokir keras, folder kerja saja.
 2. Argumen tool divalidasi (pydantic) sebelum dieksekusi.
 3. Nama aplikasi dicek terhadap daftar `apps.allowed` di config (opsional).
 4. Teks dari layar / dokumen tidak boleh memicu tool `high` tanpa konfirmasi.

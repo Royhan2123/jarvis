@@ -215,6 +215,26 @@ class WorkspaceConfig(_Section):
     context_num_ctx: int = 4096
 
 
+class AgentConfig(_Section):
+    """Agen kerja: Jarvis memikirkan tugas bertahap (baca/ubah file, jalankan perintah shell).
+
+    Butuh `workspace.folders`. Perintah shell & ubah file SELALU dikonfirmasi, kecuali perintah
+    baca-saja yang ada di `readonly_commands` (bila `auto_read_only`).
+    """
+
+    enabled: bool = False
+    model: str = ""  # kosong = llm.smart_model
+    max_steps: int = 12
+    num_ctx: int = 8192
+    command_timeout_s: int = 60
+    max_output_chars: int = 4000
+    auto_read_only: bool = True
+    readonly_commands: list[str] = [
+        "ls", "pwd", "cat", "head", "tail", "wc", "grep", "rg", "find", "tree", "which", "echo",
+        "git status", "git diff", "git log", "git branch", "git show",
+    ]  # fmt: skip
+
+
 class MessagingConfig(_Section):
     """Draf pesan WhatsApp: nama panggilan → nomor (format internasional, mis. 62812...)."""
 
@@ -241,7 +261,7 @@ class PluginsConfig(_Section):
 class ToolsConfig(_Section):
     enabled: list[str] = [
         "system", "apps", "media", "web", "screen", "keyboard",
-        "notes", "docs", "online", "smarthome", "workspace", "messaging",
+        "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent",
     ]  # fmt: skip
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
     confirm_timeout_s: int = 6
@@ -284,6 +304,7 @@ class Config(_Section):
     online: OnlineConfig = OnlineConfig()
     smarthome: SmartHomeConfig = SmartHomeConfig()
     workspace: WorkspaceConfig = WorkspaceConfig()
+    agent: AgentConfig = AgentConfig()
     messaging: MessagingConfig = MessagingConfig()
     platform: PlatformConfig = PlatformConfig()
     ui: UIConfig = UIConfig()

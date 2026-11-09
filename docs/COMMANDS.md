@@ -268,3 +268,33 @@ Piper sebagai cadangan.
 3. Isi `tts.engine: fish`, `tts.fish.voice_id`, `tts.fish.api_key_file: ~/.jarvis-fish-key`.
 4. Dokumentasi Fish: bahasa Indonesia **belum dikonfirmasi** didukung; uji kualitasnya dulu. Model gratis
    `s2.1-pro-free` tanpa jaminan latensi; model berbayar perlu saldo (kalau kosong → HTTP 402 → Piper).
+
+---
+
+## 11. Agen kerja (shell terjaga)
+
+Jarvis mengerjakan tugas bertahap di komputer, mirip Claude Code: baca/cari file, ubah, lalu jalankan
+tes. Aktifkan: `agent.enabled: true` + isi `workspace.folders`. Model: `llm.smart_model` (Qwen 9B).
+
+| Cara | Contoh |
+|---|---|
+| Suara / teks Jarvis | "Jarvis, kerjakan perbaiki bug diskon di toko.py lalu jalankan tesnya" (awalan `kerjakan` / `agen`) |
+| Terminal | `uv run python -m jarvis.agent "perbaiki toko.py dan jalankan pytest"` |
+| Dipakai app lain | `from jarvis.agent import Agent; Agent(cfg, confirm=fn, say=fn).run(tugas)` |
+
+Tool agen: `list_dir`, `read_file`, `search`, `edit_file`, `write_file`, `run_command`.
+
+**Pengaman (jangan dilonggarkan tanpa izin pemilik):**
+- Ubah/buat file dan semua perintah shell **dikonfirmasi** (suara "ya"; diam/tidak jelas = batal).
+  Pengecualian: `agent.readonly_commands` (ls, cat, grep, git status...) tanpa pipa/redirect/`$()`.
+- Daftar blokir keras yang **tak bisa ditembus konfirmasi**: `sudo`, `rm -rf` ke `/`/`~`/`*`, perintah
+  disk (`mkfs`, `dd of=`), `curl | sh`, shutdown/reboot, `crontab`/`launchctl`/`systemctl`, perintah
+  yang menyebut path rahasia (`.ssh`, `.env`, `id_rsa`, ...), perintah > 300 karakter.
+- `offline_only: true` → `curl`, `ssh`, `git push/pull`, `pip/npm install`, dll. diblokir.
+- Folder kerja perintah = `workspace.folders[0]`; path file harus di dalam folder kerja (symlink di-resolve).
+- Environment dibersihkan dari variabel `*KEY*`, `*TOKEN*`, `*SECRET*`, `*PASSWORD*`; timeout; keluaran dipotong.
+- Isi file & keluaran perintah dikirim ke model sebagai DATA; file yang diubah dicadangkan `.jarvis-bak`.
+- Batas `agent.max_steps` langkah per tugas.
+
+Batas jujur: Qwen 9B di CPU lambat (puluh detik per langkah) dan bisa salah memilih tool; selalu
+dengarkan kalimat konfirmasi sebelum bilang "ya".
