@@ -58,3 +58,6 @@ markers = ["slow: komponen audio/model besar, tidak wajib jalan di CI"]
 [tool.uv]
 # Mac Intel: onnxruntime terbaru tidak punya wheel x86_64 macOS; paksa uv memilih versi yang ada.
 required-environments = ["sys_platform == 'darwin' and platform_machine == 'x86_64'"]
+# openwakeword menarik tflite-runtime di Linux, tapi paket itu tak punya wheel Python 3.12 → `uv sync`
+# gagal di Linux. Jarvis hanya memakai inferensi ONNX, jadi tflite-runtime tidak pernah dipasang.
+override-dependencies = ["tflite-runtime ; sys_platform == 'never'"]

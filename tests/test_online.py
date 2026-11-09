@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 
 import pytest
@@ -107,6 +108,7 @@ def test_google_token_refresh_and_host_guard(on, tmp_path, monkeypatch) -> None:
     )
     assert google.access_token(on) == "baru"
     assert json.loads((tmp_path / "tok.json").read_text())["refresh_token"] == "r"
-    assert (tmp_path / "tok.json").stat().st_mode & 0o077 == 0  # hanya pemilik
+    if os.name != "nt":  # izin POSIX tidak berlaku di Windows
+        assert (tmp_path / "tok.json").stat().st_mode & 0o077 == 0  # hanya pemilik
     with pytest.raises(google.GoogleError, match="tidak diizinkan"):
         google.api(on, "GET", "https://evil.example.com/steal")
