@@ -142,6 +142,16 @@ class RagConfig(_Section):
     extensions: list[str] = [".txt", ".md", ".pdf"]
 
 
+class OnlineConfig(_Section):
+    """Fitur yang butuh internet. Semuanya hanya jalan jika general.offline_only = false."""
+
+    default_city: str = "Jakarta"
+    google_credentials: str | None = None  # file client_secret.json buatanmu (Google Cloud)
+    google_token: str | None = None  # null = <folder data>/google_token.json
+    calendar_id: str = "primary"
+    max_items: int = 5
+
+
 class AppsConfig(_Section):
     allowed: list[str] = []  # kosong = semua app boleh
     aliases: dict[str, str] = {
@@ -161,7 +171,7 @@ class PluginsConfig(_Section):
 
 class ToolsConfig(_Section):
     enabled: list[str] = [
-        "system", "apps", "media", "web", "screen", "keyboard", "notes", "docs"
+        "system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online"
     ]  # fmt: skip
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
     confirm_timeout_s: int = 6
@@ -201,6 +211,7 @@ class Config(_Section):
     tools: ToolsConfig = ToolsConfig()
     memory: MemoryConfig = MemoryConfig()
     rag: RagConfig = RagConfig()
+    online: OnlineConfig = OnlineConfig()
     platform: PlatformConfig = PlatformConfig()
     ui: UIConfig = UIConfig()
 

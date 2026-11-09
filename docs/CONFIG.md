@@ -121,7 +121,7 @@ tts:
 # TOOLS & KEAMANAN
 # ─────────────────────────────────────────────
 tools:
-  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs"]
+  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online"]
   confirm_risk_level: "high"          # low | medium | high — level minimal yang butuh konfirmasi
   confirm_timeout_s: 6
   apps:
@@ -157,6 +157,16 @@ rag:
   top_k: 3                            # jumlah kutipan yang dikirim ke LLM
   max_file_mb: 5
   extensions: [".txt", ".md", ".pdf"]
+
+# ─────────────────────────────────────────────
+# ONLINE (opsional; hanya jalan jika general.offline_only: false)
+# ─────────────────────────────────────────────
+online:
+  default_city: "Jakarta"             # cuaca (Open-Meteo, gratis tanpa API key)
+  google_credentials: null            # path client_secret.json buatanmu (Google Cloud, jenis Desktop)
+  google_token: null                  # null = <folder data>/google_token.json (izin 0600)
+  calendar_id: "primary"
+  max_items: 5
 
 # ─────────────────────────────────────────────
 # PLATFORM KHUSUS

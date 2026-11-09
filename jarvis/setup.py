@@ -168,6 +168,7 @@ def main() -> None:
     v = sub.add_parser("download-voice")
     v.add_argument("name", nargs="?", default="id_ID-news_tts-medium")
     sub.add_parser("index-docs")
+    sub.add_parser("google-login")
     t = sub.add_parser("test-stt")
     t.add_argument("-n", "--tries", type=int, default=3)
     t.add_argument("--save", help="folder untuk menyimpan rekaman .wav")
@@ -180,6 +181,13 @@ def main() -> None:
         list_mics()
     elif args.cmd == "download-voice":
         download_voice(args.name)
+    elif args.cmd == "google-login":
+        from jarvis.online import google
+
+        try:
+            print(google.login(load_config(args.config)))
+        except google.GoogleError as e:
+            sys.exit(str(e))
     elif args.cmd == "index-docs":
         from jarvis.brain.rag import DocIndex, ollama_embedder
 

@@ -44,6 +44,12 @@ TOOL_HINTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "set_reminder",
         "remember_fact",
     ),
+    ("cuaca", "hujan", "suhu", "panas", "dingin", "weather"): ("get_weather",),
+    ("jadwal", "kalender", "agenda", "acara", "rapat", "meeting"): (
+        "calendar_events",
+        "add_calendar_event",
+    ),
+    ("email", "gmail", "surel", "surat"): ("unread_emails",),
     ("dokumen", "berkas", "arsip", "kontrak", "pdf"): ("search_docs", "index_docs"),
     ("jam", "tanggal", "hari", "baterai", "batre", "ram", "cpu", "memori"): (
         "get_time",

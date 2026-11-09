@@ -198,3 +198,21 @@ Tool buatan sendiri tanpa mengubah kode Jarvis:
 Aturan: argumen divalidasi pydantic; risk `high` tetap butuh konfirmasi suara; nama yang bentrok
 dengan tool bawaan ditolak; plugin yang error dilewati (log WARNING). Plugin adalah kode dengan hak
 penuh pengguna: pasang hanya yang dipercaya, atau batasi lewat `tools.plugins.allowed`.
+
+---
+
+## 7. Integrasi online (Fase 5, opsional)
+
+Default mati: tool `get_weather`, `calendar_events`, `add_calendar_event`, `unread_emails` menolak
+jalan selama `general.offline_only: true`. Untuk memakai:
+
+1. **Cuaca:** set `general.offline_only: false`. Gratis, tanpa akun (Open-Meteo); hanya nama kota keluar.
+2. **Calendar & Gmail:** buat sendiri proyek di Google Cloud Console → aktifkan Google Calendar API
+   dan Gmail API → OAuth consent screen (External, tambahkan emailmu sebagai test user) → buat
+   OAuth client jenis *Desktop app* → unduh JSON, isi `online.google_credentials` dengan path-nya →
+   jalankan `uv run python -m jarvis.setup google-login` dan setujui di browser.
+3. Scope minimal: `calendar.events` dan `gmail.readonly`. Gmail hanya membaca pengirim + subjek.
+   Tidak ada tool kirim email atau hapus acara.
+4. Selama aplikasi berstatus *Testing*, token Google kedaluwarsa tiap ±7 hari → ulangi `google-login`.
+5. Tanpa pustaka `google-auth` (butuh `cryptography`, tidak ada paket siap pakai untuk Mac Intel);
+   OAuth loopback + PKCE dan REST ditulis dengan pustaka standar (`jarvis/online/google.py`).
