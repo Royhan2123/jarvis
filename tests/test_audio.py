@@ -72,9 +72,10 @@ def test_prompt_echo_filter() -> None:
 
     stt = object.__new__(WhisperSTT)
     stt.cfg = STTConfig()
-    assert stt._is_prompt_echo("Hello, buka, utup, volume, Spotify, Chrome, VS Code")
+    assert stt._is_prompt_echo("Hello. Mengapa langit berwarna biru? Tolong catat bahwa saya punya")
     assert not stt._is_prompt_echo("buka spotify dan putar musik santai")
     assert not stt._is_prompt_echo("hello")
+    assert not stt._is_prompt_echo("tolong catat beli kopi besok")
 
 
 def test_repetitive_hallucination_dropped() -> None:
@@ -136,3 +137,17 @@ def test_match_any_and_all_phrases() -> None:
     assert match_any("Hey teman, jam berapa", w.all_phrases) == "jam berapa"
     assert match_any("hello volume 30", w.all_phrases) == "volume 30"
     assert match_any("cuaca cerah", w.all_phrases) is None
+
+
+def test_stt_unclear_threshold() -> None:
+    from jarvis.config import STTConfig
+    from jarvis.stt.whisper import WhisperSTT
+
+    stt = WhisperSTT.__new__(WhisperSTT)  # tanpa memuat model
+    stt.cfg = STTConfig()
+    stt.last_logprob = -0.35
+    assert not stt.is_unclear()
+    stt.last_logprob = -0.99
+    assert stt.is_unclear()
+    stt.cfg = STTConfig(min_logprob=None)
+    assert not stt.is_unclear()

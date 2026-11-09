@@ -60,7 +60,9 @@ stt:
   compute_type: "int8"        # CPU: int8 | GPU: float16
   language: "id"              # null = deteksi otomatis (lebih lambat)
   beam_size: 1                # 1 = tercepat; 5 = lebih akurat
-  initial_prompt: "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"
+  initial_prompt: "Hello. Mengapa langit berwarna biru? Tolong catat bahwa saya punya janji dengan dokter. Aplikasi saya: Spotify, Chrome, dan VS Code."  # kalimat alami, bukan daftar kata
+  wake_prompt: "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"  # khusus deteksi panggilan
+  min_logprob: -0.85          # keyakinan Whisper di bawah ini → Jarvis minta diulang; null = mati
   cpu_threads: 6              # hasil bench Mac i9: 6 lebih cepat dari 8 (sisakan core untuk audio)
 
 # ─────────────────────────────────────────────

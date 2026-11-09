@@ -96,6 +96,68 @@ def test_wake(config: str, phrase: str | None, tries: int) -> None:
     )
 
 
+def test_stt(config: str, tries: int, save_dir: str | None) -> None:
+    """Rekam ucapanmu, bandingkan hasil transkripsi beberapa pengaturan pada audio yang SAMA."""
+    import time
+    import wave
+    from pathlib import Path
+
+    import numpy as np
+
+    from jarvis.audio.stream import MicStream
+    from jarvis.audio.vad import VAD, record_utterance
+    from jarvis.stt.whisper import WhisperSTT
+
+    cfg = load_config(config)
+    base = cfg.stt
+    variants = {
+        "small b1 (sekarang)": base,
+        "small b5": base.model_copy(update={"beam_size": 5}),
+        "small b5 tanpa prompt": base.model_copy(update={"beam_size": 5, "initial_prompt": ""}),
+        "medium b1": base.model_copy(update={"model": "medium"}),
+    }
+    engines: dict[str, WhisperSTT] = {}
+    for v in variants.values():
+        engines.setdefault(v.model, WhisperSTT(v))
+    mic, vad = MicStream(cfg.audio), VAD(cfg.vad)
+    mic.start()
+    out_dir = Path(save_dir) if save_dir else None
+    try:
+        for i in range(1, tries + 1):
+            print(f"\n[{i}/{tries}] Ucapkan satu kalimat (mis. 'apa ibu kota Jepang') ...")
+            mic.flush()
+            vad.reset()
+            seg = record_utterance(
+                (mic.read(timeout=0.5) for _ in iter(int, 1)),
+                vad.is_speech,
+                cfg.vad,
+                cfg.audio.sample_rate,
+                cfg.audio.chunk_ms,
+            )
+            if seg is None:
+                print("   (tidak ada suara)")
+                continue
+            peak = int(np.abs(seg).max())
+            rms = float(np.sqrt(np.mean(seg.astype(np.float32) ** 2)))
+            dur = len(seg) / cfg.audio.sample_rate
+            print(f"   durasi {dur:.1f}s, puncak {peak}/32767, rms {rms:.0f}")
+            if out_dir:
+                out_dir.mkdir(parents=True, exist_ok=True)
+                with wave.open(str(out_dir / f"ucapan_{i}.wav"), "wb") as w:
+                    w.setnchannels(1)
+                    w.setsampwidth(2)
+                    w.setframerate(cfg.audio.sample_rate)
+                    w.writeframes(seg.tobytes())
+            for name, v in variants.items():
+                eng = engines[v.model]
+                eng.cfg = v
+                t0 = time.perf_counter()
+                text = eng.transcribe(seg)
+                print(f"   {name:<24} {time.perf_counter() - t0:4.1f}s  '{text}'")
+    finally:
+        mic.stop()
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="jarvis.setup")
     ap.add_argument("--config", default="config.yaml")
@@ -106,6 +168,9 @@ def main() -> None:
     v = sub.add_parser("download-voice")
     v.add_argument("name", nargs="?", default="id_ID-news_tts-medium")
     sub.add_parser("index-docs")
+    t = sub.add_parser("test-stt")
+    t.add_argument("-n", "--tries", type=int, default=3)
+    t.add_argument("--save", help="folder untuk menyimpan rekaman .wav")
     w = sub.add_parser("test-wake")
     w.add_argument("phrase", nargs="?", help="frasa yang diuji (default: dari config)")
     w.add_argument("-n", "--tries", type=int, default=5)
@@ -123,6 +188,8 @@ def main() -> None:
             sys.exit("Isi rag.folders di config.yaml dulu")
         idx = DocIndex(cfg.rag, ollama_embedder(cfg))
         print(idx.index(), "| total (dokumen, potongan):", idx.count())
+    elif args.cmd == "test-stt":
+        test_stt(args.config, args.tries, args.save)
     elif args.cmd == "test-wake":
         test_wake(args.config, args.phrase, args.tries)
     elif args.cmd == "download-models":

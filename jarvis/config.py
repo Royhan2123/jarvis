@@ -60,7 +60,15 @@ class STTConfig(_Section):
     compute_type: str = "int8"
     language: str | None = "id"
     beam_size: int = 1
-    initial_prompt: str = "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"
+    # Kalimat alami, bukan daftar kata: daftar "buka, tutup" membuat "ibu kota" terdengar "buka ta"
+    initial_prompt: str = (
+        "Hello. Mengapa langit berwarna biru? Tolong catat bahwa saya punya janji dengan dokter. "
+        "Aplikasi saya: Spotify, Chrome, dan VS Code."
+    )
+    wake_prompt: str = (
+        "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"  # khusus deteksi panggilan
+    )
+    min_logprob: float | None = -0.85  # keyakinan Whisper di bawah ini → minta diulang; null=mati
     cpu_threads: int = 6
 
 

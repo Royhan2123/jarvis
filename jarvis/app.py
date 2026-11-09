@@ -193,6 +193,20 @@ class Jarvis:
         if not text:
             logger.info("(tidak ada teks terdengar)")
             return None
+        if self.stt.is_unclear():
+            logger.info(f"[stt] kurang yakin (logprob={self.stt.last_logprob:.2f}): '{text}'")
+            self._say("Maaf, kurang jelas. Bisa diulang?")
+            self.mic.flush()
+            self._set(State.LISTENING)
+            retry = self._record(self.cfg.vad)
+            if retry is None:
+                return None
+            self._set(State.THINKING)
+            t0 = time.perf_counter()
+            text = self.stt.transcribe(retry)
+            if not text:
+                return None
+            logger.info(f"[stt] ulangan: '{text}' (logprob={self.stt.last_logprob:.2f})")
         return self.handle_text(text, t0)
 
     def handle_text(self, text: str, t0: float | None = None) -> str | None:
