@@ -67,7 +67,15 @@ class Jarvis:
         self.mic = MicStream(cfg.audio)
         self.wake = WakeWord(cfg.wakeword) if cfg.wakeword.engine == "openwakeword" else None
         self.vad = VAD(cfg.vad)
-        self.stt = WhisperSTT(cfg.stt)
+        stt_cfg = cfg.stt
+        if (
+            cfg.workspace.folders
+        ):  # nama file di prompt Whisper → "toko.py" tidak terdengar "topkuo titip"
+            from jarvis import workspace
+
+            hint = workspace.stt_hint(cfg)
+            stt_cfg = cfg.stt.model_copy(update={"initial_prompt": cfg.stt.initial_prompt + hint})
+        self.stt = WhisperSTT(stt_cfg)
         wake_cfg = cfg.stt.model_copy(update={"model": cfg.stt.wake_model, "beam_size": 1})
         self.wake_stt = self.stt if wake_cfg.model == cfg.stt.model else WhisperSTT(wake_cfg)
         self.llm = LLM(cfg, facts=self.memory.facts_text)
@@ -246,6 +254,12 @@ class Jarvis:
         else:
             docs = self._doc_context(text)
             code = self._file_context(text)
+            if not code and self._unresolved_code_request(text):
+                reply = self._unresolved_reply()
+                self._say(reply)
+                self.memory.add_message("user", text)
+                self.memory.add_message("assistant", reply)
+                return reply
             if code:  # file yang disebut dibaca; konteks lebih besar, tool ubah hanya jika diminta
                 docs = f"{docs}\n{code}".strip()
                 edit = re.search(
@@ -264,6 +278,23 @@ class Jarvis:
         self.memory.add_message("user", text)
         self.memory.add_message("assistant", reply or "")
         return reply or None
+
+    def _unresolved_code_request(self, text: str) -> bool:
+        """Terdengar seperti permintaan soal kode/file, tapi tidak ada file yang cocok."""
+        if not self.cfg.workspace.folders:
+            return False
+        from jarvis import workspace
+
+        return workspace.looks_like_code_request(text)
+
+    def _unresolved_reply(self) -> str:
+        from jarvis import workspace
+
+        try:
+            names = workspace.list_dir(self.cfg)
+        except workspace.WorkspaceError as e:
+            return str(e)
+        return f"Saya tidak menemukan file yang kamu maksud. {names}"
 
     def _file_context(self, text: str) -> str:
         """Isi file proyek yang disebut dalam ucapan ("" jika tidak ada / fitur mati)."""

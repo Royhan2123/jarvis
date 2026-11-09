@@ -115,3 +115,16 @@ def test_whatsapp_voice_rule() -> None:
     ]
     assert match("tolong tulis wa ke siti: Aku telat")[0].args["contact"] == "siti"
     assert match("kirim email ke budi") is None
+
+
+def test_stt_hint_lists_recent_safe_names(ws) -> None:
+    cfg, root = ws
+    hint = workspace.stt_hint(cfg)
+    assert "app.py" in hint and ".env" not in hint and "gambar.png" not in hint
+    assert workspace.stt_hint(Config()) == ""
+
+
+def test_code_request_detection() -> None:
+    assert workspace.looks_like_code_request("ada bug di toko titik py")
+    assert workspace.looks_like_code_request("perbaiki fungsi total")
+    assert not workspace.looks_like_code_request("jam berapa sekarang")

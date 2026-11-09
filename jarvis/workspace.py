@@ -184,3 +184,33 @@ def create_file(cfg: Config, ref: str, content: str) -> str:
         raise WorkspaceError("Folder tujuan belum ada")
     path.write_text(content, encoding="utf-8")
     return f"File {path.name} sudah dibuat"
+
+
+def stt_hint(cfg: Config, limit_chars: int = 200) -> str:
+    """Nama file terbaru di folder kerja untuk prompt Whisper (agar nama file terdengar benar)."""
+    exts = {e.lower() for e in cfg.workspace.extensions}
+    files: list[Path] = []
+    for root in roots(cfg):
+        for f in root.rglob("*"):
+            if len(files) >= 400:
+                break
+            rel = f.relative_to(root).parts
+            if f.is_file() and f.suffix.lower() in exts and SKIP_DIRS.isdisjoint(rel):
+                if not is_denied(cfg, f):
+                    files.append(f)
+    names: list[str] = []
+    total = 0
+    for f in sorted(files, key=lambda x: x.stat().st_mtime, reverse=True):
+        if f.name not in names:
+            if total + len(f.name) + 2 > limit_chars:
+                break
+            names.append(f.name)
+            total += len(f.name) + 2
+    return f" File proyek: {', '.join(names)}." if names else ""
+
+
+CODE_WORDS = re.compile(r"\b(file|berkas|kode|script|fungsi|bug)\b|titik\s+(py|js|ts)\b", re.I)
+
+
+def looks_like_code_request(text: str) -> bool:
+    return bool(CODE_WORDS.search(text))
