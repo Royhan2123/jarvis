@@ -13,7 +13,10 @@ jobs:
       - run: uv python install 3.12
       - name: Dependensi sistem (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libportaudio2
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libportaudio2 pulseaudio
+          pulseaudio --start --exit-idle-time=-1 || true  # server audio kosong; runner tak punya perangkat suara
       - run: uv sync --extra dev
       - run: uv run ruff check .
       - run: uv run ruff format --check .

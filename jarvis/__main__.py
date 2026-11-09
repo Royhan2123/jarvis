@@ -31,7 +31,7 @@ def check(cfg: Config) -> bool:
         ok = False
 
     print("\n── Ollama ──")
-    try:
+    try:        
         models = [m.model for m in ollama.Client(host=cfg.llm.host).list().models]
         print("Model terpasang:", ", ".join(models) or "(kosong)")
         if cfg.llm.fast_model not in models:
