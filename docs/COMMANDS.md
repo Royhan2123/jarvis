@@ -181,3 +181,20 @@ Angka yang ditulis Whisper sebagai kata ("tiga puluh") dikonversi ke digit.
 - **Interupsi:** selama Jarvis bicara, ucapan pendek yang terdengar ditranskripsi (model wake);
   "berhenti/stop/cukup/diam" atau kata pemanggil memotong suara dan menghentikan LLM. Tanpa peredam
   gema: segmen yang terus-menerus (gema suara Jarvis sendiri) diabaikan, jadi lebih andal dengan headset.
+
+---
+
+## 6. Plugin (Fase 5)
+
+Tool buatan sendiri tanpa mengubah kode Jarvis:
+
+1. Buat file `.py` (atau folder dengan `__init__.py`) di folder plugins:
+   macOS `~/Library/Application Support/jarvis/plugins`, Linux `~/.local/share/jarvis/plugins`,
+   Windows `%LOCALAPPDATA%\jarvis\plugins` (atau atur `tools.plugins.dir`).
+2. Pakai dekorator `@tool` yang sama dengan tool bawaan (lihat `examples/plugins/dadu.py`).
+   Isi `KEYWORDS = [...]` agar skema tool dikirim ke LLM saat ucapan mengandung kata itu.
+3. Restart Jarvis. Cek dengan `uv run python -m jarvis.tools list`.
+
+Aturan: argumen divalidasi pydantic; risk `high` tetap butuh konfirmasi suara; nama yang bentrok
+dengan tool bawaan ditolak; plugin yang error dilewati (log WARNING). Plugin adalah kode dengan hak
+penuh pengguna: pasang hanya yang dipercaya, atau batasi lewat `tools.plugins.allowed`.

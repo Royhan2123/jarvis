@@ -129,6 +129,10 @@ tools:
       "musik": "Spotify"
       "kalkulator": "Calculator"
       "kalender": "Calendar"
+  plugins:
+    enabled: true                     # muat tool buatan sendiri dari folder plugins/
+    dir: null                         # null = <folder data pengguna>/plugins
+    allowed: []                       # kosong = semua file; isi nama file (tanpa .py) untuk membatasi
 
 # ─────────────────────────────────────────────
 # MEMORI

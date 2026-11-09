@@ -127,11 +127,18 @@ class AppsConfig(_Section):
     }
 
 
+class PluginsConfig(_Section):
+    enabled: bool = True
+    dir: str | None = None  # null = <folder data pengguna>/plugins
+    allowed: list[str] = []  # kosong = semua plugin di folder dimuat; isi nama file (tanpa .py)
+
+
 class ToolsConfig(_Section):
     enabled: list[str] = ["system", "apps", "media", "web", "screen", "keyboard", "notes"]
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
     confirm_timeout_s: int = 6
     apps: AppsConfig = AppsConfig()
+    plugins: PluginsConfig = PluginsConfig()
 
 
 class LinuxPlatformConfig(_Section):

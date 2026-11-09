@@ -94,7 +94,7 @@
 
 ## Fase 5 — v2.0 (Bulan 3+)
 
-- [ ] Plugin system (folder `plugins/`, auto-load tool baru)
+- [x] Plugin system (folder `plugins/`, auto-load tool baru)
 - [ ] Dashboard web lokal (FastAPI): log, config, plugin
 - [ ] RAG dokumen pribadi (embedding lokal + vector DB)
 - [ ] Integrasi opsional online: Google Calendar, Gmail, cuaca

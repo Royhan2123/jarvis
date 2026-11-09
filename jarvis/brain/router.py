@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from jarvis.brain import rules
 from jarvis.brain.rules import Intent
 from jarvis.config import Config
+from jarvis.tools.plugins import PLUGIN_CATEGORY
 from jarvis.tools.registry import registry
 
 ESCALATE_SCHEMA = {
@@ -75,7 +76,9 @@ class Router:
     def relevant_tools(self, text: str) -> list[str]:
         words = re.findall(r"[\w.]+", text.lower())
         names: list[str] = []
-        for keys, tools in TOOL_HINTS.items():
+        from jarvis.tools.plugins import PLUGIN_HINTS
+
+        for keys, tools in (*TOOL_HINTS.items(), *PLUGIN_HINTS.items()):
             if any(w.startswith(k) or (k == ".com" and k in w) for w in words for k in keys):
                 names.extend(t for t in tools if t not in names)
         return names
@@ -85,7 +88,9 @@ class Router:
         if not wanted:  # obrolan biasa: tanpa tools sama sekali (tools menambah 5–8 detik di CPU)
             return []
         schemas = [
-            s for s in registry.schemas(self.cfg.tools.enabled) if s["function"]["name"] in wanted
+            s
+            for s in registry.schemas([*self.cfg.tools.enabled, PLUGIN_CATEGORY])
+            if s["function"]["name"] in wanted
         ]
         return [*schemas, ESCALATE_SCHEMA] if escalate else schemas
 

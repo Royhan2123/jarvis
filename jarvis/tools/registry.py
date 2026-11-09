@@ -9,7 +9,7 @@ from __future__ import annotations
 import inspect
 import typing
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Any
 
@@ -99,6 +99,13 @@ class ToolRegistry:
             raise ValueError(f"Tool '{spec.name}' sudah terdaftar")
         self._tools[spec.name] = spec
 
+    def unregister(self, name: str) -> None:
+        self._tools.pop(name, None)
+
+    def recategorize(self, name: str, category: str) -> None:
+        if (spec := self._tools.get(name)) is not None:
+            self._tools[name] = replace(spec, category=category)
+
     def get(self, name: str) -> ToolSpec | None:
         return self._tools.get(name)
 
@@ -170,3 +177,6 @@ def load_tools(cfg: Config) -> None:
             if e.name != f"jarvis.tools.{cat}":
                 raise
             logger.debug(f"Kategori tool '{cat}' belum tersedia")
+    from jarvis.tools.plugins import load_plugins
+
+    load_plugins(cfg)
