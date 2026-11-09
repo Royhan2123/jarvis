@@ -136,3 +136,12 @@ def test_search_in_documents_is_not_web_search() -> None:
 
 def test_open_app_strips_possessive() -> None:
     assert match("coba kamu buka safari saya")[0].args == {"name": "Safari"}
+
+
+def test_weather_rule() -> None:
+    assert match("Bagaimana cuaca di Bandung hari ini?")[0] == Intent(
+        "get_weather", {"city": "Bandung"}
+    )
+    assert match("cuaca hari ini")[0] == Intent("get_weather", {"city": ""})
+    assert match("cek cuaca di Kota Medan")[0].args == {"city": "Kota Medan"}
+    assert match("apa pengaruh cuaca terhadap mood saya") is None

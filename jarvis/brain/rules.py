@@ -201,6 +201,13 @@ def match(text: str) -> list[Intent] | None:
     if re.fullmatch(r"(?:(?:lagu )?(?:sebelumnya)|previous|prev)", t):
         return [Intent("media", {"action": "prev"})]
 
+    if m := re.fullmatch(
+        r"(?:bagaimana |gimana |apa )?(?:cek )?cuaca(?: hari ini)?"
+        r"(?: di ([a-z ]+?))?(?: hari ini| sekarang)?",
+        t,
+    ):
+        city = (m.group(1) or "").strip()
+        return [Intent("get_weather", {"city": city.title()})]
     if re.fullmatch(r"(?:jam berapa(?: sekarang| ini)?|sekarang jam berapa)", t):
         return [Intent("get_time", {"what": "time"})]
     if re.fullmatch(r"(?:tanggal berapa|hari apa|hari ini hari apa)(?: hari ini| sekarang)?", t):
