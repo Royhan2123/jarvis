@@ -5,7 +5,7 @@ general:
   user_title: "Bos"
   language: "id"
   log_level: "INFO"
-  offline_only: true
+  offline_only: false         # false karena suara Fish online; kembalikan true + engine piper untuk penuh offline
 
 audio:
   input_device: null
@@ -62,7 +62,7 @@ router:
   preload_smart_model: false
 
 tts:
-  engine: "piper"
+  engine: "fish"              # fish = online (butuh offline_only: false); piper = offline
   gender: "male"
   voices:
     piper:
