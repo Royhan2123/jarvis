@@ -155,6 +155,8 @@ rag:
   chunk_chars: 800
   chunk_overlap: 100
   top_k: 3                            # jumlah kutipan yang dikirim ke LLM
+  min_score: 0.4                      # kutipan di bawah skor ini dibuang (relevan 0.47–0.63, bukan ≤0.35)
+  auto_context: true                  # pertanyaan ke LLM otomatis dibekali kutipan dokumen yang relevan
   max_file_mb: 5
   extensions: [".txt", ".md", ".pdf"]
 

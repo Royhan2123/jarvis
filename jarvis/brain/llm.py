@@ -38,7 +38,11 @@ class LLM:
         self.history = self.history[-self.cfg.llm.history_turns :]
 
     def ask(
-        self, text: str, model: str | None = None, tools: list[dict] | None = None
+        self,
+        text: str,
+        model: str | None = None,
+        tools: list[dict] | None = None,
+        docs: str = "",
     ) -> Iterator[str]:
         """Kirim pesan, yield potongan jawaban. Riwayat disimpan setelah selesai.
 
@@ -51,7 +55,7 @@ class LLM:
         messages = [
             {
                 "role": "system",
-                "content": build_system_prompt(self.cfg.general.user_title, self.facts()),
+                "content": build_system_prompt(self.cfg.general.user_title, self.facts(), docs),
             },
             *self.history,
         ]

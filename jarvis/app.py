@@ -244,18 +244,44 @@ class Jarvis:
             self._say(reply)
             logger.debug(f"[latency] rule total={time.perf_counter() - t0:.2f}s")
         else:
-            reply = self._ask_llm(text, plan, t0, t_start)
+            docs = self._doc_context(text)
+            if docs:  # dijawab dari dokumen oleh 4B tanpa tools → cepat & tanpa tool-calling
+                plan = Plan(model=self.cfg.llm.fast_model, tier="fast", tools=[])
+            reply = self._ask_llm(text, plan, t0, t_start, docs)
         self.memory.add_message("user", text)
         self.memory.add_message("assistant", reply or "")
         return reply or None
 
-    def _ask_llm(self, text: str, plan: Plan, t0: float, t_start: float) -> str | None:
+    def _doc_context(self, text: str) -> str:
+        """Kutipan dokumen pribadi yang relevan dengan pertanyaan ("" jika tidak ada/mati)."""
+        r = self.cfg.rag
+        if not (r.enabled and r.auto_context and r.folders) or len(text.split()) < 3:
+            return ""
+        try:
+            from pathlib import Path
+
+            from jarvis.tools.docs import get_index
+
+            t = time.perf_counter()
+            hits = [h for h in get_index().search(text) if h.score >= r.min_score]
+            logger.debug(
+                f"[rag] {len(hits)} kutipan relevan ({time.perf_counter() - t:.2f}s)"
+                + (f", terbaik {hits[0].score:.2f}" if hits else "")
+            )
+        except Exception as e:  # noqa: BLE001 — RAG gagal tidak boleh mematikan jawaban biasa
+            logger.warning(f"RAG dilewati: {e}")
+            return ""
+        return "\n".join(f"[{Path(h.path).name}] {h.text[:500]}" for h in hits)
+
+    def _ask_llm(
+        self, text: str, plan: Plan, t0: float, t_start: float, docs: str = ""
+    ) -> str | None:
         print(f"{self.cfg.general.name}: ", end="", flush=True)
         speaker = SentenceSpeaker(self.tts, self.cfg.tts.max_spoken_chars)
         self._speaker = speaker
         reply, buf, t_first = "", "", None
         try:
-            for piece in self.llm.ask(text, model=plan.model, tools=plan.tools):
+            for piece in self.llm.ask(text, model=plan.model, tools=plan.tools, docs=docs):
                 if self._interrupted:
                     break
                 t_first = t_first or time.perf_counter()
@@ -273,7 +299,7 @@ class Jarvis:
                 speaker.finish()
                 print()
                 fast = self.router.plan("")  # tier fast
-                return self._ask_llm(text, fast, t0, t_start)
+                return self._ask_llm(text, fast, t0, t_start, docs)
         print()
         calls = list(self.llm.tool_calls)
         if not any(n == "escalate" for n, _ in calls):
