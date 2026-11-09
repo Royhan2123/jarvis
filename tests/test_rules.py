@@ -132,3 +132,7 @@ def test_search_in_documents_is_not_web_search() -> None:
     assert match("cari di dokumen saya tentang uang jaminan") is None
     assert match("carikan berkas kontrak sewa") is None
     assert match("cari resep nasi goreng")[0].tool == "web_search"
+
+
+def test_open_app_strips_possessive() -> None:
+    assert match("coba kamu buka safari saya")[0].args == {"name": "Safari"}

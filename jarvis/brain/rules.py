@@ -110,7 +110,7 @@ def _split_items(raw: str) -> list[str]:
 
 def _clean_app(item: str) -> str:
     item = re.sub(r"^(?:aplikasi|app|program)\s+", "", item)
-    return re.sub(r"\s+(?:itu|nya|ini)$", "", item)
+    return re.sub(r"\s+(?:itu|nya|ini|saya|ku)$", "", item)
 
 
 def _open_intent(item: str) -> Intent:
