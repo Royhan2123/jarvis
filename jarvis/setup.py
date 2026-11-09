@@ -75,7 +75,7 @@ def test_wake(config: str, phrase: str | None, tries: int) -> None:
             mic.flush()
             vad.reset()
             seg = record_utterance(
-                iter(mic.read, object()),
+                (mic.read(timeout=0.5) for _ in iter(int, 1)),
                 vad.is_speech,
                 short,
                 cfg.audio.sample_rate,
