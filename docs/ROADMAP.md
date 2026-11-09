@@ -19,7 +19,7 @@ Jujur per fase: ✅ terbukti di mesin dev (Mac Intel i9) · 🟡 sebagian · ❌
 
 | Fase | Definition of Done | Status | Yang masih kurang |
 |---|---|---|---|
-| 0 | Ngobrol dengan Qwen 4B lewat terminal di 3 OS | 🟡 Mac ✅ | Windows/Linux belum diuji; CI GitHub belum pernah jalan (repo belum di-push) |
+| 0 | Ngobrol dengan Qwen 4B lewat terminal di 3 OS | 🟡 Mac ✅; CI hijau di 3 OS (unit test) | Ngobrol sungguhan dengan Ollama di Windows/Linux belum diuji |
 | 1 | Panggil → jawab dengan suara di 3 OS, ≤ 5 s | 🟡 Mac ✅ (±4,5 s sederhana; 8–13 s jika CPU berebut) | Windows/Linux; kata panggil sekarang "Hello" (bukan "Hey Jarvis") |
 | 2 | Semua tool P0 jalan di Mac, Windows, Linux | 🟡 Mac ✅ | Windows/Linux (X11 + Wayland) belum diuji, checklist di COMMANDS.md §4 |
 | 3 | MVP: router, konfirmasi, tray, installer | 🟡 Mac ✅ (`Jarvis.app` ±385 MB) | Build 3 OS lewat `release.yml` belum jalan; belum diuji 3 pengguna nyata |
@@ -37,7 +37,7 @@ Rilis (v0.1, v1.0, v2.0) belum dibuat: tidak ada push atau tag ke remote tanpa i
 - [x] `config.py` + `config.yaml` dengan validasi pydantic
 - [x] Wrapper Ollama (`brain/llm.py`) + system prompt
 - [x] **Mode teks** (`python -m jarvis --text`): ketik pertanyaan → jawaban LLM di terminal
-- [ ] GitHub Actions: lint + test di `macos-latest`, `windows-latest`, `ubuntu-latest` (workflow ditulis, belum pernah jalan di GitHub karena repo belum di-push)
+- [x] GitHub Actions: lint + test di `macos-latest`, `windows-latest`, `ubuntu-latest` (hijau di ketiganya sejak 2026-11-09; unit test, bukan uji manual)
 
 **Definition of Done:** bisa ngobrol dengan Qwen 4B lewat terminal di 3 OS.
 
