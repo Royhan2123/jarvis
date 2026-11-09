@@ -15,6 +15,16 @@ CONFIRM_TEXT = {
 }
 
 
+def _confirm_text(intent: Intent) -> str:
+    """Kalimat konfirmasi yang menyebut dengan jelas apa yang akan dilakukan."""
+    a = intent.args
+    if intent.tool == "replace_in_file":
+        return f"mengubah file {str(a.get('path', '?'))[-40:]}, cadangannya disimpan"
+    if intent.tool == "create_file":
+        return f"membuat file baru {str(a.get('path', '?'))[-40:]}"
+    return CONFIRM_TEXT.get(intent.tool, f"menjalankan {intent.tool}")
+
+
 class ActionRunner:
     """Menjalankan intent satu per satu. Tool `high` ditahan di `pending` sampai dikonfirmasi."""
 
@@ -34,7 +44,7 @@ class ActionRunner:
             return registry.call(intent.tool, intent.args, confirmed=confirmed)
         except ConfirmationRequired:
             self.pending = intent
-            what = CONFIRM_TEXT.get(intent.tool, f"menjalankan {intent.tool}")
+            what = _confirm_text(intent)
             return f"Yakin mau {what}? Bilang ya atau tidak."
         except ToolError as e:
             logger.warning(f"tool {intent.tool} gagal: {e}")

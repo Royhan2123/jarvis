@@ -117,6 +117,7 @@ Rilis (v0.1, v1.0, v2.0) belum dibuat: tidak ada push atau tag ke remote tanpa i
 - [x] Integrasi opsional online: Google Calendar, Gmail, cuaca (cuaca diuji asli lewat suara; Calendar/Gmail diuji dengan mock, belum dengan akun Google)
 - [x] Smart home: Home Assistant / MQTT (diuji dengan server HA palsu lokal; belum dengan Home Assistant/broker asli)
 - [x] Custom wake word (nama panggilan sendiri lewat `wakeword.phrases`, uji dengan `setup test-wake`)
+- [x] Folder kerja: baca & ubah kode dengan konfirmasi suara, draf WhatsApp (tambahan di luar roadmap awal; diuji dengan LLM asli pada file contoh)
 - [ ] Multi-bahasa daerah (Jawa/Sunda) — eksperimen fine-tune (dikaji: lihat [`EXPERIMEN_BAHASA_DAERAH.md`](EXPERIMEN_BAHASA_DAERAH.md); belum dikerjakan)
 
 ---

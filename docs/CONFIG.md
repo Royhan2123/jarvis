@@ -188,6 +188,20 @@ smarthome:
     "kipas":            { type: mqtt, topic: "home/kipas/set", on: "ON", off: "OFF" }
 
 # ─────────────────────────────────────────────
+# FOLDER KERJA (baca / perbaiki kode) & PESAN
+# ─────────────────────────────────────────────
+workspace:
+  folders: []                         # HANYA folder ini yang bisa dibaca/diubah, mis. ["~/project/jarvis"]
+  extensions: [".py", ".js", ".ts", ".json", ".md", ...]   # ekstensi teks yang diizinkan
+  deny: [".git", ".ssh", ".env", ".aws", "node_modules", ".venv", "id_rsa", "credentials", ...]
+  max_file_kb: 256
+  context_chars: 3000                 # potongan file yang dikirim ke LLM
+  context_num_ctx: 4096               # konteks LLM saat ada file (lebih lambat dari 2048)
+
+messaging:
+  contacts: {}                        # nama panggilan → nomor, mis. { budi: "62812xxxxxxx" }
+
+# ─────────────────────────────────────────────
 # PLATFORM KHUSUS
 # ─────────────────────────────────────────────
 platform:

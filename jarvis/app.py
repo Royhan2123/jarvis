@@ -24,7 +24,7 @@ from jarvis.brain.rules import Intent, parse_yes_no
 from jarvis.config import Config, VADConfig
 from jarvis.platform import get_adapter
 from jarvis.stt.whisper import WhisperSTT
-from jarvis.tools.registry import context, load_tools
+from jarvis.tools.registry import context, load_tools, registry
 from jarvis.tts import TTS, build_tts
 from jarvis.tts.stream import SentenceSpeaker, split_sentences
 
@@ -245,12 +245,37 @@ class Jarvis:
             logger.debug(f"[latency] rule total={time.perf_counter() - t0:.2f}s")
         else:
             docs = self._doc_context(text)
-            if docs:  # dijawab dari dokumen oleh 4B tanpa tools → cepat & tanpa tool-calling
+            code = self._file_context(text)
+            if code:  # file yang disebut dibaca; konteks lebih besar, tool ubah hanya jika diminta
+                docs = f"{docs}\n{code}".strip()
+                edit = re.search(
+                    r"\b(ubah|ganti|perbaiki|betulkan|tambah\w*|buat\w*)\b", text, re.I
+                )
+                tools = registry.schemas(["workspace"]) if edit else []
+                plan = Plan(
+                    model=self.cfg.llm.fast_model,
+                    tier="fast",
+                    tools=[t for t in tools if t["function"]["name"] != "list_files"],
+                    num_ctx=self.cfg.workspace.context_num_ctx,
+                )
+            elif docs:  # dijawab dari dokumen oleh 4B tanpa tools → cepat & tanpa tool-calling
                 plan = Plan(model=self.cfg.llm.fast_model, tier="fast", tools=[])
             reply = self._ask_llm(text, plan, t0, t_start, docs)
         self.memory.add_message("user", text)
         self.memory.add_message("assistant", reply or "")
         return reply or None
+
+    def _file_context(self, text: str) -> str:
+        """Isi file proyek yang disebut dalam ucapan ("" jika tidak ada / fitur mati)."""
+        if not self.cfg.workspace.folders:
+            return ""
+        try:
+            from jarvis import workspace
+
+            return workspace.file_context(self.cfg, text)
+        except Exception as e:  # noqa: BLE001 — gagal baca file tidak boleh mematikan jawaban
+            logger.warning(f"Konteks file dilewati: {e}")
+            return ""
 
     def _doc_context(self, text: str) -> str:
         """Kutipan dokumen pribadi yang relevan dengan pertanyaan ("" jika tidak ada/mati)."""
@@ -281,7 +306,9 @@ class Jarvis:
         self._speaker = speaker
         reply, buf, t_first = "", "", None
         try:
-            for piece in self.llm.ask(text, model=plan.model, tools=plan.tools, docs=docs):
+            for piece in self.llm.ask(
+                text, model=plan.model, tools=plan.tools, docs=docs, num_ctx=plan.num_ctx
+            ):
                 if self._interrupted:
                     break
                 t_first = t_first or time.perf_counter()

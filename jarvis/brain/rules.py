@@ -128,11 +128,18 @@ _RAW_VERBS = (
     (re.compile(r"^\W*(?:jarvis\W+)?(?:tolong\s+)?catat(?:kan)?\b\s*[:,]?\s*(.+)$", re.I | re.S),
      "add_note"),
 )  # fmt: skip
+_WA = re.compile(
+    r"^\W*(?:jarvis\W+)?(?:tolong\s+)?(?:kirim|tulis|buat|siapkan)(?:kan)?\s+(?:pesan\s+)?"
+    r"(?:whatsapp|wa)\s+(?:ke\s+)?(\w+)\s*(?:isinya|bilang|katakan|:|,)?\s*(.+)$",
+    re.I | re.S,
+)
 _UNIT_MIN = {"detik": 1 / 60, "menit": 1.0, "jam": 60.0}
 
 
 def _match_raw(text: str) -> list[Intent] | None:
     """Perintah yang isinya harus persis seperti diucapkan (ketik/catat): jangan dinormalisasi."""
+    if m := _WA.match(text.strip()):
+        return [Intent("whatsapp_draft", {"contact": m.group(1), "message": m.group(2).strip()})]
     for pat, tool in _RAW_VERBS:
         if m := pat.match(text.strip()):
             return [Intent(tool, {"text": m.group(1).strip()})]

@@ -55,6 +55,8 @@ TOOL_HINTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "device_state",
         "list_devices",
     ),
+    ("whatsapp", "wa", "pesan"): ("whatsapp_draft",),
+    ("folder", "direktori", "proyek", "project"): ("list_files",),
     ("dokumen", "berkas", "arsip", "kontrak", "pdf"): ("search_docs", "index_docs"),
     ("jam", "tanggal", "hari", "baterai", "batre", "ram", "cpu", "memori"): (
         "get_time",
@@ -74,6 +76,7 @@ class Plan:
     model: str = ""
     tier: str = "rule"  # rule | fast | smart
     tools: list[dict] = field(default_factory=list)
+    num_ctx: int | None = None  # None = pakai llm.num_ctx
 
 
 class Router:

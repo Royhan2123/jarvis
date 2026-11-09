@@ -234,3 +234,21 @@ Default mati (`smarthome.enabled: false`). Tool: `device_control` (risk medium),
   `offline_only: false`. Ini pelonggaran terbatas dari aturan "tidak ada request keluar" untuk LAN
   rumah (aturan ini sudah dicatat di CLAUDE.md).
 - Token/password tidak boleh ditulis di `config.yaml`.
+
+---
+
+## 9. Folder kerja & draf WhatsApp (setelah Fase 5)
+
+**Baca / perbaiki kode** (`workspace.folders` harus diisi; kosong = mati):
+- Sebut nama file dalam ucapan: "jelaskan fungsi hitung_diskon di toko titik py", "baris 10 sampai 30
+  di app.py". Potongan file (±3000 karakter, bernomor baris) dikirim ke LLM sebagai DATA.
+- Kata ubah/ganti/perbaiki/tambah → LLM boleh memakai `replace_in_file` / `create_file`. Keduanya
+  **risk high**: Jarvis menyebut file yang akan diubah dan menunggu "ya" (diam/tidak jelas = batal).
+- `replace_in_file` hanya jika teks lama muncul tepat satu kali; file asli dicadangkan sebagai
+  `<file>.jarvis-bak`. `create_file` tidak pernah menimpa file yang ada.
+- Dilindungi selalu: path di luar folder kerja (symlink keluar ditolak), `.env`, `.ssh`, `.git`, kunci,
+  token, dan ekstensi di luar daftar. Tidak ada penghapusan file dan tidak ada shell.
+- Batas nyata di CPU: file kecil/potongan saja; jawaban 15–25 detik. Untuk file besar sebut nomor baris.
+
+**WhatsApp:** "kirim pesan WhatsApp ke Budi isinya besok rapat jam 9" → membuka `wa.me` dengan teks
+terisi. Pesan **tidak terkirim otomatis**; kamu menekan kirim. Hanya kontak di `messaging.contacts`.

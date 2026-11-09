@@ -81,7 +81,7 @@ tts:
   max_spoken_chars: 400
 
 tools:
-  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome"]
+  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome", "workspace", "messaging"]
   confirm_risk_level: "high"
   confirm_timeout_s: 6
   apps:

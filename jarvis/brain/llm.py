@@ -23,13 +23,13 @@ class LLM:
         self.history: list[dict[str, str]] = []
         self.tool_calls: list[tuple[str, dict]] = []
 
-    def _options(self) -> dict:
+    def _options(self, num_ctx: int | None = None) -> dict:
         c = self.cfg.llm
         return {
             "temperature": c.temperature,
             "top_p": c.top_p,
             "top_k": c.top_k,
-            "num_ctx": c.num_ctx,
+            "num_ctx": num_ctx or c.num_ctx,
             "num_predict": c.num_predict,
             "num_thread": c.num_thread,
         }
@@ -43,6 +43,7 @@ class LLM:
         model: str | None = None,
         tools: list[dict] | None = None,
         docs: str = "",
+        num_ctx: int | None = None,
     ) -> Iterator[str]:
         """Kirim pesan, yield potongan jawaban. Riwayat disimpan setelah selesai.
 
@@ -64,7 +65,7 @@ class LLM:
             model=model or c.fast_model,
             messages=messages,
             stream=True,
-            options=self._options(),
+            options=self._options(num_ctx),
             keep_alive=c.keep_alive,
             think=c.think,
             tools=tools or None,

@@ -183,6 +183,30 @@ class SmartHomeConfig(_Section):
     devices: dict[str, DeviceConfig] = {}
 
 
+class WorkspaceConfig(_Section):
+    """Akses file untuk "baca/perbaiki kode". HANYA folder di `folders`; kosong = fitur mati."""
+
+    folders: list[str] = []
+    extensions: list[str] = [
+        ".py", ".js", ".ts", ".tsx", ".jsx", ".json", ".yaml", ".yml", ".toml", ".md", ".txt",
+        ".html", ".css", ".sh", ".java", ".kt", ".dart", ".go", ".rs", ".c", ".cpp", ".h", ".swift",
+    ]  # fmt: skip
+    # nama file/folder yang tidak pernah dibaca atau diubah (cocok pada tiap bagian path)
+    deny: list[str] = [
+        ".git", ".ssh", ".env", ".aws", ".gnupg", "node_modules", ".venv",
+        "id_rsa", "id_ed25519", "credentials", "secrets", "google_token.json",
+    ]  # fmt: skip
+    max_file_kb: int = 256
+    context_chars: int = 3000  # potongan file yang dikirim ke LLM (num_ctx kecil di CPU)
+    context_num_ctx: int = 4096
+
+
+class MessagingConfig(_Section):
+    """Draf pesan WhatsApp: nama panggilan → nomor (format internasional, mis. 62812...)."""
+
+    contacts: dict[str, str] = {}
+
+
 class AppsConfig(_Section):
     allowed: list[str] = []  # kosong = semua app boleh
     aliases: dict[str, str] = {
@@ -203,7 +227,7 @@ class PluginsConfig(_Section):
 class ToolsConfig(_Section):
     enabled: list[str] = [
         "system", "apps", "media", "web", "screen", "keyboard",
-        "notes", "docs", "online", "smarthome",
+        "notes", "docs", "online", "smarthome", "workspace", "messaging",
     ]  # fmt: skip
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
     confirm_timeout_s: int = 6
@@ -245,6 +269,8 @@ class Config(_Section):
     rag: RagConfig = RagConfig()
     online: OnlineConfig = OnlineConfig()
     smarthome: SmartHomeConfig = SmartHomeConfig()
+    workspace: WorkspaceConfig = WorkspaceConfig()
+    messaging: MessagingConfig = MessagingConfig()
     platform: PlatformConfig = PlatformConfig()
     ui: UIConfig = UIConfig()
 
