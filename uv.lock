@@ -494,6 +494,7 @@ dependencies = [
     { name = "pycaw", marker = "sys_platform == 'win32'" },
     { name = "pydantic" },
     { name = "pynput" },
+    { name = "pypdf" },
     { name = "pyperclip" },
     { name = "pystray" },
     { name = "pyttsx3", marker = "sys_platform == 'win32'" },
@@ -531,6 +532,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.6" },
     { name = "pyinstaller", marker = "extra == 'dev'", specifier = ">=6.5" },
     { name = "pynput", specifier = ">=1.7" },
+    { name = "pypdf", specifier = ">=7.0.0" },
     { name = "pyperclip", specifier = ">=1.8" },
     { name = "pystray", specifier = ">=0.19" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
@@ -1121,6 +1123,15 @@ sdist = { url = "https://files.pythonhosted.org/packages/7a/86/ffaa76ca28df5450c
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b6/35/c78b8cba3da718c52f2c5022498a9b89d985b8a19cbf76fe8702b88bb719/pyobjc_framework_quartz-13.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:90630977d69975e94f49f06e7b32b5e757334d71239944ad38c3efabb73aa4ef", size = 214455, upload-time = "2026-10-30T10:42:32.886Z" },
     { url = "https://files.pythonhosted.org/packages/73/f9/be94503cc5475a076b61b65b64ccb030a2b72bf6fddbe68bae1f20d9e624/pyobjc_framework_quartz-13.0-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:5e1d49f2699d128553a52fad473622ff4fd424d05e879d9585dad0a9f7c3dcfd", size = 215360, upload-time = "2026-10-30T10:42:34.247Z" },
+]
+
+[[package]]
+name = "pypdf"
+version = "7.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/19/3e8223d0618bd441eb2b3e105de83ce4187e76f5823d876f60a109ee9072/pypdf-7.0.0.tar.gz", hash = "sha256:061aa78dec270854c912dde80c6bc060486fa955399d643da27ea30afeb6571b", size = 7201622, upload-time = "2026-11-06T12:10:03.447Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8a/21/e83122a25e334c718a4da67004fa94acd7215fe9f8e63a9d7c7f979eb52b/pypdf-7.0.0-py3-none-any.whl", hash = "sha256:112a2c7cbabefd8dfe498f7a13977e575e762d58cdb0d832acb8886922602c6f", size = 413949, upload-time = "2026-11-06T12:10:01.205Z" },
 ]
 
 [[package]]

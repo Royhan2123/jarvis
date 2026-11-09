@@ -44,6 +44,7 @@ TOOL_HINTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "set_reminder",
         "remember_fact",
     ),
+    ("dokumen", "berkas", "arsip", "kontrak", "pdf"): ("search_docs", "index_docs"),
     ("jam", "tanggal", "hari", "baterai", "batre", "ram", "cpu", "memori"): (
         "get_time",
         "system_info",

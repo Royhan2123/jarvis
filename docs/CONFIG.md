@@ -119,7 +119,7 @@ tts:
 # TOOLS & KEAMANAN
 # ─────────────────────────────────────────────
 tools:
-  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes"]
+  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs"]
   confirm_risk_level: "high"          # low | medium | high — level minimal yang butuh konfirmasi
   confirm_timeout_s: 6
   apps:
@@ -142,6 +142,19 @@ memory:
   enabled: true
   save_conversations: true
   retention_days: 30                  # riwayat lebih lama otomatis dihapus
+
+# ─────────────────────────────────────────────
+# DOKUMEN PRIBADI (RAG)
+# ─────────────────────────────────────────────
+rag:
+  enabled: true
+  folders: []                         # HANYA folder ini yang dibaca, mis. ["~/Documents/jarvis-docs"]
+  embed_model: "qwen3-embedding:0.6b" # model embedding Ollama (`ollama pull ...`), multibahasa
+  chunk_chars: 800
+  chunk_overlap: 100
+  top_k: 3                            # jumlah kutipan yang dikirim ke LLM
+  max_file_mb: 5
+  extensions: [".txt", ".md", ".pdf"]
 
 # ─────────────────────────────────────────────
 # PLATFORM KHUSUS

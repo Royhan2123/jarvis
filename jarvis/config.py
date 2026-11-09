@@ -123,6 +123,17 @@ class MemoryConfig(_Section):
     retention_days: int = 30
 
 
+class RagConfig(_Section):
+    enabled: bool = True
+    folders: list[str] = []  # HANYA folder ini yang dibaca; kosong = fitur tidak aktif
+    embed_model: str = "qwen3-embedding:0.6b"  # model embedding Ollama (lokal, multibahasa)
+    chunk_chars: int = 800
+    chunk_overlap: int = 100
+    top_k: int = 3
+    max_file_mb: int = 5
+    extensions: list[str] = [".txt", ".md", ".pdf"]
+
+
 class AppsConfig(_Section):
     allowed: list[str] = []  # kosong = semua app boleh
     aliases: dict[str, str] = {
@@ -141,7 +152,9 @@ class PluginsConfig(_Section):
 
 
 class ToolsConfig(_Section):
-    enabled: list[str] = ["system", "apps", "media", "web", "screen", "keyboard", "notes"]
+    enabled: list[str] = [
+        "system", "apps", "media", "web", "screen", "keyboard", "notes", "docs"
+    ]  # fmt: skip
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
     confirm_timeout_s: int = 6
     apps: AppsConfig = AppsConfig()
@@ -179,6 +192,7 @@ class Config(_Section):
     tts: TTSConfig = TTSConfig()
     tools: ToolsConfig = ToolsConfig()
     memory: MemoryConfig = MemoryConfig()
+    rag: RagConfig = RagConfig()
     platform: PlatformConfig = PlatformConfig()
     ui: UIConfig = UIConfig()
 

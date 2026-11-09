@@ -105,6 +105,7 @@ def main() -> None:
     sub.add_parser("download-models")
     v = sub.add_parser("download-voice")
     v.add_argument("name", nargs="?", default="id_ID-news_tts-medium")
+    sub.add_parser("index-docs")
     w = sub.add_parser("test-wake")
     w.add_argument("phrase", nargs="?", help="frasa yang diuji (default: dari config)")
     w.add_argument("-n", "--tries", type=int, default=5)
@@ -114,6 +115,14 @@ def main() -> None:
         list_mics()
     elif args.cmd == "download-voice":
         download_voice(args.name)
+    elif args.cmd == "index-docs":
+        from jarvis.brain.rag import DocIndex, ollama_embedder
+
+        cfg = load_config(args.config)
+        if not cfg.rag.folders:
+            sys.exit("Isi rag.folders di config.yaml dulu")
+        idx = DocIndex(cfg.rag, ollama_embedder(cfg))
+        print(idx.index(), "| total (dokumen, potongan):", idx.count())
     elif args.cmd == "test-wake":
         test_wake(args.config, args.phrase, args.tries)
     elif args.cmd == "download-models":

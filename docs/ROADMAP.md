@@ -96,7 +96,7 @@
 
 - [x] Plugin system (folder `plugins/`, auto-load tool baru)
 - [x] Dashboard web lokal (FastAPI): log, config, plugin
-- [ ] RAG dokumen pribadi (embedding lokal + vector DB)
+- [x] RAG dokumen pribadi (embedding lokal via Ollama + SQLite/numpy; belum diuji dengan model embedding asli)
 - [ ] Integrasi opsional online: Google Calendar, Gmail, cuaca
 - [ ] Smart home: Home Assistant / MQTT
 - [x] Custom wake word (nama panggilan sendiri lewat `wakeword.phrases`, uji dengan `setup test-wake`)
