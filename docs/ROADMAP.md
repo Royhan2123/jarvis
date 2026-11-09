@@ -100,7 +100,7 @@
 - [x] Integrasi opsional online: Google Calendar, Gmail, cuaca (cuaca diuji asli lewat suara; Calendar/Gmail diuji dengan mock, belum dengan akun Google)
 - [x] Smart home: Home Assistant / MQTT (diuji dengan server HA palsu lokal; belum dengan Home Assistant/broker asli)
 - [x] Custom wake word (nama panggilan sendiri lewat `wakeword.phrases`, uji dengan `setup test-wake`)
-- [ ] Multi-bahasa daerah (Jawa/Sunda) — eksperimen fine-tune
+- [ ] Multi-bahasa daerah (Jawa/Sunda) — eksperimen fine-tune (dikaji: lihat [`EXPERIMEN_BAHASA_DAERAH.md`](EXPERIMEN_BAHASA_DAERAH.md); belum dikerjakan)
 
 ---
 
