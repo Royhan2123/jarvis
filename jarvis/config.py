@@ -81,7 +81,7 @@ class LLMConfig(_Section):
     top_p: float = 0.8
     top_k: int = 20
     num_ctx: int = 2048
-    num_predict: int = 200
+    num_predict: int = 100
     num_thread: int = 8
     keep_alive: int | str = -1
     think: bool = False
@@ -228,7 +228,9 @@ class AgentConfig(_Section):
     enabled: bool = False
     model: str = ""  # kosong = llm.smart_model
     max_steps: int = 12
-    num_ctx: int = 8192
+    num_ctx: int = 4096
+    num_predict: int = 400  # batas token per langkah (cegah model bertele-tele)
+    prewarm: bool = True  # proses prompt statis di latar saat Jarvis menyala (langkah 1 jadi cepat)
     command_timeout_s: int = 60
     max_output_chars: int = 4000
     auto_read_only: bool = True
@@ -267,7 +269,7 @@ class ToolsConfig(_Section):
         "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent",
     ]  # fmt: skip
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
-    confirm_timeout_s: int = 6
+    confirm_timeout_s: int = 8
     apps: AppsConfig = AppsConfig()
     plugins: PluginsConfig = PluginsConfig()
 

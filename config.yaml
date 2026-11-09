@@ -48,7 +48,7 @@ llm:
   top_p: 0.8
   top_k: 20
   num_ctx: 2048
-  num_predict: 200
+  num_predict: 100
   num_thread: 8
   keep_alive: -1
   think: false
@@ -87,7 +87,7 @@ tts:
 tools:
   enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent"]
   confirm_risk_level: "high"
-  confirm_timeout_s: 6
+  confirm_timeout_s: 8
   apps:
     allowed: []               # kosong = semua app boleh; isi untuk membatasi
     aliases:

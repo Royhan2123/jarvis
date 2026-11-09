@@ -88,7 +88,19 @@ class Jarvis:
         from jarvis.tools import agent as agent_tool
 
         agent_tool.confirm_hook, agent_tool.say_hook = self._agent_confirm, self._say
+        if cfg.agent.enabled and cfg.agent.prewarm and cfg.workspace.folders:
+            threading.Thread(target=self._prewarm_agent, daemon=True).start()
         self._set(State.IDLE)
+
+    def _prewarm_agent(self) -> None:
+        try:
+            from jarvis.agent import Agent
+
+            t = time.perf_counter()
+            Agent(self.cfg, lambda _w: False).warmup()
+            logger.info(f"[agen] pemanasan model selesai ({time.perf_counter() - t:.1f}s)")
+        except Exception as e:  # noqa: BLE001 — pemanasan gagal tidak boleh mengganggu Jarvis
+            logger.warning(f"Pemanasan agen dilewati: {e}")
 
     # ── util ──
     def _set(self, state: State) -> None:
@@ -170,19 +182,21 @@ class Jarvis:
         while self._running:
             yield self.mic.read(timeout=0.5)
 
-    def _say(self, text: str) -> None:
+    def _say(self, text: str, interruptible: bool = True) -> None:
         text = shorten_for_speech(text, self.cfg.tts.max_spoken_chars)
         if not text:
             return
         print(f"{self.cfg.general.name}: {text}")
         self._set(State.SPEAKING)
-        self._start_monitor()
+        if interruptible:
+            self._start_monitor()
         try:
             self.tts.speak(text)
         except Exception as e:  # noqa: BLE001 — TTS gagal tidak boleh mematikan app
             logger.error(f"TTS gagal: {e}")
         finally:
-            self._stop_monitor()
+            if interruptible:
+                self._stop_monitor()
 
     def _record(self, vad_cfg: VADConfig):
         self.mic.flush()
@@ -415,7 +429,8 @@ class Jarvis:
     def _agent_confirm(self, what: str) -> bool:
         """Konfirmasi satu langkah agen lewat suara; hanya 'ya' yang jelas yang mengizinkan."""
         print(f"\n⚠️  Agen ingin {what}")
-        self._say(f"Saya ingin {what}. Boleh? Bilang ya atau tidak.")
+        # tidak boleh diinterupsi: gema suaranya sendiri pernah terdengar sebagai "Hello"
+        self._say(f"Saya ingin {what}. Boleh? Bilang ya atau tidak.", interruptible=False)
         return self._listen_yes_no() is True
 
     # ── wake word ──

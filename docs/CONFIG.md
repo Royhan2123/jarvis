@@ -78,7 +78,7 @@ llm:
   top_p: 0.8
   top_k: 20
   num_ctx: 2048               # panjang konteks (token); bench: 2048 lebih cepat dari 4096
-  num_predict: 200            # panjang maksimal jawaban (token)
+  num_predict: 100            # panjang maksimal jawaban (token)
   num_thread: 8               # = jumlah CORE FISIK CPU
   keep_alive: -1              # -1 = model tetap di RAM; "10m" = lepas setelah 10 menit
   think: false                # mode reasoning Qwen; false = jauh lebih cepat
@@ -131,7 +131,7 @@ tts:
 tools:
   enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome"]
   confirm_risk_level: "high"          # low | medium | high — level minimal yang butuh konfirmasi
-  confirm_timeout_s: 6
+  confirm_timeout_s: 8
   apps:
     allowed: []                       # kosong = semua app boleh; isi untuk membatasi
     aliases:
@@ -208,9 +208,11 @@ workspace:
 
 agent:                                # agen kerja: tugas bertahap + shell terjaga (butuh workspace.folders)
   enabled: false                      # WAJIB true untuk memakai "kerjakan ..." / python -m jarvis.agent
-  model: ""                           # kosong = llm.smart_model (9B; 4B kurang andal memanggil tool)
+  model: ""                           # kosong = llm.smart_model (9B, akurat ±2 mnt/tugas). "qwen3.5:4b" ±1,3 mnt tapi laporan akhirnya pernah keliru
   max_steps: 12                       # batas langkah per tugas
-  num_ctx: 8192
+  num_ctx: 4096
+  num_predict: 400                    # batas token per langkah
+  prewarm: true                       # proses prompt agen di latar saat Jarvis menyala (langkah 1 cepat)
   command_timeout_s: 60
   max_output_chars: 4000
   auto_read_only: true                # ls/cat/grep/git status... jalan tanpa tanya (tanpa pipa/redirect)
