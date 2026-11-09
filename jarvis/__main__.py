@@ -140,8 +140,10 @@ def main() -> None:
     except ValidationError as e:
         sys.exit(f"Config tidak valid:\n{e}")
 
+    if args.log_level:
+        cfg.general.log_level = args.log_level
     logger.remove()
-    logger.add(sys.stderr, level=args.log_level or cfg.general.log_level)
+    logger.add(sys.stderr, level=cfg.general.log_level)
 
     if args.check:
         sys.exit(0 if check(cfg) else 1)

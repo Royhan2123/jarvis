@@ -184,12 +184,33 @@ class Jarvis:
             self.cfg.audio.chunk_ms,
         )
 
+    def _save_debug_audio(self, audio) -> None:
+        """Mode DEBUG: simpan ucapan terakhir (debug/last_utterance.wav) untuk analisis offline."""
+        if self.cfg.general.log_level != "DEBUG":
+            return
+        import wave
+
+        from jarvis.brain.memory import data_dir
+
+        try:
+            d = data_dir() / "debug"
+            d.mkdir(exist_ok=True)
+            with wave.open(str(d / "last_utterance.wav"), "wb") as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(self.cfg.audio.sample_rate)
+                w.writeframes(audio.tobytes())
+        except OSError as e:
+            logger.debug(f"gagal simpan audio debug: {e}")
+
     # ── pemrosesan perintah ──
     def handle_utterance(self, audio) -> str | None:
         """STT → router untuk satu ucapan."""
         self._set(State.THINKING)
         t0 = time.perf_counter()
         text = self.stt.transcribe(audio)
+        logger.debug(f"[stt] '{text}' logprob={self.stt.last_logprob:.2f}")
+        self._save_debug_audio(audio)
         if not text:
             logger.info("(tidak ada teks terdengar)")
             return None
