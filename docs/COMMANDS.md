@@ -285,6 +285,7 @@ tes. Aktifkan: `agent.enabled: true` + isi `workspace.folders`. Model: `llm.smar
 Tool agen: `list_dir`, `read_file`, `search`, `edit_file`, `write_file`, `run_command`.
 
 **Pengaman (jangan dilonggarkan tanpa izin pemilik):**
+- **Izin bisa disetel** lewat `agent.confirm_actions` (default minta izin untuk `edit_file`, `write_file`, `run_command`; hapus item agar otomatis, `[]` = tanpa tanya). Blokir keras dan file rahasia tidak ikut longgar.
 - Ubah/buat file dan semua perintah shell **dikonfirmasi** (suara "ya"; diam/tidak jelas = batal).
   Pengecualian: `agent.readonly_commands` (ls, cat, grep, git status...) tanpa pipa/redirect/`$()`.
 - Daftar blokir keras yang **tak bisa ditembus konfirmasi**: `sudo`, `rm -rf` ke `/`/`~`/`*`, perintah

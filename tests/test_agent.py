@@ -169,3 +169,31 @@ def test_rule_routes_to_agent_and_tool_guards(adapter) -> None:
 def test_path_with_project_folder_prefix_is_tolerated(cfg, tmp_path) -> None:
     agent, _ = make(cfg, [])
     assert "return a - b" in agent.call("read_file", {"path": f"{tmp_path.name}/toko.py"})
+
+
+def test_default_asks_for_everything(cfg) -> None:
+    assert set(cfg.agent.confirm_actions) == {"edit_file", "write_file", "run_command"}
+
+
+def test_setting_can_skip_permission_for_some_actions(cfg, tmp_path) -> None:
+    cfg.agent.confirm_actions = ["run_command"]  # ubah file otomatis, perintah tetap tanya
+    script = [
+        ("edit_file", {"path": "toko.py", "old": "a - b", "new": "a + b"}),
+        ("run_command", {"command": "echo hai > x.txt"}),
+        "selesai",
+    ]
+    agent, asked = make(cfg, script, [False])
+    agent.run("x")
+    assert "a + b" in (tmp_path / "toko.py").read_text()  # tanpa izin
+    assert len(asked) == 1 and "echo" in asked[0]  # perintah tetap ditanya
+    assert not (tmp_path / "x.txt").exists()  # ditolak
+
+
+def test_no_permission_mode_still_enforces_hard_blocks(cfg) -> None:
+    cfg.agent.confirm_actions = []
+    cfg.general.offline_only = False
+    agent, asked = make(cfg, [("run_command", {"command": "sudo rm -rf /"}), "x"])
+    agent.run("x")
+    assert asked == []
+    assert "ERROR" in agent.client.seen[-1]["content"]
+    assert "ERROR" in agent.call("read_file", {"path": "~/.ssh/id_rsa"})

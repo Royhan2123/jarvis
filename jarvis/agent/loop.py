@@ -84,6 +84,13 @@ class Agent:
         self.steps: list[str] = []  # jejak aksi, untuk log/UI
 
     # ── tool ──
+    def _ask(self, action: str, what: str) -> bool:
+        """Minta izin bila `action` ada di agent.confirm_actions; selain itu langsung diizinkan."""
+        if action not in self.cfg.agent.confirm_actions:
+            logger.info(f"[agen] {action} otomatis (tanpa izin, sesuai setelan): {what}")
+            return True
+        return self.confirm(what)
+
     def _path(self, ref: str, must_exist: bool = True) -> Path:
         rs = workspace.roots(self.cfg)
         if not rs:
@@ -170,7 +177,9 @@ class Agent:
         n = text.count(old)
         if n != 1:
             raise AgentError("Teks lama tidak ditemukan persis" if n == 0 else f"Muncul {n} kali")
-        if not self.confirm(f"mengubah file {p.name}, {len(old)} jadi {len(new)} karakter"):
+        if not self._ask(
+            "edit_file", f"mengubah file {p.name}, {len(old)} jadi {len(new)} karakter"
+        ):
             raise AgentError("Pengguna menolak perubahan ini")
         shutil.copy2(p, p.with_name(p.name + ".jarvis-bak"))
         p.write_text(text.replace(old, new, 1), encoding="utf-8")
@@ -182,15 +191,15 @@ class Agent:
             raise AgentError("File sudah ada; pakai edit_file")
         if len(content) > MAX_WRITE_CHARS or not p.parent.is_dir():
             raise AgentError("Isi terlalu panjang atau folder tujuan belum ada")
-        if not self.confirm(f"membuat file baru {p.name}, {len(content)} karakter"):
+        if not self._ask("write_file", f"membuat file baru {p.name}, {len(content)} karakter"):
             raise AgentError("Pengguna menolak pembuatan file")
         p.write_text(content, encoding="utf-8")
         return f"{p.name} dibuat"
 
     def t_run_command(self, command: str) -> str:
         shell.check_command(self.cfg, command)
-        if not shell.is_read_only(self.cfg, command) and not self.confirm(
-            f"menjalankan perintah: {command}"
+        if not shell.is_read_only(self.cfg, command) and not self._ask(
+            "run_command", f"menjalankan perintah: {command}"
         ):
             raise AgentError("Pengguna menolak perintah ini")
         return shell.run(self.cfg, command)

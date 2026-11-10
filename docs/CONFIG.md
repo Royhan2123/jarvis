@@ -215,6 +215,9 @@ agent:                                # agen kerja: tugas bertahap + shell terja
   prewarm: true                       # proses prompt agen di latar saat Jarvis menyala (langkah 1 cepat)
   command_timeout_s: 60
   max_output_chars: 4000
+  confirm_actions: ["edit_file", "write_file", "run_command"]   # aksi yang MINTA IZIN (default semua)
+                                      # hapus item agar otomatis, mis. ["run_command"]; [] = tanpa tanya
+                                      # blokir keras & file rahasia tetap berlaku walau otomatis
   auto_read_only: true                # ls/cat/grep/git status... jalan tanpa tanya (tanpa pipa/redirect)
   readonly_commands: ["ls", "pwd", "cat", "grep", "git status", "git diff", ...]
 

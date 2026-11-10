@@ -236,6 +236,12 @@ class AgentConfig(_Section):
     prewarm: bool = True  # proses prompt statis di latar saat Jarvis menyala (langkah 1 jadi cepat)
     command_timeout_s: int = 60
     max_output_chars: int = 4000
+    # Aksi yang MINTA IZIN (default: semuanya). Hapus satu agar jalan otomatis, mis. ["run_command"]
+    # = ubah/buat file otomatis, perintah shell tetap tanya. [] = tidak pernah tanya.
+    # Blokir keras (sudo, hapus massal, ...) dan file rahasia TIDAK ikut dilonggarkan.
+    confirm_actions: list[Literal["edit_file", "write_file", "run_command"]] = [
+        "edit_file", "write_file", "run_command",
+    ]  # fmt: skip
     auto_read_only: bool = True
     readonly_commands: list[str] = [
         "ls", "pwd", "cat", "head", "tail", "wc", "grep", "rg", "find", "tree", "which", "echo",

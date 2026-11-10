@@ -116,5 +116,9 @@ ui:
 # rahasia dilindungi (workspace.deny), pemblokiran jaringan bila offline_only.
 agent:
   enabled: true
+  # Aksi yang MINTA IZIN (default: semua). Hapus item agar jalan otomatis tanpa tanya:
+  #   ["run_command"]  → ubah/buat file otomatis, perintah shell tetap tanya
+  #   []               → tidak pernah tanya (blokir keras & file rahasia tetap berlaku)
+  confirm_actions: ["edit_file", "write_file", "run_command"]
 workspace:
   folders: ["~"]
