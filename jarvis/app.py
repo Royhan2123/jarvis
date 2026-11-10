@@ -11,6 +11,7 @@ from enum import StrEnum
 
 from loguru import logger
 
+from jarvis import island
 from jarvis.audio.sounds import play_confirm, play_done, play_error, play_ting
 from jarvis.audio.stream import MicStream
 from jarvis.audio.vad import VAD, record_utterance
@@ -429,6 +430,7 @@ class Jarvis:
     def _agent_confirm(self, what: str) -> bool:
         """Konfirmasi satu langkah agen lewat suara; hanya 'ya' yang jelas yang mengizinkan."""
         print(f"\n⚠️  Agen ingin {what}")
+        island.notify_async(self.cfg, f"Jarvis ingin {what}. Jawab ya atau tidak")
         # tidak boleh diinterupsi: gema suaranya sendiri pernah terdengar sebagai "Hello"
         self._say(f"Saya ingin {what}. Boleh? Bilang ya atau tidak.", interruptible=False)
         return self._listen_yes_no() is True

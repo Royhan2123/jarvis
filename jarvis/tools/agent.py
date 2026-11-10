@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from jarvis import island
 from jarvis.tools.registry import ToolError, context, tool
 
 # Diisi aplikasi (suara/UI): konfirmasi(kalimat) -> bool dan ucapan(teks). Tanpa itu agen menolak.
@@ -27,7 +28,9 @@ def run_agent(task: str) -> str:
     if confirm_hook is None:
         raise ToolError("Agen butuh cara konfirmasi (suara atau UI) yang belum tersambung")
     try:
-        return Agent(cfg, confirm_hook, say_hook).run(task)
+        result = Agent(cfg, confirm_hook, say_hook).run(task)
+        island.notify_async(cfg, f"Jarvis: {result}")
+        return result
     except AgentError as e:
         raise ToolError(str(e)) from e
     except Exception as e:  # noqa: BLE001 — Ollama mati dsb. jangan menjatuhkan Jarvis

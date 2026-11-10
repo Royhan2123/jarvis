@@ -249,6 +249,13 @@ class AgentConfig(_Section):
     ]  # fmt: skip
 
 
+class IslandConfig(_Section):
+    """Sambungan ke Isla Desk (pulau notifikasi Tauri) lewat IPC loopback; tidak butuh internet."""
+
+    enabled: bool = False
+    ipc_file: str = ""  # kosong = folder data Isla di OS ini (…/com.royhan.isladesk/ipc.json)
+
+
 class MessagingConfig(_Section):
     """Draf pesan WhatsApp: nama panggilan → nomor (format internasional, mis. 62812...)."""
 
@@ -275,7 +282,7 @@ class PluginsConfig(_Section):
 class ToolsConfig(_Section):
     enabled: list[str] = [
         "system", "apps", "media", "web", "screen", "keyboard",
-        "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent",
+        "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent", "island",
     ]  # fmt: skip
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
     confirm_timeout_s: int = 8
@@ -319,6 +326,7 @@ class Config(_Section):
     smarthome: SmartHomeConfig = SmartHomeConfig()
     workspace: WorkspaceConfig = WorkspaceConfig()
     agent: AgentConfig = AgentConfig()
+    island: IslandConfig = IslandConfig()
     messaging: MessagingConfig = MessagingConfig()
     platform: PlatformConfig = PlatformConfig()
     ui: UIConfig = UIConfig()

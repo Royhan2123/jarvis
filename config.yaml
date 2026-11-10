@@ -85,7 +85,7 @@ tts:
     api_key_file: "~/.jarvis-fish-key"
 
 tools:
-  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent"]
+  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent", "island"]
   confirm_risk_level: "high"
   confirm_timeout_s: 8
   apps:

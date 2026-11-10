@@ -136,11 +136,18 @@ _WA = re.compile(
 _AGENT = re.compile(
     r"^\W*(?:jarvis\W+)?(?:tolong\s+)?(?:agen|agent|kerjakan)\b\s*[:,]?\s*(.+)$", re.I | re.S
 )
+_ISLAND = re.compile(
+    r"^\W*(?:jarvis\W+)?(?:tolong\s+)?(?:tampilkan|tunjukkan|kirim)\s+(?:ke\s+|di\s+)(?:pulau|isla)\b"
+    r"\s*[:,]?\s*(.+)$",
+    re.I | re.S,
+)
 _UNIT_MIN = {"detik": 1 / 60, "menit": 1.0, "jam": 60.0}
 
 
 def _match_raw(text: str) -> list[Intent] | None:
     """Perintah yang isinya harus persis seperti diucapkan (ketik/catat): jangan dinormalisasi."""
+    if m := _ISLAND.match(text.strip()):
+        return [Intent("show_on_island", {"text": m.group(1).strip()})]
     if m := _AGENT.match(text.strip()):
         return [Intent("run_agent", {"task": m.group(1).strip()})]
     if m := _WA.match(text.strip()):
