@@ -128,3 +128,25 @@ def test_code_request_detection() -> None:
     assert workspace.looks_like_code_request("ada bug di toko titik py")
     assert workspace.looks_like_code_request("perbaiki fungsi total")
     assert not workspace.looks_like_code_request("jam berapa sekarang")
+
+
+def test_walk_skips_huge_dirs_and_hidden(tmp_path) -> None:
+    (tmp_path / "node_modules" / "x").mkdir(parents=True)
+    (tmp_path / "node_modules" / "x" / "lib.js").write_text("1")
+    (tmp_path / "Library").mkdir()
+    (tmp_path / "Library" / "a.txt").write_text("1")
+    (tmp_path / ".hidden").mkdir()
+    (tmp_path / ".hidden" / "h.txt").write_text("1")
+    (tmp_path / "proyek").mkdir()
+    (tmp_path / "proyek" / "toko.py").write_text("1")
+    names = {p.name for p in workspace.walk_files(tmp_path)}
+    assert names == {"toko.py"}
+
+
+def test_home_wide_workspace_still_protects_secrets(tmp_path) -> None:
+    from jarvis.config import Config
+
+    cfg = Config()
+    cfg.workspace.folders = [str(tmp_path)]
+    for name in [".jarvis-fish-key", ".netrc", ".ssh", ".env", "Keychains", ".config"]:
+        assert workspace.is_denied(cfg, tmp_path / name / "x"), name

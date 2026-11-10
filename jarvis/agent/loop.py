@@ -145,15 +145,15 @@ class Agent:
         except re.error:
             rx = re.compile(re.escape(pattern), re.I)
         base = self._path(path or ".")
-        files = [base] if base.is_file() else sorted(base.rglob("*"))
+        files = [base] if base.is_file() else workspace.walk_files(base, budget_s=8.0)
         hits: list[str] = []
         for f in files:
             if len(hits) >= 40:
                 break
-            rel = f.relative_to(base).parts if base.is_dir() else ()
-            if not f.is_file() or not workspace.SKIP_DIRS.isdisjoint(rel):
-                continue
-            if workspace.is_denied(self.cfg, f) or f.stat().st_size > 512_000:
+            try:
+                if workspace.is_denied(self.cfg, f) or f.stat().st_size > 512_000:
+                    continue
+            except OSError:
                 continue
             try:
                 for n, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):

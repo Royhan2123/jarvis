@@ -291,6 +291,7 @@ Tool agen: `list_dir`, `read_file`, `search`, `edit_file`, `write_file`, `run_co
   disk (`mkfs`, `dd of=`), `curl | sh`, shutdown/reboot, `crontab`/`launchctl`/`systemctl`, perintah
   yang menyebut path rahasia (`.ssh`, `.env`, `id_rsa`, ...), perintah > 300 karakter.
 - `offline_only: true` → `curl`, `ssh`, `git push/pull`, `pip/npm install`, dll. diblokir.
+- `workspace.folders` boleh seluruh home (`["~"]`); folder raksasa (`Library`, `node_modules`, ...) tidak dipindai, dan `workspace.deny` (`.ssh`, `.config`, `.env`, kunci Fish, riwayat shell, Keychains, ...) tetap tak tersentuh walau folder dibuka penuh.
 - Folder kerja perintah = `workspace.folders[0]`; path file harus di dalam folder kerja (symlink di-resolve).
 - Environment dibersihkan dari variabel `*KEY*`, `*TOKEN*`, `*SECRET*`, `*PASSWORD*`; timeout; keluaran dipotong.
 - Isi file & keluaran perintah dikirim ke model sebagai DATA; file yang diubah dicadangkan `.jarvis-bak`.

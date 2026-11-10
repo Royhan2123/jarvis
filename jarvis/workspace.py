@@ -7,13 +7,36 @@ ubah file = risk high (konfirmasi suara) + cadangan `<file>.jarvis-bak`; isi fil
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
+import time
+from collections.abc import Iterator
 from pathlib import Path
 
 from jarvis.config import Config
 
-SKIP_DIRS = {".git", "node_modules", ".venv", "__pycache__", "build", "dist", ".idea"}
+SKIP_DIRS = {
+    ".git", "node_modules", ".venv", "__pycache__", "build", "dist", ".idea",
+    "Library", ".Trash", ".cache", ".npm", ".cargo", ".rustup", ".pyenv", "site-packages",
+    "Applications", "Movies", "Music", "Pictures",
+}  # fmt: skip  # tidak ikut dipindai (folder raksasa); tetap bisa diakses bila path-nya disebut
+
+
+def walk_files(root: Path, budget_s: float = 3.0) -> Iterator[Path]:
+    """Telusuri file di bawah `root` tanpa masuk SKIP_DIRS; berhenti setelah `budget_s` detik.
+
+    Aman untuk folder besar seperti seluruh home (rglob akan menelusuri Library/node_modules).
+    """
+    deadline = time.monotonic() + budget_s
+    for cur, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
+        for name in files:
+            yield Path(cur) / name
+        if time.monotonic() > deadline:
+            return
+
+
 MAX_EDIT_CHARS = 4000
 
 
@@ -67,10 +90,9 @@ def find_file(cfg: Config, ref: str) -> Path:
         if direct.is_file():
             matches.append(direct)
             continue
-        for f in root.rglob(Path(ref).name):
-            if SKIP_DIRS.isdisjoint(f.relative_to(root).parts) and f.is_file():
-                if str(f).endswith(ref):
-                    matches.append(f)
+        for f in walk_files(root):
+            if f.name == Path(ref).name and str(f).endswith(ref):
+                matches.append(f)
             if len(matches) > 20:
                 break
     matches = sorted({m.resolve() for m in matches})
@@ -191,13 +213,11 @@ def stt_hint(cfg: Config, limit_chars: int = 200) -> str:
     exts = {e.lower() for e in cfg.workspace.extensions}
     files: list[Path] = []
     for root in roots(cfg):
-        for f in root.rglob("*"):
+        for f in walk_files(root, budget_s=2.0):
             if len(files) >= 400:
                 break
-            rel = f.relative_to(root).parts
-            if f.is_file() and f.suffix.lower() in exts and SKIP_DIRS.isdisjoint(rel):
-                if not is_denied(cfg, f):
-                    files.append(f)
+            if f.suffix.lower() in exts and not f.name.startswith(".") and not is_denied(cfg, f):
+                files.append(f)
     names: list[str] = []
     total = 0
     for f in sorted(files, key=lambda x: x.stat().st_mtime, reverse=True):

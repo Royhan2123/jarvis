@@ -211,7 +211,10 @@ class WorkspaceConfig(_Section):
     # nama file/folder yang tidak pernah dibaca atau diubah (cocok pada tiap bagian path)
     deny: list[str] = [
         ".git", ".ssh", ".env", ".aws", ".gnupg", "node_modules", ".venv",
-        "id_rsa", "id_ed25519", "credentials", "secrets", "google_token.json",
+        "id_rsa", "id_ed25519", "id_ecdsa", "credentials", "secrets", "google_token.json",
+        ".jarvis-fish-key", ".netrc", ".npmrc", ".pypirc", ".kube", ".docker", ".config",
+        "Keychains", "Cookies", "Login Data", "known_hosts",
+        ".bash_history", ".zsh_history", ".python_history", ".claude.json",
     ]  # fmt: skip
     max_file_kb: int = 256
     context_chars: int = 3000  # potongan file yang dikirim ke LLM (num_ctx kecil di CPU)

@@ -110,3 +110,11 @@ platform:
 
 ui:
   tray: true
+
+# Agen kerja: Jarvis mengerjakan tugas bertahap di komputer (keputusan pemilik 2026-11-10: seluruh home).
+# Tetap berlaku: konfirmasi tiap ubah file/perintah, blokir keras (sudo, hapus massal, ...), file
+# rahasia dilindungi (workspace.deny), pemblokiran jaringan bila offline_only.
+agent:
+  enabled: true
+workspace:
+  folders: ["~"]
