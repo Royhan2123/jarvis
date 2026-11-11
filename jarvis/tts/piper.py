@@ -43,10 +43,11 @@ def play_int16(audio: np.ndarray, rate: int, device, stop: threading.Event) -> N
 
 
 class PiperTTS:
-    def __init__(self, cfg: Config) -> None:
+    def __init__(self, cfg: Config, lang: str = "id") -> None:
         from piper import PiperVoice, SynthesisConfig
 
-        name = getattr(cfg.tts.voices.piper, cfg.tts.gender)
+        pair = cfg.tts.voices.piper_en if lang == "en" else cfg.tts.voices.piper
+        name = getattr(pair, cfg.tts.gender)
         path = resolve_voice(name) if name else None
         if path is None or not path.exists():
             raise FileNotFoundError(f"Suara Piper belum ada: {path}. Jalankan setup download-voice")

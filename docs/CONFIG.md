@@ -107,6 +107,13 @@ tts:
     piper:                            # offline; isi dengan file .onnx suara Piper
       male: "id_ID-news_tts-medium"   # cek dulu karakter suaranya; ganti dengan suara custom hasil training
       female: "custom/jarvis_cewek.onnx"
+    piper_en:                         # suara Inggris offline; kalimat Inggris otomatis memakainya
+      male: "en_US-ryan-medium"       # unduh: python -m jarvis.setup download-voice en_US-ryan-medium (±63 MB)
+      female: "en_US-amy-medium"      # unduh: ... download-voice en_US-amy-medium (±63 MB)
+    system_en:                        # suara OS untuk kalimat Inggris (bila Piper Inggris tak ada)
+      macos:   { male: "Daniel", female: "Samantha" }
+      windows: { male: "Microsoft David", female: "Microsoft Zira" }
+      linux:   { male: "en+m3", female: "en+f3" }
     system:                           # offline, bawaan OS (fallback)
       macos:   { male: null, female: "Damayanti" }
       windows: { male: "Microsoft Andika", female: null }   # butuh language pack Indonesia

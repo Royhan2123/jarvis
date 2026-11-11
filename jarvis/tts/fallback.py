@@ -8,9 +8,12 @@ from jarvis.platform.base import PlatformAdapter
 
 
 class SystemTTS:
-    def __init__(self, cfg: Config, adapter: PlatformAdapter | None = None) -> None:
+    def __init__(
+        self, cfg: Config, adapter: PlatformAdapter | None = None, lang: str = "id"
+    ) -> None:
         self.adapter = adapter or get_adapter()
-        pair = getattr(cfg.tts.voices.system, self.adapter.name)
+        voices = cfg.tts.voices.system_en if lang == "en" else cfg.tts.voices.system
+        pair = getattr(voices, self.adapter.name)
         self.voice = getattr(pair, cfg.tts.gender)
 
     def speak(self, text: str) -> None:

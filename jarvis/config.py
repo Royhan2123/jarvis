@@ -116,9 +116,17 @@ class SystemVoices(_Section):
     linux: VoicePair = VoicePair(male="id+m3", female="id+f3")
 
 
+class SystemVoicesEn(_Section):
+    macos: VoicePair = VoicePair(male="Daniel", female="Samantha")
+    windows: VoicePair = VoicePair(male="Microsoft David", female="Microsoft Zira")
+    linux: VoicePair = VoicePair(male="en+m3", female="en+f3")
+
+
 class TTSVoices(_Section):
     piper: VoicePair = VoicePair(male="id_ID-news_tts-medium", female="custom/jarvis_cewek.onnx")
+    piper_en: VoicePair = VoicePair(male="en_US-ryan-medium", female="en_US-amy-medium")
     system: SystemVoices = SystemVoices()
+    system_en: SystemVoicesEn = SystemVoicesEn()
     edge: VoicePair = VoicePair(male="id-ID-ArdiNeural", female="id-ID-GadisNeural")
 
 

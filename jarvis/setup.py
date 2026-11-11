@@ -12,7 +12,11 @@ from jarvis.config import load_config
 from jarvis.tts.piper import resolve_voice, voices_dir
 
 _HF = "https://huggingface.co/rhasspy/piper-voices/resolve/main"
-_VOICE_PATHS = {"id_ID-news_tts-medium": "id/id_ID/news_tts/medium"}
+_VOICE_PATHS = {
+    "id_ID-news_tts-medium": "id/id_ID/news_tts/medium",
+    "en_US-ryan-medium": "en/en_US/ryan/medium",  # suara Inggris pria (±63 MB)
+    "en_US-amy-medium": "en/en_US/amy/medium",  # suara Inggris wanita (±63 MB)
+}
 
 
 def list_mics() -> None:

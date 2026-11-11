@@ -269,8 +269,14 @@ lama dari `id` saja), lalu ditranskripsi dengan bahasa itu. Frasa pemanggil teta
   "translate good morning to Indonesian" · "how do you say thank you in Japanese".
   Bahasa dikenal: Inggris, Indonesia, Jepang, Korea, Mandarin, Arab, Jerman, Prancis, Spanyol, Belanda,
   Portugis, Rusia, Italia, Jawa, Sunda (kualitas Jawa/Sunda dari Qwen belum teruji baik).
-- **Suara balasan:** Fish Audio membacakan Inggris/Jepang dengan suara yang sama. Piper/suara OS (cadangan)
-  hanya Indonesia, jadi terjemahan akan terdengar dengan logat Indonesia.
+- **Suara balasan:** Fish Audio membacakan Inggris/Jepang dengan suara yang sama. Untuk Piper/suara OS
+  (cadangan atau mode offline), tiap kalimat dipilih suaranya: kalimat Inggris memakai `tts.voices.piper_en`
+  (atau `system_en`), selainnya suara Indonesia. Unduh suara Inggris: `python -m jarvis.setup download-voice
+  en_US-ryan-medium` (pria) / `en_US-amy-medium` (wanita), masing-masing ±63 MB. Bahasa selain Inggris
+  (mis. Jepang) tetap dibaca suara Indonesia bila Fish tak tersedia.
+- **Perintah Inggris lainnya:** "take a note: …", "type: …", "remind me to X in 10 minutes", "read my notes",
+  "my name is Roy", "summarize my screen", "what's on my calendar", "any new emails", "send a WhatsApp to
+  Budi saying …", "work on <tugas>" (agen), "turn on <nama perangkat>".
 
 ## 10. Suara Fish Audio (online, opsional)
 

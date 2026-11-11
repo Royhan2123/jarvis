@@ -38,6 +38,10 @@ _EN = {
     "the", "and", "is", "are", "to", "of", "for", "with", "this", "that", "what", "how", "why",
     "can", "you", "please", "open", "close", "play", "turn", "my", "me", "it", "in", "on",
     "time", "today", "tell", "show", "set", "do", "does", "who", "where", "when",
+    "good", "morning", "evening", "night", "hello", "hi", "thanks", "thank", "everyone", "here",
+    "there", "very", "your", "have", "has", "was", "were", "be", "will", "would", "not", "but",
+    "from", "at", "by", "as", "an", "i", "we", "they", "he", "she", "if", "so", "sorry",
+    "welcome", "sure", "yes", "capital", "weather", "name", "which", "than", "about",
 }  # fmt: skip
 
 

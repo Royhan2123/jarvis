@@ -209,3 +209,53 @@ def test_english_device_commands() -> None:
 def test_english_questions_are_not_hijacked() -> None:
     for q in ["how do I take a screenshot", "who is the note taker", "why did the system restart"]:
         assert rules.match(q) is None, q
+
+
+# ── TTS dua bahasa ──
+class SpyTTS:
+    def __init__(self) -> None:
+        self.said: list[str] = []
+        self.stopped = False
+
+    def speak(self, text: str) -> None:
+        self.said.append(text)
+
+    def stop(self) -> None:
+        self.stopped = True
+
+
+def test_bilingual_tts_picks_voice_per_sentence() -> None:
+    from jarvis.tts import BilingualTTS
+
+    idt, ent = SpyTTS(), SpyTTS()
+    tts = BilingualTTS(idt, ent)
+    tts.speak("Siap, saya buka Spotify.")
+    tts.speak("Good morning everyone.")
+    tts.stop()
+    assert idt.said == ["Siap, saya buka Spotify."] and ent.said == ["Good morning everyone."]
+    assert idt.stopped and ent.stopped
+
+
+def test_bilingual_tts_without_english_voice_uses_indonesian_for_all() -> None:
+    from jarvis.tts import BilingualTTS
+
+    idt = SpyTTS()
+    BilingualTTS(idt, None).speak("Good morning everyone.")
+    assert idt.said == ["Good morning everyone."]
+
+
+def test_system_tts_uses_english_voice_table(adapter) -> None:
+    from jarvis.tts.fallback import SystemTTS
+
+    cfg = Config()
+    assert SystemTTS(cfg, adapter, lang="en").voice == "Daniel"
+    cfg.tts.gender = "female"
+    assert SystemTTS(cfg, adapter, lang="en").voice == "Samantha"
+    assert SystemTTS(cfg, adapter).voice == "Damayanti"
+
+
+def test_guess_short_english_phrases() -> None:
+    for s in ["Good morning everyone.", "Thank you very much", "Paris is the capital of France."]:
+        assert language.guess(s) == "en", s
+    for s in ["Siap, saya buka Spotify.", "Terima kasih banyak", "Oke"]:
+        assert language.guess(s) == "id", s
