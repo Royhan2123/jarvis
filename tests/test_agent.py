@@ -131,7 +131,12 @@ def test_paths_outside_workspace_and_denied_refused(cfg, tmp_path) -> None:
 def test_command_runs_in_workspace_with_clean_env(cfg, tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("FISH_API_KEY", "rahasia")
     out = shell.run(cfg, "pwd; echo [${FISH_API_KEY}]")
-    assert str(tmp_path.resolve()) in out and "rahasia" not in out and "[exit 0]" in out
+    native = str(tmp_path.resolve())
+    posix = tmp_path.resolve().as_posix()
+    if len(posix) > 2 and posix[1] == ":":  # Windows + Git Bash menulis C:/x sebagai /c/x
+        posix = "/" + posix[0].lower() + posix[2:]
+    assert native in out or posix in out
+    assert "rahasia" not in out and "[exit 0]" in out
 
 
 def test_command_timeout(cfg) -> None:
