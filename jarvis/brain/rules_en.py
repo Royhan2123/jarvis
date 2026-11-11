@@ -14,6 +14,33 @@ from jarvis.brain.rules import Intent
 _FILL = {"please", "hey", "could", "can", "you", "would", "the", "a", "my"}
 
 
+_P = r"^\W*(?:jarvis\W+)?(?:please\s+)?(?:(?:could|can|would) you\s+(?:please\s+)?)?"
+_RAW = (
+    (re.compile(_P + r"(?:take a note|make a note|note down|note)\b\s*[:,]?\s*(?:that\s+)?(.+)$",
+                re.I | re.S), "add_note", "text"),
+    (re.compile(_P + r"type\b\s*[:,]?\s*(.+)$", re.I | re.S), "type_text", "text"),
+    (re.compile(_P + r"(?:work on|agent)\b\s*[:,]?\s*(.+)$", re.I | re.S), "run_agent", "task"),
+)  # fmt: skip
+_WA = re.compile(
+    _P + r"(?:send|write|draft|make)\s+(?:a\s+)?(?:whatsapp|wa)(?:\s+message)?\s+(?:to\s+)?(\w+)"
+    r"\s*(?:saying|that says|:|,)?\s*(.+)$",
+    re.I | re.S,
+)
+_UNIT_MIN = {"second": 1 / 60, "seconds": 1 / 60, "minute": 1.0, "minutes": 1.0,
+             "hour": 60.0, "hours": 60.0}  # fmt: skip
+
+
+def match_raw(text: str) -> list[Intent] | None:
+    """Perintah Inggris yang isinya harus persis seperti diucapkan (catatan, ketik, pesan)."""
+    s = text.strip()
+    if m := _WA.match(s):
+        return [Intent("whatsapp_draft", {"contact": m.group(1), "message": m.group(2).strip()})]
+    for pat, tool, arg in _RAW:
+        if m := pat.match(s):
+            return [Intent(tool, {arg: m.group(1).strip()})]
+    return None
+
+
 def match(
     t: str,
     open_intent: Callable[[str], Intent],
@@ -50,6 +77,56 @@ def match(
     ):
         kind = "battery" if "battery" in t else "cpu" if "cpu" in t else "ram"
         return [Intent("system_info", {"kind": kind})]
+    if m := re.fullmatch(
+        r"remind me(?: to)? (.+?) in (\d+(?:\.\d+)?) (minutes?|hours?|seconds?)", t
+    ):
+        return [
+            Intent(
+                "set_reminder",
+                {"text": m.group(1), "minutes": float(m.group(2)) * _UNIT_MIN[m.group(3)]},
+            )
+        ]
+    if m := re.fullmatch(
+        r"remind me in (\d+(?:\.\d+)?) (minutes?|hours?|seconds?)(?: to)? (.+)", t
+    ):
+        return [
+            Intent(
+                "set_reminder",
+                {"text": m.group(3), "minutes": float(m.group(1)) * _UNIT_MIN[m.group(2)]},
+            )
+        ]
+    if re.fullmatch(
+        r"(?:read|read out|list|what are) notes|read notes? back|what notes do i have", t
+    ):
+        return [Intent("list_notes")]
+    if m := re.fullmatch(r"(?:name is|call me|i am called)\s+(.+)", t):
+        return [Intent("remember_fact", {"key": "nama", "value": m.group(1).title()})]
+    if m := re.fullmatch(r"i live in\s+(.+)", t):
+        return [Intent("remember_fact", {"key": "kota", "value": m.group(1).title()})]
+    if re.fullmatch(
+        r"(?:summarize|read|explain|describe)(?: what s on)?(?: this| my)? screen"
+        r"|what s on(?: this| my)? screen",
+        t,
+    ):
+        return [Intent("read_screen", {"question": "Summarize what is on this screen briefly"})]
+    if re.fullmatch(r"what s this error|what error is this|why is there an error", t):
+        return [Intent("read_screen", {"question": "What error is on screen and what causes it?"})]
+    if re.fullmatch(
+        r"(?:what s|what is|check)(?: on)?(?: my)? (?:calendar|schedule|agenda)(?: today)?"
+        r"|what do i have today|what meetings do i have(?: today)?",
+        t,
+    ):
+        return [Intent("calendar_events", {"days": 1})]
+    if re.fullmatch(
+        r"(?:check|read) (?:email|emails|mail|inbox)"
+        r"|(?:do i have )?(?:any )(?:new |unread )?emails?|do i have (?:new |unread )?emails?",
+        t,
+    ):
+        return [Intent("unread_emails")]
+    if re.fullmatch(r"(?:shut down|shutdown|turn off)(?: computer| laptop| pc| mac)?", t):
+        return [Intent("shutdown")]
+    if re.fullmatch(r"restart(?: computer| laptop| pc| mac)?", t):
+        return [Intent("restart")]
     if re.fullmatch(r"lock(?: screen| computer| laptop| mac| pc)?", t):
         return [Intent("lock_screen")]
     if re.fullmatch(r"(?:stop|be quiet|quiet|enough|stop talking|shut up)", t):

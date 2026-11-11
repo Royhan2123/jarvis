@@ -209,7 +209,9 @@ def _match_raw(text: str) -> list[Intent] | None:
     for pat, tool in _RAW_VERBS:
         if m := pat.match(text.strip()):
             return [Intent(tool, {"text": m.group(1).strip()})]
-    return None
+    from jarvis.brain import rules_en
+
+    return rules_en.match_raw(text)
 
 
 def match(text: str) -> list[Intent] | None:
@@ -345,6 +347,7 @@ def parse_yes_no(text: str) -> bool | None:
 
 _DEVICE_VERBS = {
     "nyalakan": "on", "hidupkan": "on", "nyalain": "on", "matikan": "off", "matiin": "off",
+    "turn on": "on", "switch on": "on", "turn off": "off", "switch off": "off",
 }  # fmt: skip
 
 
@@ -354,8 +357,12 @@ def match_devices(text: str, names: list[str]) -> list[Intent] | None:
     for name in sorted(names, key=len, reverse=True):
         n = " ".join(name.lower().split())
         for verb, action in _DEVICE_VERBS.items():
-            if re.fullmatch(rf"{verb} {re.escape(n)}", t):
+            if re.fullmatch(rf"{verb} (?:the )?{re.escape(n)}", t):
                 return [Intent("device_control", {"name": name, "action": action})]
-        if re.fullmatch(rf"(?:apakah |apa )?{re.escape(n)} (?:sedang )?(?:menyala|nyala|mati)", t):
+        if re.fullmatch(
+            rf"(?:apakah |apa |is )?{re.escape(n)} (?:sedang |currently )?"
+            r"(?:menyala|nyala|mati|on|off)",
+            t,
+        ):
             return [Intent("device_state", {"name": name})]
     return None

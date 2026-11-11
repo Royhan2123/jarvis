@@ -162,3 +162,50 @@ def test_fixed_language_never_detects_and_wake_stays_indonesian(stt_cls) -> None
     auto = stt_cls(Config().stt.model_copy(update={"language": "auto"}))
     auto.transcribe(AUDIO, fast=True)  # wake tidak memakai deteksi
     assert FakeModel.seen[-1] == "id" and auto.last_language == "id"
+
+
+@pytest.mark.parametrize(
+    ("said", "expected"),
+    [
+        ("take a note: buy coffee tomorrow", [Intent("add_note", {"text": "buy coffee tomorrow"})]),
+        ("note that the meeting moved to 3",
+         [Intent("add_note", {"text": "the meeting moved to 3"})]),
+        ("type: hello, the meeting is at 3",
+         [Intent("type_text", {"text": "hello, the meeting is at 3"})]),
+        ("send a WhatsApp to Budi saying I'll be late",
+         [Intent("whatsapp_draft", {"contact": "Budi", "message": "I'll be late"})]),
+        ("work on fixing the login bug", [Intent("run_agent", {"task": "fixing the login bug"})]),
+        ("remind me to drink water in 10 minutes",
+         [Intent("set_reminder", {"text": "drink water", "minutes": 10.0})]),
+        ("remind me in 2 hours to call mom",
+         [Intent("set_reminder", {"text": "call mom", "minutes": 120.0})]),
+        ("read my notes", [Intent("list_notes")]),
+        ("my name is Roy", [Intent("remember_fact", {"key": "nama", "value": "Roy"})]),
+        ("summarize my screen", [Intent("read_screen",
+                                        {"question": "Summarize what is on this screen briefly"})]),
+        ("what's on my calendar today", [Intent("calendar_events", {"days": 1})]),
+        ("do I have any new emails", [Intent("unread_emails")]),
+        ("shut down computer", [Intent("shutdown")]),
+        ("restart", [Intent("restart")]),
+    ],
+)  # fmt: skip
+def test_more_english_rules(said, expected) -> None:
+    assert rules.match(said) == expected
+
+
+def test_english_device_commands() -> None:
+    names = ["lampu ruang tamu"]
+    assert rules.match_devices("turn on the lampu ruang tamu", names) == [
+        Intent("device_control", {"name": "lampu ruang tamu", "action": "on"})
+    ]
+    assert rules.match_devices("switch off lampu ruang tamu", names) == [
+        Intent("device_control", {"name": "lampu ruang tamu", "action": "off"})
+    ]
+    assert rules.match_devices("is lampu ruang tamu on", names) == [
+        Intent("device_state", {"name": "lampu ruang tamu"})
+    ]
+
+
+def test_english_questions_are_not_hijacked() -> None:
+    for q in ["how do I take a screenshot", "who is the note taker", "why did the system restart"]:
+        assert rules.match(q) is None, q
