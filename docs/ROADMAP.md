@@ -148,6 +148,9 @@ Dikerjakan berurutan; tiap item: lint + tes, commit kecil, centang di sini. Item
 - [x] 6. Benchmark latensi (2026-11-11, Mac Intel i9, `python -m jarvis.bench`): STT small 2.46 s, token pertama LLM 0.30 s, kalimat pertama 1.73 s, TTS 0.13 s → mulai bicara ±4.3 s (target ≤ 5 s tercapai). Pramuat (`keep_alive=-1`), `think=False`, int8, beam 1 sudah aktif; `cpu_threads=8` tidak membantu (2.66 s). Hanya `stt.model=base` yang menembus target STT (0.89 s) tapi lebih sering salah dengar, jadi default tetap `small`
 - [~] 7. 👤 Daftar uji siap di `docs/UJI_MANUAL.md`; menunggu pemilik menjalankan: uji suara penuh (konfirmasi "ya"), Google Calendar/Gmail, WhatsApp, Smart Home asli, RAG lewat mic
 - [x] 7b. Bahasa Inggris + terjemahan (2026-11-11): deteksi bahasa per ucapan (`stt.language: auto`), perintah dasar Inggris, tool `translate`; belum diuji lewat mikrofon asli
-- [ ] 8. Rilis v0.2.0 (tag + installer; butuh izin pemilik) lalu bahasa daerah Jawa/Sunda (paling akhir)
+- [x] 8a. Rilis v0.2.0 terbit (2026-11-11; 4 installer di GitHub Releases, CI 3 OS hijau)
+- [x] 8b. Isla dua arah: Tanya AI via penyedia "Jarvis" dan kartu izin Setuju/Tolak (belum dilihat langsung di layar Mac ini)
+- [x] 8c. Suara Inggris offline (Piper en_US) dan perintah Inggris lanjutan
+- [ ] 9. Bahasa daerah Jawa/Sunda (paling akhir; eksperimen, lihat EXPERIMEN_BAHASA_DAERAH.md)
 
 Di luar kendali sesi ini: uji Windows/Linux (CI hanya membuktikan tes unit) dan kecepatan LLM di CPU.
