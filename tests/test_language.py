@@ -292,9 +292,14 @@ def test_misheard_command_words_are_corrected_only_when_it_helps() -> None:
     assert rules.match("saya suka anggur") is None
 
 
-def test_speakable_rounds_long_decimals_only() -> None:
+def test_speakable_rounds_long_decimals_then_spells_them() -> None:
     from jarvis.tts.stream import speakable
 
-    assert speakable("Angka pi adalah 3,141592653589793.") == "Angka pi adalah 3,14."
-    assert speakable("Sekarang jam 19.43") == "Sekarang jam 19.43"
-    assert speakable("versi 1.2.3 dan 12,5 persen") == "versi 1.2.3 dan 12,5 persen"
+    assert (
+        speakable("Angka pi adalah 3,141592653589793.") == "Angka pi adalah tiga koma satu empat."
+    )
+    assert speakable("Sekarang jam 19.43") == "Sekarang jam sembilan belas empat puluh tiga"
+    assert (
+        speakable("versi 1.2.3 dan 12,5 persen")
+        == "versi satu titik dua titik tiga dan dua belas koma lima persen"
+    )

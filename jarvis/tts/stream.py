@@ -19,8 +19,16 @@ _LONG_DECIMAL = re.compile(r"(\d+)([.,])(\d{2})\d{2,}")
 
 def speakable(text: str) -> str:
     """Rapikan untuk diucapkan: desimal panjang (3,141592653…) dibulatkan ke 2 angka di belakang
-    koma; TTS membacakan tiap digit sehingga terdengar seperti mengoceh."""
-    return _LONG_DECIMAL.sub(r"\1\2\3", text)
+    koma, lalu semua angka dieja (kalimat Indonesia; Inggris dibiarkan, mesin suara membacanya
+    sendiri). Digit mentah dibaca ngawur oleh Fish."""
+    from jarvis.brain.language import guess
+
+    text = _LONG_DECIMAL.sub(r"\1\2\3", text)
+    if guess(text) == "en":
+        return text
+    from jarvis.tts.numbers import spell_numbers
+
+    return spell_numbers(text)
 
 
 def split_sentences(buf: str) -> tuple[list[str], str]:
