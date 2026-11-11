@@ -58,9 +58,11 @@ stt:
   wake_model: "base"        # model untuk mengenali frasa pemanggil (dipanggil sering → pakai yang cepat)
   device: "auto"              # auto | cpu | cuda
   compute_type: "int8"        # CPU: int8 | GPU: float16
-  language: "id"              # null = deteksi otomatis (lebih lambat)
+  language: "id"              # "id" | "en" | "auto" = kenali Indonesia/Inggris per ucapan (+±0.4 dtk, model detect_model)
+  detect_model: "tiny"        # model kecil khusus mendeteksi bahasa saat language: auto (diunduh oleh download-models)
   beam_size: 1                # 1 = tercepat; 5 = lebih akurat
   initial_prompt: "Hello. Mengapa langit berwarna biru? Tolong catat bahwa saya punya janji dengan dokter. Aplikasi saya: Spotify, Chrome, dan VS Code."  # kalimat alami, bukan daftar kata
+  initial_prompt_en: "Hello. Why is the sky blue? Please remind me about my doctor appointment. Open Chrome and play music on Spotify."  # dipakai bila ucapan terdeteksi Inggris
   wake_prompt: "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"  # khusus deteksi panggilan
   min_logprob: -0.85          # keyakinan Whisper di bawah ini → Jarvis minta diulang; null = mati
   cpu_threads: 6              # hasil bench Mac i9: 6 lebih cepat dari 8 (sisakan core untuk audio)
@@ -130,7 +132,7 @@ tts:
 # ─────────────────────────────────────────────
 tools:
   enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online",
-            "smarthome", "workspace", "messaging", "agent", "island"]
+            "smarthome", "workspace", "messaging", "agent", "island", "language"]
   confirm_risk_level: "high"          # low | medium | high — level minimal yang butuh konfirmasi
   confirm_timeout_s: 8
   apps:

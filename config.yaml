@@ -34,7 +34,7 @@ stt:
   wake_model: "base"         # untuk mengenali frasa pemanggil (cepat)
   device: "auto"
   compute_type: "int8"
-  language: "id"
+  language: "auto"           # auto = kenali Indonesia/Inggris per ucapan (+0.4 dtk); "id" = Indonesia saja, tercepat
   beam_size: 1
   initial_prompt: "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"
   cpu_threads: 6
@@ -85,7 +85,7 @@ tts:
     api_key_file: "~/.jarvis-fish-key"
 
 tools:
-  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent", "island"]
+  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent", "island", "language"]
   confirm_risk_level: "high"
   confirm_timeout_s: 8
   apps:

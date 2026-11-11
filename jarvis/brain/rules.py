@@ -149,11 +149,57 @@ _ASK = re.compile(
     r"^(?:selalu|mulai|kembali) tanya(?: izin)?(?: lagi)?(?: untuk| soal| buat| sebelum)? (.+)$"
     r"|^tanya(?: izin)?(?: lagi)? (?:untuk|soal|buat|sebelum) (.+)$"  # "dulu" dibuang normalize()
 )
+_TR_VERB = r"(?:terjemahkan|terjemahin|artikan|translate)"
+_TRANSLATE = (
+    # "terjemahkan ke bahasa inggris: selamat pagi" / "translate to english: good morning"
+    re.compile(
+        rf"^\W*(?:jarvis\W+)?(?:tolong\s+|please\s+)?{_TR_VERB}\s+(?:ke|dalam|to|into)\s+"
+        r"(?:bahasa\s+)?(\w+)\s*[:,]?\s*(.+)$",
+        re.I | re.S,
+    ),
+    # "terjemahkan selamat pagi ke bahasa inggris" / "translate good morning to indonesian"
+    re.compile(
+        rf"^\W*(?:jarvis\W+)?(?:tolong\s+|please\s+)?{_TR_VERB}\s+(.+?)\s+"
+        r"(?:ke|dalam|to|into)\s+(?:bahasa\s+)?(\w+)\W*$",
+        re.I | re.S,
+    ),
+)
+_HOW_SAY = (
+    # "apa bahasa inggris dari selamat pagi" / "bagaimana bahasa inggrisnya terima kasih"
+    re.compile(
+        r"^\W*(?:jarvis\W+)?(?:apa|bagaimana)\s+bahasa\s+(\w+?)(?:nya)?\s+(?:dari\s+|untuk\s+)?"
+        r"(.+?)\W*$",
+        re.I | re.S,
+    ),
+    # "how do you say thank you in indonesian"
+    re.compile(
+        r"^\W*(?:jarvis\W+)?how (?:do you|to|would you) say\s+(.+?)\s+in\s+(\w+)\W*$", re.I | re.S
+    ),
+)
 _UNIT_MIN = {"detik": 1 / 60, "menit": 1.0, "jam": 60.0}
+
+
+def _match_translate(text: str) -> list[Intent] | None:
+    from jarvis.brain.language import target_language
+
+    s = text.strip()
+    for i, pat in enumerate(_TRANSLATE):
+        if m := pat.match(s):
+            lang, body = (m.group(1), m.group(2)) if i == 0 else (m.group(2), m.group(1))
+            if target_language(lang):
+                return [Intent("translate", {"text": body.strip(), "target": lang.lower()})]
+    for i, pat in enumerate(_HOW_SAY):
+        if m := pat.match(s):
+            lang, body = (m.group(1), m.group(2)) if i == 0 else (m.group(2), m.group(1))
+            if target_language(lang):
+                return [Intent("translate", {"text": body.strip(), "target": lang.lower()})]
+    return None
 
 
 def _match_raw(text: str) -> list[Intent] | None:
     """Perintah yang isinya harus persis seperti diucapkan (ketik/catat): jangan dinormalisasi."""
+    if tr := _match_translate(text):
+        return tr
     if m := _ISLAND.match(text.strip()):
         return [Intent("show_on_island", {"text": m.group(1).strip()})]
     if m := _AGENT.match(text.strip()):
@@ -276,7 +322,9 @@ def match(text: str) -> list[Intent] | None:
         ]
     if m := re.fullmatch(r"(?:buka|bukakan|jalankan)\s+(.+)", t):
         return [_open_intent(i) for i in _split_items(m.group(1))]
-    return None
+    from jarvis.brain import rules_en
+
+    return rules_en.match(t, _open_intent, _clean_app)
 
 
 YES = {"ya", "iya", "yakin", "lanjut", "lanjutkan", "oke", "ok", "boleh", "silakan", "betul",

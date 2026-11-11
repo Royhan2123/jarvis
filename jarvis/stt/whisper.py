@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 import numpy as np
+from loguru import logger
 
 from jarvis.config import STTConfig
 
@@ -23,20 +24,53 @@ class WhisperSTT:
 
         self.cfg = cfg
         self.last_logprob = 0.0
+        self.last_language = cfg.language if cfg.language in ("id", "en") else "id"
         self.model = WhisperModel(
             cfg.model,
             device=cfg.device,
             compute_type=cfg.compute_type,
             cpu_threads=cfg.cpu_threads,
         )
+        self.detector = None
+        if cfg.language == "auto":
+            try:
+                self.detector = WhisperModel(
+                    cfg.detect_model,
+                    device=cfg.device,
+                    compute_type=cfg.compute_type,
+                    cpu_threads=cfg.cpu_threads,
+                )
+            except Exception as e:  # noqa: BLE001 — model belum diunduh/offline: tetap Indonesia
+                logger.warning(f"Deteksi bahasa dimatikan ({e}); memakai bahasa Indonesia")
+
+    def detect_language(self, samples: np.ndarray) -> str:
+        """'en' bila ucapan lebih mirip Inggris daripada Indonesia, selain itu 'id'."""
+        if self.detector is None:
+            return "id"
+        _, _, probs = self.detector.detect_language(samples)
+        p = dict(probs)
+        return "en" if p.get("en", 0.0) > p.get("id", 0.0) else "id"
 
     def transcribe(self, audio: np.ndarray, fast: bool = False) -> str:
         """audio: int16 mono 16 kHz. fast=True: tanpa fallback suhu (untuk wake)."""
         samples = audio.astype(np.float32) / 32768.0
-        prompt = (self.cfg.wake_prompt if fast else self.cfg.initial_prompt) or None
+        if fast:  # wake: frasa pemanggil selalu dikenali sebagai bahasa Indonesia/"Hello"
+            lang = self.cfg.language if self.cfg.language in ("id", "en") else "id"
+        elif self.cfg.language == "auto":
+            lang = self.detect_language(samples)
+        else:
+            lang = self.cfg.language
+        if not fast:
+            self.last_language = lang if lang in ("id", "en") else "id"
+        if fast:
+            prompt = self.cfg.wake_prompt or None
+        else:
+            prompt = (
+                self.cfg.initial_prompt_en if lang == "en" else self.cfg.initial_prompt
+            ) or None
         segments, _ = self.model.transcribe(
             samples,
-            language=self.cfg.language,
+            language=lang,
             beam_size=self.cfg.beam_size,
             initial_prompt=prompt,
             vad_filter=True,

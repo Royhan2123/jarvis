@@ -46,7 +46,10 @@ def download_models(config: str) -> None:
     cfg = load_config(config)
     print("⬇ model wake word…")
     openwakeword.utils.download_models([cfg.wakeword.model])
-    for name in dict.fromkeys([cfg.stt.wake_model, cfg.stt.model]):
+    names = [cfg.stt.wake_model, cfg.stt.model]
+    if cfg.stt.language == "auto":
+        names.append(cfg.stt.detect_model)  # pendeteksi bahasa Indonesia/Inggris
+    for name in dict.fromkeys(names):
         print(f"⬇ Whisper '{name}'…")
         WhisperModel(name, device="cpu", compute_type=cfg.stt.compute_type)
     print("✅ Model siap")

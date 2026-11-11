@@ -58,12 +58,19 @@ class STTConfig(_Section):
     wake_model: str = "base"
     device: Literal["auto", "cpu", "cuda"] = "auto"
     compute_type: str = "int8"
-    language: str | None = "id"
+    language: str | None = "id"  # "id" | "en" | "auto" (deteksi Indonesia/Inggris per ucapan)
+    detect_model: str = (
+        "tiny"  # model kecil khusus mendeteksi bahasa bila language: auto (±0.4 dtk)
+    )
     beam_size: int = 1
     # Kalimat alami, bukan daftar kata: daftar "buka, tutup" membuat "ibu kota" terdengar "buka ta"
     initial_prompt: str = (
         "Hello. Mengapa langit berwarna biru? Tolong catat bahwa saya punya janji dengan dokter. "
         "Aplikasi saya: Spotify, Chrome, dan VS Code."
+    )
+    initial_prompt_en: str = (
+        "Hello. Why is the sky blue? Please remind me about my doctor appointment. "
+        "Open Chrome and play music on Spotify."
     )
     wake_prompt: str = (
         "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"  # khusus deteksi panggilan
@@ -285,6 +292,7 @@ class ToolsConfig(_Section):
     enabled: list[str] = [
         "system", "apps", "media", "web", "screen", "keyboard",
         "notes", "docs", "online", "smarthome", "workspace", "messaging", "agent", "island",
+        "language",
     ]  # fmt: skip
     confirm_risk_level: Literal["low", "medium", "high"] = "high"
     confirm_timeout_s: int = 8

@@ -255,6 +255,23 @@ terisi. Pesan **tidak terkirim otomatis**; kamu menekan kirim. Hanya kontak di `
 
 ---
 
+## 9b. Bahasa Inggris & terjemahan
+
+Dengan `stt.language: auto`, tiap ucapan dideteksi Indonesia atau Inggris (model `tiny`, ±0.4 dtk lebih
+lama dari `id` saja), lalu ditranskripsi dengan bahasa itu. Frasa pemanggil tetap dikenali sebagai "Hello".
+
+- **Perintah dasar Inggris** (Tier 0, `jarvis/brain/rules_en.py`): "open Chrome", "close Spotify",
+  "what time is it", "what's the date", "set volume to 40", "mute", "next song", "lock screen",
+  "search for …", "what's the weather in Bandung". Perintah lain ditangani LLM dengan tool; LLM menjawab
+  Inggris bila Anda berbicara Inggris.
+- **Terjemahan** — `translate(text, target)` (risk low, LLM lokal Qwen 4B, tanpa internet):
+  "terjemahkan ke bahasa Inggris: selamat pagi" · "apa bahasa Inggris dari terima kasih" ·
+  "translate good morning to Indonesian" · "how do you say thank you in Japanese".
+  Bahasa dikenal: Inggris, Indonesia, Jepang, Korea, Mandarin, Arab, Jerman, Prancis, Spanyol, Belanda,
+  Portugis, Rusia, Italia, Jawa, Sunda (kualitas Jawa/Sunda dari Qwen belum teruji baik).
+- **Suara balasan:** Fish Audio membacakan Inggris/Jepang dengan suara yang sama. Piper/suara OS (cadangan)
+  hanya Indonesia, jadi terjemahan akan terdengar dengan logat Indonesia.
+
 ## 10. Suara Fish Audio (online, opsional)
 
 `tts.engine: fish` memakai API Fish Audio untuk suara yang lebih jelas. **Privasi:** teks setiap kalimat

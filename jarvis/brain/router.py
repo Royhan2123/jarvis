@@ -24,21 +24,39 @@ ESCALATE_SCHEMA = {
 # Kata kunci (awalan) → tool yang relevan. Hanya skema tool yang relevan dikirim ke LLM:
 # 12 skema sekaligus membuat Qwen 4B di CPU 10–20 detik lebih lambat dan sering salah panggil tool.
 TOOL_HINTS: dict[tuple[str, ...], tuple[str, ...]] = {
-    ("volume", "suara", "kecil", "besar", "pelan", "keras", "naik", "turun", "mute", "bisu"): (
+    (
+        "volume",
+        "suara",
+        "kecil",
+        "besar",
+        "pelan",
+        "keras",
+        "naik",
+        "turun",
+        "mute",
+        "bisu",
+        "louder",
+        "quieter",
+        "lower",
+        "raise",
+    ): (
         "set_volume",
         "mute",
     ),
     ("lagu", "musik", "putar", "play", "pause", "jeda", "next", "skip", "berikut", "sebelum"): (
         "media",
     ),
-    ("buka", "tutup", "aplikasi", "jalankan", "quit", "app"): ("open_app", "close_app"),
-    ("web", "situs", "cari", "google", "browser", "link", "url", ".com"): (
+    ("buka", "tutup", "aplikasi", "jalankan", "quit", "app", "open", "close", "launch"): (
+        "open_app",
+        "close_app",
+    ),
+    ("web", "situs", "cari", "google", "browser", "link", "url", ".com", "search"): (
         "open_url",
         "web_search",
     ),
-    ("layar", "screen", "rangkum", "error"): ("read_screen",),
+    ("layar", "screen", "rangkum", "error", "summarize"): ("read_screen",),
     ("ketik", "tulis"): ("type_text",),
-    ("catat", "catatan", "ingat", "pengingat", "nama"): (
+    ("catat", "catatan", "ingat", "pengingat", "nama", "note", "remind", "reminder", "remember"): (
         "add_note",
         "list_notes",
         "set_reminder",
@@ -58,10 +76,24 @@ TOOL_HINTS: dict[tuple[str, ...], tuple[str, ...]] = {
     ("whatsapp", "wa", "pesan"): ("whatsapp_draft",),
     ("folder", "direktori", "proyek", "project"): ("list_files",),
     ("dokumen", "berkas", "arsip", "kontrak", "pdf"): ("search_docs", "index_docs"),
-    ("jam", "tanggal", "hari", "baterai", "batre", "ram", "cpu", "memori"): (
+    (
+        "jam",
+        "tanggal",
+        "hari",
+        "baterai",
+        "batre",
+        "ram",
+        "cpu",
+        "memori",
+        "time",
+        "date",
+        "battery",
+        "memory",
+    ): (
         "get_time",
         "system_info",
     ),
+    ("terjemah", "translate", "artikan", "bahasa", "inggris", "english"): ("translate",),
     ("kunci", "layar", "matikan", "restart", "shutdown", "komputer", "laptop"): (
         "lock_screen",
         "shutdown",
