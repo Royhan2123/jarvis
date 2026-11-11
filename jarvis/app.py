@@ -54,6 +54,7 @@ class Jarvis:
     def __init__(self, cfg: Config) -> None:
         self.cfg = cfg
         self.state = State.LOADING
+        self._voice_feed = island.VoiceFeed(cfg)
         self.listeners: list[Callable[[State], None]] = []
         self.mic_muted = False
         self._running = False
@@ -111,6 +112,7 @@ class Jarvis:
         if state is State.SPEAKING and self.cfg.audio.interruptible:
             self._start_monitor()
         HUB.publish(state.value)  # dibaca API lokal (/v1/state)
+        self._voice_feed.push(state.value)  # indikator batang suara di pulau Isla
         for fn in self.listeners:
             fn(state)
 

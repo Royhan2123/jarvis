@@ -255,6 +255,7 @@ class IslandConfig(_Section):
 
     enabled: bool = False
     ipc_file: str = ""  # kosong = folder data Isla di OS ini (…/com.royhan.isladesk/ipc.json)
+    show_voice: bool = True  # indikator batang suara di pulau saat Jarvis mendengar/berpikir/bicara
 
 
 class MessagingConfig(_Section):

@@ -225,6 +225,7 @@ agent:                                # agen kerja: tugas bertahap + shell terja
 
 island:                               # sambungan ke Isla Desk (pulau notifikasi Tauri), lewat IPC loopback
   enabled: false                      # true = pertanyaan izin & hasil agen juga tampil di pulau; tool show_on_island
+  show_voice: true                    # batang suara di pulau saat Jarvis mendengar/berpikir/bicara (perlu enabled: true)
   ipc_file: ""                        # kosong = folder data Isla di OS ini (…/com.royhan.isladesk/ipc.json)
                                       # Windows %APPDATA%, macOS ~/Library/Application Support, Linux ~/.local/share
                                       # hanya 127.0.0.1, jadi aman walau general.offline_only: true
