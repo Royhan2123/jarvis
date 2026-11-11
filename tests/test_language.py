@@ -413,17 +413,20 @@ def test_set_language_rule_ignores_unknown_languages_and_other_changes() -> None
     assert rules.match("ganti wallpaper") is None
 
 
-def test_set_language_tool_switches_and_restores(adapter) -> None:
+def test_set_language_adds_a_third_language_and_can_restore(adapter) -> None:
     cfg = Config()
     context.configure(adapter, cfg, context.memory)
-    assert "Japanese" in registry.call("set_language", {"language": "jepang"})
-    assert cfg.stt.language == "ja"
-    registry.call("set_language", {"language": "otomatis"})
-    assert cfg.stt.language == "auto"
+    lang_tool._ORIGINAL.clear()
+    out = registry.call("set_language", {"language": "jepang"})
+    assert "Japanese" in out and "Indonesia tetap bisa" in out
+    assert cfg.stt.language == "auto" and cfg.stt.detect_languages == ["id", "en", "ja"]
+    registry.call("set_language", {"language": "spanyol"})
+    assert cfg.stt.detect_languages == ["id", "en", "es"]  # satu bahasa tambahan, bukan menumpuk
     registry.call("set_language", {"language": "indonesia"})
-    assert cfg.stt.language == "id"
+    assert cfg.stt.language == "id" and cfg.stt.detect_languages == ["id", "en"]
     with pytest.raises(ToolError, match="tidak dikenal"):
         registry.call("set_language", {"language": "kucing"})
+    lang_tool._ORIGINAL.clear()
 
 
 def test_translate_retries_with_smart_model_when_output_barely_changed(
@@ -496,3 +499,11 @@ def test_action_runner_answers_in_english_only_when_user_spoke_english(adapter) 
     intent = Intent("open_app", {"name": "Spotify"})
     assert ActionRunner(lang=lambda: "en").run([intent]) == "Opening Spotify"
     assert ActionRunner().run([intent]) == "Siap, Spotify sudah dibuka"
+
+
+def test_short_english_replies_are_not_spelled_as_indonesian() -> None:
+    from jarvis.tts.stream import speakable
+
+    for text in ["It's 10:29 PM", "Volume is now 60 percent", "Battery is at 80 percent, charging"]:
+        assert speakable(text) == text, text
+    assert speakable("Volume sekarang 60 persen") == "Volume sekarang enam puluh persen"

@@ -92,6 +92,8 @@ _EN = {
     "there", "very", "your", "have", "has", "was", "were", "be", "will", "would", "not", "but",
     "from", "at", "by", "as", "an", "i", "we", "they", "he", "she", "if", "so", "sorry",
     "welcome", "sure", "yes", "capital", "weather", "name", "which", "than", "about",
+    "it's", "its", "opening", "closed", "battery", "usage", "percent", "charging", "cancelled",
+    "okay", "now", "couldn't", "isn't", "running", "am", "pm",
 }  # fmt: skip
 # Kata umum bahasa Latin lain (Spanyol/Prancis/Jerman/Portugis/Italia/Belanda): bila menang,
 # teks bukan Indonesia/Inggris dan angkanya tidak boleh dieja dengan kata Indonesia.

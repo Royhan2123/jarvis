@@ -66,27 +66,37 @@ def translate(text: str, target: str = "English") -> str:
     return out or "Saya tidak bisa menerjemahkan itu"
 
 
+_ORIGINAL: dict[str, object] = {}
+
+
 @tool(
     name="set_language",
     description=(
-        "Mengganti bahasa yang didengarkan Jarvis (mis. Jepang, Inggris, Spanyol); "
-        "'otomatis' untuk deteksi Indonesia/Inggris, 'Indonesia' untuk kembali ke awal"
+        "Mengganti bahasa yang didengarkan Jarvis (mis. Jepang, Spanyol, Korea) selain Indonesia "
+        "dan Inggris; 'Indonesia' atau 'otomatis' untuk kembali ke awal"
     ),
     risk="low",
     category="language",
 )
 def set_language(language: str) -> str:
-    """Bahasa ucapan untuk sisa sesi (tidak menulis config.yaml). Whisper dengan bahasa tetap jauh
-    lebih akurat daripada deteksi otomatis lintas banyak bahasa."""
+    """Tambahkan satu bahasa ke deteksi untuk sisa sesi (tidak menulis config.yaml).
+
+    Jarvis lalu memilih per ucapan di antara Indonesia, Inggris, dan bahasa itu: pilihan tiga arah
+    jauh lebih andal daripada deteksi ±90 bahasa, dan ucapan Indonesia tetap dikenali (jadi
+    "ganti bahasa ke Indonesia" selalu bisa diucapkan)."""
+    stt = context.cfg.stt
+    _ORIGINAL.setdefault("language", stt.language)
+    _ORIGINAL.setdefault("detect_languages", list(stt.detect_languages))
     word = language.strip().lower()
-    if word in {"otomatis", "auto", "automatic"}:
-        context.cfg.stt.language = "auto"
-        return "Oke, bahasa otomatis: Indonesia atau Inggris"
     name = target_language(word)
+    reset = word in {"otomatis", "auto", "automatic"} or name == "Indonesian"
+    if reset:
+        stt.language = _ORIGINAL["language"]
+        stt.detect_languages = list(_ORIGINAL["detect_languages"])  # type: ignore[arg-type]
+        return "Oke, kembali ke bahasa Indonesia dan Inggris"
     code = next((c for c, n in WHISPER_LANGUAGES.items() if n == name), None)
     if code is None:
         raise ToolError(f"Bahasa {language} tidak dikenal")
-    context.cfg.stt.language = code
-    if code == "id":
-        return "Oke, kembali ke bahasa Indonesia"
-    return f"Oke, sekarang saya dengarkan bahasa {name} sampai Anda ganti lagi"
+    stt.language = "auto"
+    stt.detect_languages = list(dict.fromkeys(["id", "en", code]))
+    return f"Oke, sekarang saya juga mendengarkan bahasa {name}; bahasa Indonesia tetap bisa"

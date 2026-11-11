@@ -281,8 +281,10 @@ lama dari `id` saja), lalu ditranskripsi dengan bahasa itu. Frasa pemanggil teta
   diterjemahkan, diucapkan Fish, dan didengar balik dengan benar; **Turki dan Ukraina masih cacat** (kata
   Indonesia tersisa / salah ketik). Bila hasil hampir sama dengan sumber, Jarvis mengulang dengan Qwen 9B.
 - **Mendengarkan bahasa lain:** ucapkan **"ganti bahasa ke Jepang"** (juga "pakai bahasa Korea", "switch
-  language to German", "ganti ke otomatis", "ganti bahasa ke Indonesia"). Whisper lalu memakai bahasa
-  tetap itu sampai Jarvis dimatikan; frasa pemanggil tetap "Hello". Cara ini andal.
+  language to German"). Jarvis lalu memilih per ucapan di antara **Indonesia, Inggris, dan bahasa itu**
+  (tiga arah, jauh lebih andal daripada ±90 bahasa) sampai dimatikan; bahasa Indonesia tetap dikenali,
+  jadi "ganti bahasa ke Indonesia" / "ganti ke otomatis" selalu bisa dipakai untuk kembali. Hanya satu
+  bahasa tambahan sekaligus; frasa pemanggil tetap "Hello".
 - **Deteksi otomatis banyak bahasa tidak andal** (uji nyata 26 bahasa: `tiny` benar 10, `base` 6, `small`
   5; bahasa Indonesia berisiko terdeteksi sebagai bahasa lain). Karena itu default `detect_languages` hanya
   `["id","en"]`; `["all"]` hanya untuk eksperimen.

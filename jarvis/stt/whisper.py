@@ -92,7 +92,9 @@ class WhisperSTT:
             return "id"
         _, _, probs = self.detector.detect_language(samples)
         p = dict(probs)
-        others = [c for c in self.candidates if c != "id"]
+        from jarvis.brain.language import detect_candidates
+
+        others = [c for c in detect_candidates(self.cfg.detect_languages) if c != "id"]
         best = max(others, key=lambda c: p.get(c, 0.0), default="id")
         if p.get(best, 0.0) >= self.cfg.detect_min_prob and p.get(best, 0.0) > p.get("id", 0.0):
             return best
