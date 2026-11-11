@@ -27,8 +27,9 @@ class MockAdapter(PlatformAdapter):
         self._rec("stop_say")
 
     def open_app(self, name) -> None:
-        if name == "Tidak Ada":
-            raise AppNotFound("Aplikasi Tidak Ada tidak ditemukan")
+        # Aplikasi sungguhan hanya yang terpasang: nama berawalan "Tidak"/memuat "kalo" tidak ada.
+        if name.split()[0] == "Tidak" or "kalo" in name.lower():
+            raise AppNotFound(f"Aplikasi {name} tidak ditemukan")
         self._rec("open_app", name)
 
     def close_app(self, name) -> None:

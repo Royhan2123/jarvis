@@ -457,3 +457,11 @@ def test_stt_picks_a_non_indonesian_language_only_when_confident(stt_cls) -> Non
     FakeModel.probs = [("ko", 0.9), ("id", 0.05)]  # ko tidak ada di daftar → Indonesia
     stt.transcribe(AUDIO)
     assert FakeModel.seen[-1] == "id"
+
+
+def test_open_app_ignores_trailing_words_that_are_not_part_of_the_name(adapter) -> None:
+    context.configure(adapter, Config(), context.memory)
+    out = registry.call("open_app", {"name": "Spotify kalo sama seperti ini"})
+    assert out == "Siap, Spotify sudah dibuka"
+    with pytest.raises(ToolError, match="tidak ditemukan"):
+        registry.call("open_app", {"name": "Tidak Ada Sama Sekali"})

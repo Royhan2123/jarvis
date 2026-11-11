@@ -151,3 +151,31 @@ def test_stt_unclear_threshold() -> None:
     assert stt.is_unclear()
     stt.cfg = STTConfig(min_logprob=None)
     assert not stt.is_unclear()
+
+
+def test_quiet_audio_is_normalized_but_loud_audio_is_left_alone() -> None:
+    import numpy as np
+    import pytest
+
+    from jarvis.stt.whisper import MAX_GAIN, TARGET_PEAK, normalize_gain
+
+    quiet = np.full(1000, 0.08, dtype=np.float32)
+    boosted, peak = normalize_gain(quiet)
+    assert peak == pytest.approx(0.08, abs=1e-6)
+    assert boosted.max() == pytest.approx(TARGET_PEAK, abs=1e-5)
+    tiny = np.full(1000, 0.01, dtype=np.float32)
+    assert normalize_gain(tiny)[0].max() == pytest.approx(
+        0.01 * MAX_GAIN, abs=1e-5
+    )  # gain dibatasi
+    loud = np.full(1000, 0.6, dtype=np.float32)
+    assert normalize_gain(loud)[0].max() == pytest.approx(0.6, abs=1e-6)
+    silence = np.zeros(1000, dtype=np.float32)
+    assert not normalize_gain(silence)[0].any()
+
+
+def test_hallucinated_filler_dropped_only_for_quiet_audio() -> None:
+    from jarvis.stt.whisper import is_hallucination
+
+    assert is_hallucination("Terima kasih.", 0.08)
+    assert not is_hallucination("Terima kasih.", 0.6)  # ucapan keras = sungguhan
+    assert not is_hallucination("Buka Spotify", 0.05)

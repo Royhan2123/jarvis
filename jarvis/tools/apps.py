@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+from jarvis.platform.base import AppNotFound
 from jarvis.tools.registry import ToolError, context, tool
 
 # Huruf/angka, spasi, titik, minus, plus, underscore, kurung, apostrof. Tanpa tanda kutip,
@@ -25,6 +26,21 @@ def resolve_app(name: str) -> str:
     return name
 
 
+def _with_shorter_names(name: str, action) -> str:  # noqa: ANN001
+    """Jalankan `action(app)`; bila aplikasi tidak ada dan namanya beberapa kata, coba tanpa kata
+    terakhir ("kalkulator kalo" → "kalkulator"): ekor ucapan sering ikut terdengar."""
+    words = name.split()
+    error: AppNotFound | None = None
+    for n in range(len(words), 0, -1):
+        app = resolve_app(" ".join(words[:n]))
+        try:
+            action(app)
+            return app
+        except AppNotFound as e:
+            error = error or e
+    raise error or AppNotFound(f"Aplikasi {name} tidak ditemukan")
+
+
 @tool(
     name="open_app",
     description="Membuka aplikasi di komputer, misalnya Spotify, Chrome, atau VS Code",
@@ -32,8 +48,7 @@ def resolve_app(name: str) -> str:
     category="apps",
 )
 def open_app(name: str) -> str:
-    app = resolve_app(name)
-    context.adapter.open_app(app)
+    app = _with_shorter_names(name, context.adapter.open_app)
     return f"Siap, {app} sudah dibuka"
 
 
@@ -44,6 +59,5 @@ def open_app(name: str) -> str:
     category="apps",
 )
 def close_app(name: str) -> str:
-    app = resolve_app(name)
-    context.adapter.close_app(app)
+    app = _with_shorter_names(name, context.adapter.close_app)
     return f"Oke, {app} sudah ditutup"

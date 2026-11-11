@@ -18,6 +18,33 @@ def is_repetitive(text: str) -> bool:
     return len(set(words)) / len(words) < 0.35
 
 
+# Frasa yang Whisper "karang" saat audio terlalu pelan/hampir kosong (dari subtitle latihannya).
+HALLUCINATIONS = {
+    "terima kasih", "terima kasih telah menonton", "terima kasih sudah menonton", "sampai jumpa",
+    "sampai jumpa lagi", "thank you", "thanks for watching", "thank you for watching",
+    "subtitle by", "you", "bye", "oh", "hmm", "eh",
+}  # fmt: skip
+TARGET_PEAK = 0.7  # audio dinormalkan ke puncak ini sebelum dikenali
+MAX_GAIN = (
+    12.0  # batas penguatan (mic Mac sering diatur pelan; derau tidak ikut dibesarkan tanpa batas)
+)
+QUIET_PEAK = 0.25  # di bawah ini audio dianggap pelan
+
+
+def normalize_gain(samples: np.ndarray) -> tuple[np.ndarray, float]:
+    """Perkuat ucapan yang pelan ke puncak TARGET_PEAK; kembalikan (audio, puncak asli)."""
+    peak = float(np.abs(samples).max()) if samples.size else 0.0
+    if 0.003 < peak < QUIET_PEAK:
+        samples = np.clip(samples * min(TARGET_PEAK / peak, MAX_GAIN), -1.0, 1.0)
+    return samples, peak
+
+
+def is_hallucination(text: str, peak: float) -> bool:
+    """Frasa pengisi khas Whisper pada audio pelan ("Terima kasih."): buang, bukan perintah."""
+    bare = re.sub(r"[^\w\s]", "", text.lower()).strip()
+    return peak < QUIET_PEAK and bare in HALLUCINATIONS
+
+
 class WhisperSTT:
     def __init__(self, cfg: STTConfig) -> None:
         from faster_whisper import WhisperModel
@@ -73,7 +100,7 @@ class WhisperSTT:
 
     def transcribe(self, audio: np.ndarray, fast: bool = False) -> str:
         """audio: int16 mono 16 kHz. fast=True: tanpa fallback suhu (untuk wake)."""
-        samples = audio.astype(np.float32) / 32768.0
+        samples, peak = normalize_gain(audio.astype(np.float32) / 32768.0)
         if fast:  # wake: frasa pemanggil selalu dikenali sebagai bahasa Indonesia/"Hello"
             lang = self.cfg.language if self.cfg.language in ("id", "en") else "id"
         elif self.cfg.language == "auto":
@@ -104,6 +131,8 @@ class WhisperSTT:
         # rata-rata keyakinan per segmen (≈ -0.35 untuk ucapan jelas, ≈ -1.0 untuk salah dengar)
         self.last_logprob = sum(s.avg_logprob for s in segs) / len(segs) if segs else 0.0
         if self._is_prompt_echo(text, prompt or "") or is_repetitive(text):
+            return ""
+        if is_hallucination(text, peak):
             return ""
         return text
 
