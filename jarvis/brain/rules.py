@@ -295,7 +295,11 @@ def match(text: str) -> list[Intent] | None:
         return [Intent("get_weather", {"city": city.title()})]
     if re.fullmatch(r"(?:jam berapa(?: sekarang| ini)?|sekarang jam berapa)", t):
         return [Intent("get_time", {"what": "time"})]
-    if re.fullmatch(r"(?:tanggal berapa|hari apa|hari ini hari apa)(?: hari ini| sekarang)?", t):
+    if re.fullmatch(
+        r"(?:sekarang )?(?:tanggal berapa|hari apa|hari ini hari apa|tanggal berapa hari ini)"
+        r"(?: hari ini| sekarang| ini)?",
+        t,
+    ):
         return [Intent("get_time", {"what": "date"})]
     # Info sistem: hanya jika SEMUA kata berasal dari kosakata pertanyaan status (hindari
     # salah tangkap seperti "apa bedanya RAM dan SSD").

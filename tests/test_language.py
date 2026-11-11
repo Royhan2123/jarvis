@@ -259,3 +259,25 @@ def test_guess_short_english_phrases() -> None:
         assert language.guess(s) == "en", s
     for s in ["Siap, saya buka Spotify.", "Terima kasih banyak", "Oke"]:
         assert language.guess(s) == "id", s
+
+
+@pytest.mark.parametrize(
+    "said",
+    [
+        "sekarang tanggal berapa?",
+        "tanggal berapa hari ini",
+        "hari apa sekarang",
+        "hari ini hari apa",
+    ],
+)
+def test_date_questions_use_the_tool_not_the_llm(said) -> None:
+    assert rules.match(said) == [Intent("get_time", {"what": "date"})]
+
+
+def test_system_prompt_time_is_indonesian() -> None:
+    from jarvis.brain.prompts import build_system_prompt
+
+    prompt = build_system_prompt("Bos")
+    assert any(
+        d in prompt for d in ("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
+    )
