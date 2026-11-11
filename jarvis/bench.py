@@ -18,6 +18,10 @@ from jarvis.tts.stream import split_sentences
 
 FIXTURE = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "pertanyaan.wav"
 QUESTION = "Apa ibu kota Jepang?"
+# Pertanyaan LLM berganti tiap putaran: Ollama meng-cache prompt yang identik (0.3 dtk), sedangkan
+# pemakaian nyata selalu pertanyaan baru (token pertama ±3 dtk).
+QUESTIONS = [QUESTION, "Siapa penemu telepon?", "Apa ibu kota Prancis?", "Berapa dua kali tujuh?",
+             "Apa warna langit?"]  # fmt: skip
 
 
 def ensure_fixture(cfg: Config) -> np.ndarray:
@@ -94,12 +98,12 @@ def main() -> None:
         from jarvis.brain.llm import LLM
 
         list(LLM(cfg).ask("Halo"))  # pemanasan: model sudah di RAM
-        for _ in range(args.runs):
+        for run in range(args.runs):
             llm = LLM(cfg)  # riwayat kosong
             t = time.perf_counter()
             t1 = ts = None
             buf = ""
-            for piece in llm.ask(QUESTION):
+            for piece in llm.ask(QUESTIONS[run % len(QUESTIONS)]):
                 now = time.perf_counter()
                 t1 = t1 or now
                 buf += piece

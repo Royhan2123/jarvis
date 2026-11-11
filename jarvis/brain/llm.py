@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterator
 
 import ollama
 
-from jarvis.brain.prompts import build_system_prompt
+from jarvis.brain.prompts import context_line, static_system_prompt
 from jarvis.config import Config
 
 
@@ -53,12 +53,13 @@ class LLM:
         c = self.cfg.llm
         self.history.append({"role": "user", "content": text})
         self._trim()
+        # Prompt sistem ringkas dan tetap; info yang berubah hanya di pesan terakhir, bila perlu.
+        extra = context_line(self.facts(), docs, text)
+        current = {"role": "user", "content": f"{extra}\n{text}" if extra else text}
         messages = [
-            {
-                "role": "system",
-                "content": build_system_prompt(self.cfg.general.user_title, self.facts(), docs),
-            },
-            *self.history,
+            {"role": "system", "content": static_system_prompt(self.cfg.general.user_title)},
+            *self.history[:-1],
+            current,
         ]
         reply = ""
         for chunk in self.client.chat(
