@@ -349,6 +349,15 @@ Isla Desk adalah proyek terpisah (`Dekstop-Notification-With-Tauri`): pulau noti
 mengirim teks ke pulau lewat IPC loopback; Isla membalas "diterima". Aktifkan: `island.enabled: true` dan
 jalankan Isla Desk lebih dulu.
 
+**Isla ↔ Jarvis dua arah** (butuh `ui.api.enabled: true` supaya Isla bisa menghubungi Jarvis):
+- **Batang suara:** fase Jarvis (mendengarkan/berpikir/bicara) tampil di pulau (`island.show_voice`).
+- **Tanya AI lewat Jarvis:** di Setelan Isla pilih otak AI **Jarvis**; Quick Ask dijawab Jarvis lokal (offline)
+  lewat `POST /v1/ask`. Catatan: fitur Isla yang butuh keluaran terstruktur (review kode, saran commit)
+  lebih andal dengan penyedia lain.
+- **Izin agen sebagai tombol:** bila agen minta izin dan Isla menerima kartunya (`island.approvals`), pulau
+  menampilkan kartu **Setuju/Tolak**; jawaban dikirim ke `POST /v1/approvals/{id}`. Tanpa jawaban dalam
+  `island.approval_timeout_s` detik = ditolak. Bila Isla tidak berjalan, Jarvis kembali bertanya lewat suara.
+
 | Cara | Contoh |
 |---|---|
 | Suara / teks Jarvis | "Jarvis, tampilkan di pulau selamat pagi bos" (tool `show_on_island`, risk low) |
