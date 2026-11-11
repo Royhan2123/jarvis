@@ -90,7 +90,9 @@ class Jarvis:
         self.router = Router(cfg)
         self.tts: TTS = build_tts(cfg)
         self.actions = ActionRunner(
-            local={"stop_speaking": self._stop_speaking}, on_error=self._beep_error
+            local={"stop_speaking": self._stop_speaking},
+            on_error=self._beep_error,
+            lang=lambda: self.stt.last_language,
         )
         from jarvis.tools import agent as agent_tool
 

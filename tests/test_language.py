@@ -473,3 +473,26 @@ def test_notes_rules_tolerate_how_whisper_splits_and_spells_words() -> None:
     ]
     assert rules.match("Baca kan catatan saya.") == [Intent("list_notes")]
     assert rules.match("bacakan catatan saya") == [Intent("list_notes")]
+
+
+def test_english_replies_for_common_tool_results() -> None:
+    from jarvis.brain.replies_en import to_english
+
+    assert to_english("Sekarang jam 22.20") == "It's 10:20 PM"
+    assert to_english("Sekarang jam 09.05") == "It's 9:05 AM"
+    assert to_english("Hari ini Rabu, 11 November 2026") == "Today is Wednesday, November 11, 2026"
+    assert to_english("Siap, Calculator sudah dibuka") == "Opening Calculator"
+    assert to_english("Oke, Calculator sudah ditutup") == "Closed Calculator"
+    assert to_english("Volume sekarang 60 persen") == "Volume is now 60 percent"
+    assert to_english("Baterai 80 persen, sedang diisi") == "Battery is at 80 percent, charging"
+    assert to_english("Kalimat lain yang tidak dikenal") == "Kalimat lain yang tidak dikenal"
+    assert to_english("") == ""
+
+
+def test_action_runner_answers_in_english_only_when_user_spoke_english(adapter) -> None:
+    from jarvis.brain.actions import ActionRunner
+
+    context.configure(adapter, Config(), context.memory)
+    intent = Intent("open_app", {"name": "Spotify"})
+    assert ActionRunner(lang=lambda: "en").run([intent]) == "Opening Spotify"
+    assert ActionRunner().run([intent]) == "Siap, Spotify sudah dibuka"

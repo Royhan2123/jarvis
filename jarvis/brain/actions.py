@@ -38,7 +38,11 @@ class ActionRunner:
         self,
         local: dict[str, Callable[[dict], str]] | None = None,
         on_error: Callable[[], None] | None = None,
+        lang: Callable[[], str] | None = None,
     ) -> None:
+        self.lang = lang or (
+            lambda: "id"
+        )  # bahasa ucapan terakhir; "en" → balasan tool berbahasa Inggris
         self.local = local or {}  # aksi internal Jarvis (mis. stop_speaking), bukan tool OS
         self.on_error = on_error or (lambda: None)
         self.pending: Intent | None = None
@@ -64,7 +68,14 @@ class ActionRunner:
             parts.append(self.execute(it))
             if self.pending:
                 break
-        return " ".join(p for p in parts if p)
+        return self._localize(" ".join(p for p in parts if p))
+
+    def _localize(self, text: str) -> str:
+        if self.lang() != "en":
+            return text
+        from jarvis.brain.replies_en import to_english
+
+        return to_english(text)
 
     def resolve(self, answer: bool | None) -> str:
         """Selesaikan konfirmasi: True = jalankan, False/None = batalkan (aman bila ragu)."""
@@ -72,7 +83,7 @@ class ActionRunner:
         if pending is None:
             return ""
         if answer is True:
-            return self.execute(pending, confirmed=True)
+            return self._localize(self.execute(pending, confirmed=True))
         if answer is False:
-            return "Oke, dibatalkan."
+            return self._localize("Oke, dibatalkan.")
         return "Saya tidak mendengar jawaban yang jelas, jadi saya batalkan."
