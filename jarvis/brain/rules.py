@@ -181,6 +181,14 @@ _YOUTUBE = re.compile(
     r"(.+?)\s+(?:di|dari|lewat|pakai|pake|on|in)\s+(?:youtube|yutub|you tube)\W*$",
     re.I | re.S,
 )
+_SET_LANG = re.compile(
+    r"^\W*(?:jarvis\W+)?(?:tolong\s+)?(?:ganti|ubah|pindah|pakai|pake|gunakan|switch|change|set)"
+    r"(?:\s+(?:ke|jadi|menjadi|to))?\s+(?:bahasa|language)(?:\s+(?:ke|jadi|menjadi|to))?\s+(\w+)\W*$"
+    r"|^\W*(?:jarvis\W+)?(?:tolong\s+)?(?:bicara|berbicara|dengarkan|dengar|listen|speak)"
+    r"(?:\s+(?:dalam|pakai|in|to))?\s+(?:bahasa|language)\s+(\w+)\W*$"
+    r"|^\W*(?:jarvis\W+)?(?:ganti|switch)\s+(?:ke\s+)?(?:bahasa\s+)?(otomatis|auto)\W*$",
+    re.I,
+)
 _UNIT_MIN = {"detik": 1 / 60, "menit": 1.0, "jam": 60.0}
 
 
@@ -205,6 +213,12 @@ def _match_raw(text: str) -> list[Intent] | None:
     """Perintah yang isinya harus persis seperti diucapkan (ketik/catat): jangan dinormalisasi."""
     if tr := _match_translate(text):
         return tr
+    if m := _SET_LANG.match(text.strip()):
+        from jarvis.brain.language import target_language
+
+        word = next(g for g in m.groups() if g)
+        if word.lower() in {"otomatis", "auto"} or target_language(word):
+            return [Intent("set_language", {"language": word.lower()})]
     if m := _ISLAND.match(text.strip()):
         return [Intent("show_on_island", {"text": m.group(1).strip()})]
     if m := _AGENT.match(text.strip()):

@@ -32,24 +32,44 @@ class WhisperSTT:
             cpu_threads=cfg.cpu_threads,
         )
         self.detector = None
+        self._detector_failed = False
+        from jarvis.brain.language import detect_candidates
+
+        self.candidates = set(detect_candidates(cfg.detect_languages))
         if cfg.language == "auto":
-            try:
-                self.detector = WhisperModel(
-                    cfg.detect_model,
-                    device=cfg.device,
-                    compute_type=cfg.compute_type,
-                    cpu_threads=cfg.cpu_threads,
-                )
-            except Exception as e:  # noqa: BLE001 — model belum diunduh/offline: tetap Indonesia
-                logger.warning(f"Deteksi bahasa dimatikan ({e}); memakai bahasa Indonesia")
+            self._load_detector()
+
+    def _load_detector(self) -> None:
+        """Muat model deteksi bahasa (bisa belakangan, mis. setelah 'bahasa otomatis')."""
+        if self.detector is not None or self._detector_failed:
+            return
+        from faster_whisper import WhisperModel
+
+        cfg = self.cfg
+        try:
+            self.detector = WhisperModel(
+                cfg.detect_model,
+                device=cfg.device,
+                compute_type=cfg.compute_type,
+                cpu_threads=cfg.cpu_threads,
+            )
+        except Exception as e:  # noqa: BLE001 — model belum diunduh/offline: tetap Indonesia
+            self._detector_failed = True
+            logger.warning(f"Deteksi bahasa dimatikan ({e}); memakai bahasa Indonesia")
 
     def detect_language(self, samples: np.ndarray) -> str:
-        """'en' bila ucapan lebih mirip Inggris daripada Indonesia, selain itu 'id'."""
+        """Kode bahasa ucapan: bahasa non-Indonesia terkuat di `detect_languages` bila yakin
+        (≥ detect_min_prob dan mengalahkan Indonesia), selain itu 'id'."""
+        self._load_detector()
         if self.detector is None:
             return "id"
         _, _, probs = self.detector.detect_language(samples)
         p = dict(probs)
-        return "en" if p.get("en", 0.0) > p.get("id", 0.0) else "id"
+        others = [c for c in self.candidates if c != "id"]
+        best = max(others, key=lambda c: p.get(c, 0.0), default="id")
+        if p.get(best, 0.0) >= self.cfg.detect_min_prob and p.get(best, 0.0) > p.get("id", 0.0):
+            return best
+        return "id"
 
     def transcribe(self, audio: np.ndarray, fast: bool = False) -> str:
         """audio: int16 mono 16 kHz. fast=True: tanpa fallback suhu (untuk wake)."""
@@ -61,13 +81,14 @@ class WhisperSTT:
         else:
             lang = self.cfg.language
         if not fast:
-            self.last_language = lang if lang in ("id", "en") else "id"
+            self.last_language = lang or "id"
         if fast:
             prompt = self.cfg.wake_prompt or None
         else:
+            prompts = {"id": self.cfg.initial_prompt, "en": self.cfg.initial_prompt_en}
             prompt = (
-                self.cfg.initial_prompt_en if lang == "en" else self.cfg.initial_prompt
-            ) or None
+                prompts.get(lang or "id") or None
+            )  # bahasa lain: tanpa prompt (id/en menyesatkan)
         segments, _ = self.model.transcribe(
             samples,
             language=lang,

@@ -24,7 +24,7 @@ def speakable(text: str) -> str:
     from jarvis.brain.language import guess
 
     text = _LONG_DECIMAL.sub(r"\1\2\3", text)
-    if guess(text) == "en":
+    if guess(text) != "id":
         return text
     from jarvis.tts.numbers import spell_numbers
 

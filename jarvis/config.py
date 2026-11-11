@@ -58,10 +58,12 @@ class STTConfig(_Section):
     wake_model: str = "base"
     device: Literal["auto", "cpu", "cuda"] = "auto"
     compute_type: str = "int8"
-    language: str | None = "id"  # "id" | "en" | "auto" (deteksi Indonesia/Inggris per ucapan)
-    detect_model: str = (
-        "tiny"  # model kecil khusus mendeteksi bahasa bila language: auto (±0.4 dtk)
-    )
+    language: str | None = "id"  # "id" | "en" | "auto" (deteksi bahasa per ucapan)
+    # Bahasa yang dipertimbangkan saat language: auto. ["all"] = ±90 bahasa Whisper; id selalu jadi
+    # cadangan. Bahasa selain id dipilih hanya bila keyakinannya ≥ detect_min_prob.
+    detect_languages: list[str] = ["id", "en"]
+    detect_min_prob: float = 0.5
+    detect_model: str = "tiny"  # model kecil khusus mendeteksi bahasa (±0.4 dtk)
     beam_size: int = 1
     # Kalimat alami, bukan daftar kata: daftar "buka, tutup" membuat "ibu kota" terdengar "buka ta"
     initial_prompt: str = (

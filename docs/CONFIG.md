@@ -59,6 +59,8 @@ stt:
   device: "auto"              # auto | cpu | cuda
   compute_type: "int8"        # CPU: int8 | GPU: float16
   language: "id"              # "id" | "en" | "auto" = kenali Indonesia/Inggris per ucapan (+±0.4 dtk, model detect_model)
+  detect_languages: ["id", "en"]   # bahasa yang dipertimbangkan saat auto; ["all"] = ±90 bahasa (EKSPERIMEN, lihat COMMANDS §9b)
+  detect_min_prob: 0.5        # bahasa selain Indonesia dipilih hanya bila keyakinan deteksi ≥ ini
   detect_model: "tiny"        # model kecil khusus mendeteksi bahasa saat language: auto (diunduh oleh download-models)
   beam_size: 1                # 1 = tercepat; 5 = lebih akurat
   initial_prompt: "Hello. Mengapa langit berwarna biru? Tolong catat bahwa saya punya janji dengan dokter. Aplikasi saya: Spotify, Chrome, dan VS Code."  # kalimat alami, bukan daftar kata

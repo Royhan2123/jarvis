@@ -275,6 +275,19 @@ lama dari `id` saja), lalu ditranskripsi dengan bahasa itu. Frasa pemanggil teta
   (atau `system_en`), selainnya suara Indonesia. Unduh suara Inggris: `python -m jarvis.setup download-voice
   en_US-ryan-medium` (pria) / `en_US-amy-medium` (wanita), masing-masing ±63 MB. Bahasa selain Inggris
   (mis. Jepang) tetap dibaca suara Indonesia bila Fish tak tersedia.
+- **±100 bahasa (Whisper):** terjemahan ke semua bahasa di `jarvis/brain/language.py` (nama Indonesia atau
+  Inggris: "terjemahkan ke bahasa Swahili: …"). Hasil uji nyata (26 bahasa, 2026-11-11): Jepang, Korea,
+  Mandarin, Arab, Jerman, Prancis, Spanyol, Rusia, Hindi, Vietnam, Polandia, Swedia, Ibrani, Persia dst.
+  diterjemahkan, diucapkan Fish, dan didengar balik dengan benar; **Turki dan Ukraina masih cacat** (kata
+  Indonesia tersisa / salah ketik). Bila hasil hampir sama dengan sumber, Jarvis mengulang dengan Qwen 9B.
+- **Mendengarkan bahasa lain:** ucapkan **"ganti bahasa ke Jepang"** (juga "pakai bahasa Korea", "switch
+  language to German", "ganti ke otomatis", "ganti bahasa ke Indonesia"). Whisper lalu memakai bahasa
+  tetap itu sampai Jarvis dimatikan; frasa pemanggil tetap "Hello". Cara ini andal.
+- **Deteksi otomatis banyak bahasa tidak andal** (uji nyata 26 bahasa: `tiny` benar 10, `base` 6, `small`
+  5; bahasa Indonesia berisiko terdeteksi sebagai bahasa lain). Karena itu default `detect_languages` hanya
+  `["id","en"]`; `["all"]` hanya untuk eksperimen.
+- **Suara:** Fish resmi mendukung ±13 bahasa (uji: Jepang, Korea, Mandarin, Arab, Jerman, Spanyol, Rusia,
+  Hindi baik). Bahasa lain dan mode offline (Piper/OS) hanya Indonesia/Inggris.
 - **Perintah Inggris lainnya:** "take a note: …", "type: …", "remind me to X in 10 minutes", "read my notes",
   "my name is Roy", "summarize my screen", "what's on my calendar", "any new emails", "send a WhatsApp to
   Budi saying …", "work on <tugas>" (agen), "turn on <nama perangkat>".

@@ -362,3 +362,98 @@ def test_play_youtube_tool_opens_first_result_and_respects_offline(adapter, monk
     cfg.general.offline_only = True
     with pytest.raises(ToolError, match="offline"):
         registry.call("play_youtube", {"query": "x"})
+
+
+# ── ±100 bahasa ──
+def test_language_table_covers_whisper_and_resolves_names() -> None:
+    assert len(language.WHISPER_LANGUAGES) == 100
+    assert language.target_language("Jepang") == "Japanese"
+    assert language.target_language("spanyol") == "Spanish"
+    assert language.target_language("swahili") == "Swahili"
+    assert language.target_language("sw") == "Swahili"
+    assert language.target_language("tagalog") == "Tagalog"
+    assert language.target_language("kucing") is None
+    assert language.language_name("ja") == "Japanese"
+
+
+def test_detect_candidates_all_skips_ambiguous_and_falls_back() -> None:
+    allc = language.detect_candidates(["all"])
+    assert allc[0] == "id" and "ja" in allc and "en" in allc
+    assert not (set(allc) & language.AMBIGUOUS)
+    assert language.detect_candidates(["xx"]) == ["id", "en"]
+    assert language.detect_candidates(["id", "ja"]) == ["id", "ja"]
+
+
+def test_guess_flags_other_scripts_and_latin_languages() -> None:
+    assert language.guess("こんにちは、今日は天気がとても良いです") == "other"
+    assert language.guess("Buenos días, hoy el clima es muy bueno") == "other"
+    assert language.guess("Guten Morgen, ich bin sehr müde") == "other"
+    assert language.guess("Baterai 80 persen, sedang diisi") == "id"
+
+
+def test_speakable_leaves_foreign_text_alone() -> None:
+    from jarvis.tts.stream import speakable
+
+    assert speakable("今日は2026年11月11日です") == "今日は2026年11月11日です"
+    assert speakable("Hoy es 11 de noviembre, hola") == "Hoy es 11 de noviembre, hola"
+
+
+@pytest.mark.parametrize(
+    ("said", "language_word"),
+    [("ganti bahasa ke Jepang", "jepang"), ("Jarvis, ganti bahasa jadi Spanyol", "spanyol"),
+     ("pakai bahasa Korea", "korea"), ("bicara bahasa Inggris", "inggris"),
+     ("switch language to German", "german"), ("ganti ke otomatis", "otomatis")],
+)  # fmt: skip
+def test_set_language_rule(said, language_word) -> None:
+    assert rules.match(said) == [Intent("set_language", {"language": language_word})]
+
+
+def test_set_language_rule_ignores_unknown_languages_and_other_changes() -> None:
+    assert rules.match("ganti bahasa ke kucing") is None
+    assert rules.match("ganti wallpaper") is None
+
+
+def test_set_language_tool_switches_and_restores(adapter) -> None:
+    cfg = Config()
+    context.configure(adapter, cfg, context.memory)
+    assert "Japanese" in registry.call("set_language", {"language": "jepang"})
+    assert cfg.stt.language == "ja"
+    registry.call("set_language", {"language": "otomatis"})
+    assert cfg.stt.language == "auto"
+    registry.call("set_language", {"language": "indonesia"})
+    assert cfg.stt.language == "id"
+    with pytest.raises(ToolError, match="tidak dikenal"):
+        registry.call("set_language", {"language": "kucing"})
+
+
+def test_translate_retries_with_smart_model_when_output_barely_changed(
+    adapter, monkeypatch
+) -> None:
+    cfg = Config()
+    context.configure(adapter, cfg, context.memory)
+    models: list[str] = []
+
+    def fake(text, target, cfg=None, client=None):  # noqa: ANN001, ANN202
+        models.append(cfg.llm.fast_model if cfg else "?")
+        return text if len(models) == 1 else "Buongiorno a tutti, oggi fa bel tempo"
+
+    monkeypatch.setattr(lang_tool, "run_translation", fake)
+    out = registry.call(
+        "translate", {"text": "selamat pagi semuanya hari ini cuaca bagus", "target": "italia"}
+    )
+    assert out.startswith("Buongiorno")
+    assert models == ["?", cfg.llm.smart_model]  # percobaan kedua memakai model pintar
+
+
+def test_stt_picks_a_non_indonesian_language_only_when_confident(stt_cls) -> None:
+    cfg = Config().stt.model_copy(update={"language": "auto", "detect_languages": ["id", "ja"]})
+    stt = stt_cls(cfg)
+    FakeModel.probs = [("ja", 0.8), ("id", 0.1)]
+    stt.transcribe(AUDIO)
+    assert FakeModel.seen[-1] == "ja" and stt.last_language == "ja"
+    FakeModel.probs = [("ja", 0.3), ("id", 0.25)]  # kurang yakin → tetap Indonesia
+    stt.transcribe(AUDIO)
+    assert FakeModel.seen[-1] == "id"
+    FakeModel.probs = [("ko", 0.9), ("id", 0.05)]  # ko tidak ada di daftar → Indonesia
+    stt.transcribe(AUDIO)
+    assert FakeModel.seen[-1] == "id"
