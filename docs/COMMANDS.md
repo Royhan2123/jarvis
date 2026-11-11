@@ -300,3 +300,29 @@ Tool agen: `list_dir`, `read_file`, `search`, `edit_file`, `write_file`, `run_co
 
 Batas jujur: Qwen 9B di CPU lambat (puluh detik per langkah) dan bisa salah memilih tool; selalu
 dengarkan kalimat konfirmasi sebelum bilang "ya".
+
+---
+
+## 12. Sambungan ke Isla Desk (pulau notifikasi)
+
+Isla Desk adalah proyek terpisah (`Dekstop-Notification-With-Tauri`): pulau notifikasi di atas layar. Jarvis
+mengirim teks ke pulau lewat IPC loopback; Isla membalas "diterima". Aktifkan: `island.enabled: true` dan
+jalankan Isla Desk lebih dulu.
+
+| Cara | Contoh |
+|---|---|
+| Suara / teks Jarvis | "Jarvis, tampilkan di pulau selamat pagi bos" (tool `show_on_island`, risk low) |
+| Otomatis | Pertanyaan izin agen ("Jarvis ingin mengubah file …") dan ringkasan hasil agen ikut tampil di pulau |
+| Dari kode | `from jarvis import island; island.notify(cfg, "teks")` (`notify_async` agar tidak menunggu) |
+
+**Protokol** (`jarvis/island.py`): baca `ipc.json` ({port, token}) di folder data Isla; kirim satu baris JSON
+`{"token": …, "notify": "<teks>"}` ke `127.0.0.1:<port>`; Isla membalas satu baris `{"allow": true}`.
+Teks dirapikan jadi satu baris tanpa karakter kontrol, maksimal 200 karakter (batas Isla).
+
+**Batas jujur**
+- Balasan `allow:true` hanya berarti *diterima*, bukan *tampil*. Isla membuang pesan saat **Jangan Ganggu** aktif,
+  dan pulau tidak terlihat di Space layar penuh kecuali Isla memakai versi `macos-support` (NSPanel).
+  Karena itu pesan tool-nya "Sudah saya kirim ke pulau Isla", bukan "sudah tampil".
+- Pesan hanya tampil sekitar 8 detik (setelan `display_seconds` di Isla).
+- Isla tidak menyala atau IPC tak terjangkau → Jarvis diam-diam melewatinya (tidak error).
+- Arah sebaliknya (Tanya AI di pulau memanggil Jarvis, persetujuan agen lewat tombol) belum ada; lihat ROADMAP.

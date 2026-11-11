@@ -129,7 +129,8 @@ tts:
 # TOOLS & KEAMANAN
 # ─────────────────────────────────────────────
 tools:
-  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online", "smarthome"]
+  enabled: ["system", "apps", "media", "web", "screen", "keyboard", "notes", "docs", "online",
+            "smarthome", "workspace", "messaging", "agent", "island"]
   confirm_risk_level: "high"          # low | medium | high — level minimal yang butuh konfirmasi
   confirm_timeout_s: 8
   apps:
@@ -220,6 +221,12 @@ agent:                                # agen kerja: tugas bertahap + shell terja
                                       # blokir keras & file rahasia tetap berlaku walau otomatis
   auto_read_only: true                # ls/cat/grep/git status... jalan tanpa tanya (tanpa pipa/redirect)
   readonly_commands: ["ls", "pwd", "cat", "grep", "git status", "git diff", ...]
+
+island:                               # sambungan ke Isla Desk (pulau notifikasi Tauri), lewat IPC loopback
+  enabled: false                      # true = pertanyaan izin & hasil agen juga tampil di pulau; tool show_on_island
+  ipc_file: ""                        # kosong = folder data Isla di OS ini (…/com.royhan.isladesk/ipc.json)
+                                      # Windows %APPDATA%, macOS ~/Library/Application Support, Linux ~/.local/share
+                                      # hanya 127.0.0.1, jadi aman walau general.offline_only: true
 
 messaging:
   contacts: {}                        # nama panggilan → nomor, mis. { budi: "62812xxxxxxx" }

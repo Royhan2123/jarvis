@@ -13,7 +13,7 @@
 
 ---
 
-## Status Definition of Done (per 2026-11-09)
+## Status Definition of Done (per 2026-11-11)
 
 Jujur per fase: ✅ terbukti di mesin dev (Mac Intel i9) · 🟡 sebagian · ❌ belum.
 
@@ -24,9 +24,9 @@ Jujur per fase: ✅ terbukti di mesin dev (Mac Intel i9) · 🟡 sebagian · ❌
 | 2 | Semua tool P0 jalan di Mac, Windows, Linux | 🟡 Mac ✅ | Windows/Linux (X11 + Wayland) belum diuji, checklist di COMMANDS.md §4 |
 | 3 | MVP: router, konfirmasi, tray, installer | 🟡 Mac ✅; rilis v0.1.0 terbit (4 target) | Installer Windows/Linux/ARM belum pernah dijalankan; belum diuji 3 pengguna nyata |
 | 4 | Baca layar, ketik, memori, pengingat, interupsi | 🟡 baca layar, ketik, memori, catatan, pengingat, streaming, interupsi ✅ di Mac | Benchmark hardware minimum; Windows/Linux belum diuji |
-| 5 | Plugin, dashboard, RAG, online, smart home, wake word kustom | 🟡 kode + tes ✅ | Calendar/Gmail (butuh akun Google), Home Assistant/MQTT (butuh perangkat), RAG lewat mic, bahasa daerah (hanya dikaji) |
+| 5 | Plugin, dashboard, RAG, online, smart home, wake word kustom | 🟡 kode + tes ✅; tambahan: folder kerja, **agen kerja**, suara **Fish**, sambungan **Isla Desk** | Konfirmasi "ya" lewat mikrofon belum teramati; Calendar/Gmail (butuh akun Google), Home Assistant/MQTT (butuh perangkat), RAG & WhatsApp lewat mic, bahasa daerah (hanya dikaji) |
 
-Rilis (v0.1, v1.0, v2.0) belum dibuat: tidak ada push atau tag ke remote tanpa izin.
+Rilis: **v0.1.0 terbit** (4 installer, belum memuat agen, Fish, folder kerja, dan sambungan Isla). v0.2.0 belum dibuat; push dan tag hanya dengan izin pemilik.
 
 ---
 
@@ -119,6 +119,7 @@ Rilis (v0.1, v1.0, v2.0) belum dibuat: tidak ada push atau tag ke remote tanpa i
 - [x] Custom wake word (nama panggilan sendiri lewat `wakeword.phrases`, uji dengan `setup test-wake`)
 - [x] Folder kerja: baca & ubah kode dengan konfirmasi suara, draf WhatsApp (tambahan di luar roadmap awal; diuji dengan LLM asli pada file contoh)
 - [x] Agen kerja: loop LLM + tool file & shell terjaga, konfirmasi tiap langkah berisiko (`kerjakan ...`, `python -m jarvis.agent`; diuji Qwen 9B asli: bug diskon `/10`→`/100` diperbaiki + pytest lolos, 4 langkah ±1 menit; belum diuji lewat mikrofon; Fish Audio belum diuji)
+- [x] Sambungan ke Isla Desk: Jarvis mengirim teks, pertanyaan izin agen, dan hasil agen ke pulau lewat IPC loopback (`jarvis/island.py`, tool `show_on_island`; diuji dengan server Isla palsu dan Isla asli di Mac)
 - [ ] Multi-bahasa daerah (Jawa/Sunda) — eksperimen fine-tune (dikaji: lihat [`EXPERIMEN_BAHASA_DAERAH.md`](EXPERIMEN_BAHASA_DAERAH.md); belum dikerjakan)
 
 ---
@@ -131,3 +132,21 @@ Rilis (v0.1, v1.0, v2.0) belum dibuat: tidak ada push atau tag ke remote tanpa i
 | **Jarvis for Business** | Versi kantor: integrasi tools internal, deploy massal, support |
 | **Marketplace plugin** | Developer jual plugin, platform ambil komisi |
 | **Custom voice / wake word** | Jasa suara & nama panggilan custom untuk brand |
+
+---
+
+## Fase 6 — Penyelesaian Jarvis (rencana kerja, mulai 2026-11-11)
+
+Dikerjakan berurutan; tiap item: lint + tes, commit kecil, centang di sini. Item bertanda 👤 butuh pemilik
+(mikrofon, akun, perangkat) dan akan disiapkan skrip + checklist-nya.
+
+- [x] 1. Rapikan dokumen: CONFIG/COMMANDS/ARCHITECTURE memuat agen, Fish, folder kerja, Isla; status DoD jujur
+- [ ] 2. Suara pengisi saat agen bekerja ("Sedang membaca file…")
+- [ ] 3. Atur izin agen lewat suara ("jangan tanya lagi untuk ubah file") dan dashboard, tanpa edit `config.yaml`
+- [ ] 4. API lokal berotentikasi (127.0.0.1 + token) agar aplikasi desktop bisa memakai Jarvis dan agen — *arsitektur baru: minta izin pemilik dulu*
+- [ ] 5. Status Jarvis (mendengarkan/berpikir/bicara) tampil di pulau Isla
+- [ ] 6. Tuning latensi + benchmark sebelum/sesudah (pramuat model, prompt pendek, Fish berurutan); target ≤ 5 s tetap dibatasi CPU Intel
+- [ ] 7. 👤 Uji suara penuh (konfirmasi "ya"), Google Calendar/Gmail, WhatsApp, Smart Home asli, RAG lewat mic
+- [ ] 8. Rilis v0.2.0 (tag + installer; butuh izin pemilik) lalu bahasa daerah Jawa/Sunda (paling akhir)
+
+Di luar kendali sesi ini: uji Windows/Linux (CI hanya membuktikan tes unit) dan kecepatan LLM di CPU.

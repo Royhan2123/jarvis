@@ -210,7 +210,15 @@ jarvis/
 │   ├── __main__.py             # entry point: python -m jarvis
 │   ├── app.py                  # state machine & orkestrasi
 │   ├── config.py               # load & validasi config (pydantic)
-│   ├── setup.py                # CLI: download voice, cek dependensi
+│   ├── setup.py                # CLI: download voice/model, test-wake, test-stt, index-docs, google-login
+│   ├── workspace.py            # akses file terbatas (folder kerja, deny list, cadangan .jarvis-bak)
+│   ├── island.py               # sambungan ke Isla Desk (IPC loopback)
+│   ├── smarthome.py            # Home Assistant / MQTT (alamat LAN saja)
+│   ├── agent/
+│   │   ├── loop.py             # loop agen: LLM ↔ tool, konfirmasi per langkah
+│   │   └── shell.py            # shell terjaga: blokir keras, env bersih, timeout
+│   ├── online/
+│   │   └── google.py           # OAuth loopback + REST Calendar/Gmail (tanpa pustaka Google)
 │   ├── audio/
 │   │   ├── stream.py           # input mic (sounddevice)
 │   │   ├── wakeword.py         # openWakeWord
@@ -223,7 +231,8 @@ jarvis/
 │   │   ├── rules.py            # regex perintah cepat
 │   │   ├── llm.py              # wrapper Ollama
 │   │   ├── prompts.py          # system prompt
-│   │   └── memory.py           # SQLite
+│   │   ├── memory.py           # SQLite
+│   │   └── rag.py              # RAG dokumen: SQLite + cosine, embedding via Ollama
 │   ├── tools/
 │   │   ├── registry.py         # decorator @tool, schema, risk
 │   │   ├── system.py           # jam, baterai, cpu, shutdown
@@ -232,17 +241,28 @@ jarvis/
 │   │   ├── web.py              # buka url, cari google
 │   │   ├── screen.py           # screenshot → vision
 │   │   ├── keyboard.py         # ketik teks
-│   │   └── notes.py            # catatan & pengingat
+│   │   ├── notes.py            # catatan & pengingat
+│   │   ├── docs.py             # cari/indeks dokumen pribadi (RAG)
+│   │   ├── online.py           # cuaca, Calendar, Gmail (menolak bila offline_only)
+│   │   ├── smarthome.py        # device_control / device_state
+│   │   ├── workspace.py        # list_files, replace_in_file, create_file (konfirmasi)
+│   │   ├── messaging.py        # draf WhatsApp (tidak mengirim otomatis)
+│   │   ├── agent.py            # run_agent ("kerjakan ...")
+│   │   ├── island.py           # show_on_island
+│   │   └── plugins.py          # muat plugin dari folder plugins/
 │   ├── platform/
 │   │   ├── base.py             # PlatformAdapter (ABC)
 │   │   ├── macos.py
 │   │   ├── windows.py
 │   │   └── linux.py
 │   ├── tts/
-│   │   ├── piper.py            # Piper TTS (utama)
+│   │   ├── piper.py            # Piper TTS (offline, utama)
+│   │   ├── fish.py             # Fish Audio (ONLINE, opsional; cadangan ke Piper)
+│   │   ├── stream.py           # SentenceSpeaker: bicara per kalimat
 │   │   └── fallback.py         # say / SAPI / espeak-ng
 │   └── ui/
-│       └── tray.py             # pystray
+│       ├── tray.py             # pystray
+│       └── dashboard.py        # FastAPI lokal: log, config, plugin (token + cek Host)
 ├── models/                     # suara Piper (.onnx) — di-gitignore
 ├── scripts/
 │   ├── install_macos.sh
