@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import threading
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
@@ -92,14 +93,21 @@ class Agent:
         confirm: Callable[[str], bool],
         say: Callable[[str], None] | None = None,
         client: ollama.Client | None = None,
+        on_event: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         self.cfg = cfg
+        self.on_event = on_event or (lambda _e: None)  # jejak langkah untuk UI/API
+        self._cancelled = threading.Event()
         self.confirm = confirm
         self.say = say or (lambda _t: None)
         self.client = client or ollama.Client(host=cfg.llm.host)
         self.steps: list[str] = []  # jejak aksi, untuk log/UI
         self._voice: ThreadPoolExecutor | None = None
         self._speaking: Future[None] | None = None
+
+    def cancel(self) -> None:
+        """Batalkan tugas: berhenti sebelum langkah berikutnya; pertanyaan izin dianggap ditolak."""
+        self._cancelled.set()
 
     # ── suara pengisi ──
     def _say_safely(self, text: str) -> None:
@@ -140,6 +148,8 @@ class Agent:
             logger.info(f"[agen] {action} otomatis (tanpa izin, sesuai setelan): {what}")
             return True
         self._flush_voice()  # pertanyaan izin tidak boleh bertabrakan dengan ucapan status
+        if self._cancelled.is_set():
+            return False
         return self.confirm(what)
 
     def _path(self, ref: str, must_exist: bool = True) -> Path:
@@ -321,6 +331,8 @@ class Agent:
         options = self._options()
         self.say("Siap, saya kerjakan.")
         for step in range(1, a.max_steps + 1):
+            if self._cancelled.is_set():
+                return "Tugas dibatalkan."
             resp = self.client.chat(
                 model=model, messages=messages, tools=TOOLS, options=options,
                 keep_alive=c.keep_alive, think=False,
@@ -335,7 +347,17 @@ class Agent:
                 logger.info(f"[agen] {step}. {name}({str(args)[:120]})")
                 self.steps.append(f"{name} {str(args)[:80]}")
                 self._narrate(narration(name, args))
+                self.on_event({"type": "step", "n": step, "tool": name, "summary": str(args)[:120]})
                 result = self.call(name, args)
+                self.on_event(
+                    {
+                        "type": "result",
+                        "n": step,
+                        "tool": name,
+                        "ok": not result.startswith("ERROR"),
+                        "preview": result[:200],
+                    }
+                )
                 messages.append(
                     {
                         "role": "tool",

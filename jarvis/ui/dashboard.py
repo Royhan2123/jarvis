@@ -51,7 +51,9 @@ def _install_log_sink() -> None:
         )
 
 
-def create_app(cfg: Config, config_path: Path, token: str, port: int) -> FastAPI:
+def create_app(
+    cfg: Config, config_path: Path, token: str, port: int, backend: object | None = None
+) -> FastAPI:
     app = FastAPI(title="Jarvis Dashboard", docs_url=None, redoc_url=None, openapi_url=None)
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
 
@@ -166,6 +168,11 @@ def create_app(cfg: Config, config_path: Path, token: str, port: int) -> FastAPI
             "note": note,
         }
 
+    if cfg.ui.api.enabled:
+        from jarvis.ui.api import ApiBackend, build_router
+
+        app.include_router(build_router(backend or ApiBackend(cfg), token))  # type: ignore[arg-type]
+
     app.state.token = token
     return app
 
@@ -191,6 +198,10 @@ def start_dashboard(cfg: Config, config_path: str | Path) -> str | None:
     threading.Thread(target=server.run, name="dashboard", daemon=True).start()
     url = f"http://127.0.0.1:{port}/?token={token}"
     logger.info(f"Dashboard: {url}")
+    if cfg.ui.api.enabled:
+        from jarvis.ui.api import write_info
+
+        logger.info(f"API lokal aktif; port + token ada di {write_info(port, token)}")
     return url
 
 

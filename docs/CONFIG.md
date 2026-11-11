@@ -229,6 +229,14 @@ island:                               # sambungan ke Isla Desk (pulau notifikasi
                                       # Windows %APPDATA%, macOS ~/Library/Application Support, Linux ~/.local/share
                                       # hanya 127.0.0.1, jadi aman walau general.offline_only: true
 
+ui:
+  tray: true
+  dashboard: { enabled: false, port: 8765 }   # dashboard web lokal (127.0.0.1, token)
+  api:                                # API lokal berotentikasi untuk aplikasi lain (COMMANDS.md §13)
+    enabled: false                    # true = server dashboard ikut menyala; /v1 butuh Authorization: Bearer
+    confirm_timeout_s: 60             # pertanyaan izin agen yang tak dijawab dianggap DITOLAK
+    max_text_chars: 2000              # batas panjang `text` / `task` per permintaan
+
 messaging:
   contacts: {}                        # nama panggilan → nomor, mis. { budi: "62812xxxxxxx" }
 

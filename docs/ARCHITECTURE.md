@@ -164,6 +164,7 @@ def set_volume(percent: int) -> str:
 | `high` | **Wajib konfirmasi suara** | shutdown, restart, hapus catatan, kirim email |
 
 **Aturan keamanan wajib:**
+0. API lokal (`ui.api`, mati bawaan): 127.0.0.1 + token Bearer + cek Host; agen lewat API tetap tunduk pada semua pengaman di bawah, dan pertanyaan izin yang tak dijawab = ditolak.
 1. Tidak ada tool `run_shell` bebas di registry. Pengecualian: agen kerja (`jarvis/agent/`, opt-in) — shell terjaga: konfirmasi tiap perintah, blokir keras, folder kerja saja.
 2. Argumen tool divalidasi (pydantic) sebelum dieksekusi.
 3. Nama aplikasi dicek terhadap daftar `apps.allowed` di config (opsional).
@@ -262,7 +263,8 @@ jarvis/
 │   │   └── fallback.py         # say / SAPI / espeak-ng
 │   └── ui/
 │       ├── tray.py             # pystray
-│       └── dashboard.py        # FastAPI lokal: log, config, plugin (token + cek Host)
+│       ├── dashboard.py        # FastAPI lokal: log, config, plugin, izin agen (token + cek Host)
+│       └── api.py              # API /v1 untuk aplikasi lain: ask, agen + SSE + konfirmasi (Bearer)
 ├── models/                     # suara Piper (.onnx) — di-gitignore
 ├── scripts/
 │   ├── install_macos.sh

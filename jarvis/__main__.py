@@ -88,7 +88,7 @@ def run_listen(cfg: Config, tray: bool, config_path: str) -> None:
 
     from jarvis.app import Jarvis
 
-    if cfg.ui.dashboard.enabled:
+    if cfg.ui.dashboard.enabled or cfg.ui.api.enabled:
         from jarvis.ui.dashboard import start_dashboard
 
         start_dashboard(cfg, config_path)

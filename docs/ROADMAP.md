@@ -143,7 +143,7 @@ Dikerjakan berurutan; tiap item: lint + tes, commit kecil, centang di sini. Item
 - [x] 1. Rapikan dokumen: CONFIG/COMMANDS/ARCHITECTURE memuat agen, Fish, folder kerja, Isla; status DoD jujur
 - [x] 2. Suara pengisi saat agen bekerja ("Membaca toko titik py", di latar; `agent.narrate`); belum didengar lewat speaker nyata
 - [x] 3. Atur izin agen lewat suara ("jangan tanya lagi untuk ubah file", pelonggaran wajib konfirmasi "ya") dan dashboard (kotak centang + simpan permanen), tanpa edit `config.yaml`
-- [ ] 4. API lokal berotentikasi (127.0.0.1 + token) agar aplikasi desktop bisa memakai Jarvis dan agen — *arsitektur baru: minta izin pemilik dulu*
+- [x] 4. API lokal berotentikasi (`ui.api`, `/v1`: ask, agen + SSE + konfirmasi lewat tombol, Bearer + cek Host; desain disetujui pemilik 2026-11-11)
 - [ ] 5. Status Jarvis (mendengarkan/berpikir/bicara) tampil di pulau Isla
 - [ ] 6. Tuning latensi + benchmark sebelum/sesudah (pramuat model, prompt pendek, Fish berurutan); target ≤ 5 s tetap dibatasi CPU Intel
 - [ ] 7. 👤 Uji suara penuh (konfirmasi "ya"), Google Calendar/Gmail, WhatsApp, Smart Home asli, RAG lewat mic

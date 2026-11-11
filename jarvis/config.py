@@ -306,9 +306,22 @@ class DashboardConfig(_Section):
     port: int = 8765  # selalu hanya di 127.0.0.1
 
 
+class ApiConfig(_Section):
+    """API lokal berotentikasi untuk aplikasi lain di komputer yang sama (docs/COMMANDS.md §13).
+
+    Memakai server dashboard (127.0.0.1, port `ui.dashboard.port`), token acak per proses lewat
+    `Authorization: Bearer`. Mati bawaan.
+    """
+
+    enabled: bool = False
+    confirm_timeout_s: int = 60  # pertanyaan izin agen yang tak dijawab dianggap DITOLAK
+    max_text_chars: int = 2000
+
+
 class UIConfig(_Section):
     tray: bool = True
     dashboard: DashboardConfig = DashboardConfig()
+    api: ApiConfig = ApiConfig()
 
 
 class Config(_Section):

@@ -343,3 +343,41 @@ Teks dirapikan jadi satu baris tanpa karakter kontrol, maksimal 200 karakter (ba
 - Pesan hanya tampil sekitar 8 detik (setelan `display_seconds` di Isla).
 - Isla tidak menyala atau IPC tak terjangkau → Jarvis diam-diam melewatinya (tidak error).
 - Arah sebaliknya (Tanya AI di pulau memanggil Jarvis, persetujuan agen lewat tombol) belum ada; lihat ROADMAP.
+
+---
+
+## 13. API lokal untuk aplikasi lain
+
+Agar aplikasi desktop (mis. Isla Desk) bisa bertanya ke Jarvis dan memberi tugas ke agen kerja, dengan persetujuan
+lewat **tombol** (bukan suara). Aktifkan: `ui.api.enabled: true` (memakai server dashboard di 127.0.0.1, port
+`ui.dashboard.port`). Mati bawaan.
+
+**Menemukan server:** saat menyala, Jarvis menulis `api.json` (izin 600) di folder data pengguna
+(`platformdirs.user_data_dir("jarvis")`): `{"port", "token", "pid", "url"}`. Token acak per proses; kirim sebagai
+`Authorization: Bearer <token>`. Header `Host` harus `127.0.0.1:<port>` atau `localhost:<port>` (anti DNS-rebinding).
+
+| Rute | Fungsi |
+|---|---|
+| `GET /v1/status` | Model, `agent.enabled/workspace/busy/confirm_actions` |
+| `POST /v1/ask` `{text}` | `{reply, tier}`: aturan, Qwen 4B, atau 9B; tanpa suara. Riwayat percakapan API terpisah dari suara. Aksi berisiko tinggi (matikan komputer) **tidak dijalankan** (butuh "ya" suara) |
+| `POST /v1/agent` `{task}` | 202 `{id}`; **satu tugas pada satu waktu** (409 bila sibuk, agen mati, atau folder kerja belum diatur) |
+| `GET /v1/agent/{id}` | `{status, result, pending_confirm}` (status: running/done/error/cancelled) |
+| `GET /v1/agent/{id}/events` | SSE: `step`, `result`, `confirm` {confirm_id, what}, `confirm_result` {allow, timeout}, `done`/`error`/`cancelled`; denyut `: ping` tiap 15 dtk |
+| `POST /v1/agent/{id}/confirm` `{confirm_id, allow}` | Jawab pertanyaan izin (409 bila id salah / tak ada yang menunggu) |
+| `POST /v1/agent/{id}/cancel` | Batalkan; pertanyaan izin yang menunggu dianggap ditolak |
+
+**Contoh (curl):**
+
+```bash
+# port & token dari api.json
+curl -H "Authorization: Bearer $TOKEN" -d '{"text":"apa ibu kota Jepang?"}' -H 'Content-Type: application/json' \
+     http://127.0.0.1:8765/v1/ask
+```
+
+**Pengaman (sama dengan agen suara, tidak dilonggarkan):** blokir keras shell, file rahasia, `workspace.folders`,
+`agent.confirm_actions`. Pertanyaan izin yang tak dijawab dalam `ui.api.confirm_timeout_s` (60 dtk) = ditolak.
+Tidak ada CORS (klien adalah program lokal, bukan halaman web). Isi `text`/`task` dibatasi `ui.api.max_text_chars`.
+
+Batas jujur: satu klien agen sekaligus; `/v1/ask` memakai satu riwayat bersama untuk semua pemanggil API; belum ada
+streaming token untuk `/v1/ask`.
+
