@@ -3,7 +3,9 @@
 Contoh pemakai: aplikasi desktop (Isla Desk) yang ingin bertanya ke Jarvis atau memberi tugas ke
 agen kerja dan menyetujui langkahnya lewat tombol, bukan suara. Rute ada di `/v1`:
 
-    GET  /v1/status                      keadaan Jarvis
+    GET  /v1/status                      keadaan Jarvis (termasuk state suara)
+    GET  /v1/state                       {state, seq, at}: idle/listening/thinking/dst.
+    GET  /v1/state/events                SSE `state`: keadaan sekarang, lalu tiap perubahan
     POST /v1/ask            {text}       jawaban (router + LLM yang sama, tanpa suara)
     POST /v1/agent          {task}       mulai tugas agen -> {id}; satu tugas pada satu waktu
     GET  /v1/agent/{id}                  status + hasil
@@ -20,6 +22,7 @@ tidak dijalankan (butuh konfirmasi suara yang tak ada di sini).
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import secrets
@@ -42,6 +45,7 @@ from jarvis.brain.llm import LLM
 from jarvis.brain.router import Router
 from jarvis.brain.rules import Intent
 from jarvis.config import Config
+from jarvis.state_hub import HUB
 from jarvis.tools.registry import context
 
 MAX_EVENTS = 1000
@@ -91,6 +95,15 @@ class Task:
     def finish(self, status: str, text: str) -> None:
         self.status, self.result = status, text
         self.emit({"type": status, "text": text})
+
+    def wait(self, i: int, timeout: float) -> tuple[list[dict[str, Any]], bool]:
+        """Tunggu event setelah indeks `i` (maks `timeout` dtk). Mengembalikan (event baru, selesai
+        dan semua sudah terbaca)."""
+        with self.cond:
+            if i >= len(self.events) and self.status == "running":
+                self.cond.wait(timeout=timeout)
+            batch = self.events[i:]
+            return batch, self.status != "running" and i + len(batch) >= len(self.events)
 
     def answer(self, confirm_id: str, allow: bool) -> bool:
         """Jawab pertanyaan izin; False bila tak ada yang menunggu dengan id itu."""
@@ -172,6 +185,7 @@ class ApiBackend:
             "name": c.general.name,
             "offline_only": c.general.offline_only,
             "models": {"fast": c.llm.fast_model, "smart": c.llm.smart_model},
+            "state": HUB.snapshot()["state"],
             "agent": {
                 "enabled": c.agent.enabled,
                 "workspace": bool(workspace.roots(c)),
@@ -267,24 +281,37 @@ def sse(events: Iterator[dict[str, Any] | None]) -> Iterator[str]:
 
 
 def stream_events(task: Task, ping_every: float = PING_EVERY_S) -> Iterator[dict[str, Any] | None]:
+    """Event tugas sampai selesai (generator sinkron; rute HTTP memakai versi async di bawah)."""
     i, last = 0, time.monotonic()
     while True:
-        with task.cond:
-            while i >= len(task.events) and task.status == "running":
-                if (
-                    not task.cond.wait(timeout=min(1.0, ping_every))
-                    and time.monotonic() - last >= ping_every
-                ):
-                    break
-            batch = task.events[i:]
-            i += len(batch)
-            over = task.status != "running" and i >= len(task.events)
+        batch, over = task.wait(i, min(1.0, ping_every))
+        i += len(batch)
         yield from batch
+        if batch:
+            last = time.monotonic()
         if over:
             return
-        if not batch:
+        if not batch and time.monotonic() - last >= ping_every:
             last = time.monotonic()
             yield None
+
+
+async def sse_stream(request: Request, wait, fmt, ping_every: float = PING_EVERY_S):  # noqa: ANN001, ANN201
+    """Aliran SSE asinkron: menunggu di thread dengan jeda 1 dtk dan memeriksa putusnya klien tiap
+    putaran, supaya thread dilepas segera (bukan menunggu denyut berikutnya)."""
+    last = time.monotonic()
+    state: Any = None
+    while not await request.is_disconnected():
+        chunks, state, over = await asyncio.to_thread(wait, state)
+        for chunk in chunks:
+            yield fmt(chunk)
+        if chunks:
+            last = time.monotonic()
+        if over:
+            return
+        if not chunks and time.monotonic() - last >= ping_every:
+            last = time.monotonic()
+            yield ": ping\n\n"
 
 
 class AskBody(BaseModel):
@@ -328,6 +355,25 @@ def build_router(backend: ApiBackend, token: str) -> APIRouter:
     def status() -> dict:
         return backend.status()
 
+    @router.get("/state", dependencies=[Depends(auth)])
+    def state() -> dict:
+        return HUB.snapshot()
+
+    @router.get("/state/events", dependencies=[Depends(auth)])
+    def state_events(request: Request) -> StreamingResponse:
+        def wait(last):  # noqa: ANN001, ANN202
+            snap = HUB.wait(-1 if last is None else last, 1.0)
+            return ([snap] if snap else []), (snap["seq"] if snap else last), False
+
+        def fmt(snap: dict) -> str:
+            return f"event: state\ndata: {json.dumps(snap)}\n\n"
+
+        return StreamingResponse(
+            sse_stream(request, wait, fmt),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
     @router.post("/ask", dependencies=[Depends(auth)])
     def ask(body: AskBody) -> dict:
         text = check(body.text, "text")
@@ -347,10 +393,18 @@ def build_router(backend: ApiBackend, token: str) -> APIRouter:
         return guard(lambda: backend.get_task(task_id)).view()
 
     @router.get("/agent/{task_id}/events", dependencies=[Depends(auth)])
-    def events(task_id: str) -> StreamingResponse:
+    def events(task_id: str, request: Request) -> StreamingResponse:
         task = guard(lambda: backend.get_task(task_id))
+
+        def wait(i):  # noqa: ANN001, ANN202
+            batch, over = task.wait(i or 0, 1.0)
+            return batch, (i or 0) + len(batch), over
+
+        def fmt(ev: dict) -> str:
+            return f"event: {ev['type']}\ndata: {json.dumps(ev, ensure_ascii=False)}\n\n"
+
         return StreamingResponse(
-            sse(stream_events(task)),
+            sse_stream(request, wait, fmt),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )

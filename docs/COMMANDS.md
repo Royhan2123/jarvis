@@ -358,7 +358,9 @@ lewat **tombol** (bukan suara). Aktifkan: `ui.api.enabled: true` (memakai server
 
 | Rute | Fungsi |
 |---|---|
-| `GET /v1/status` | Model, `agent.enabled/workspace/busy/confirm_actions` |
+| `GET /v1/status` | Model, `agent.enabled/workspace/busy/confirm_actions`, `state` suara |
+| `GET /v1/state` | `{state, seq, at}`: idle/listening/thinking/speaking/confirming |
+| `GET /v1/state/events` | SSE `state`: keadaan sekarang dulu, lalu tiap perubahan (denyut tiap 15 dtk) |
 | `POST /v1/ask` `{text}` | `{reply, tier}`: aturan, Qwen 4B, atau 9B; tanpa suara. Riwayat percakapan API terpisah dari suara. Aksi berisiko tinggi (matikan komputer) **tidak dijalankan** (butuh "ya" suara) |
 | `POST /v1/agent` `{task}` | 202 `{id}`; **satu tugas pada satu waktu** (409 bila sibuk, agen mati, atau folder kerja belum diatur) |
 | `GET /v1/agent/{id}` | `{status, result, pending_confirm}` (status: running/done/error/cancelled) |

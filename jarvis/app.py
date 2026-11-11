@@ -24,6 +24,7 @@ from jarvis.brain.router import Plan, Router
 from jarvis.brain.rules import Intent, parse_yes_no
 from jarvis.config import Config, VADConfig
 from jarvis.platform import get_adapter
+from jarvis.state_hub import HUB
 from jarvis.stt.whisper import WhisperSTT
 from jarvis.tools.registry import context, load_tools, registry
 from jarvis.tts import TTS, build_tts
@@ -109,6 +110,7 @@ class Jarvis:
         logger.debug(f"state → {state.value}")
         if state is State.SPEAKING and self.cfg.audio.interruptible:
             self._start_monitor()
+        HUB.publish(state.value)  # dibaca API lokal (/v1/state)
         for fn in self.listeners:
             fn(state)
 

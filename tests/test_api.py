@@ -318,3 +318,52 @@ def test_discovery_file_has_port_token_and_private_mode(tmp_path) -> None:
     if os.name != "nt":  # izin POSIX tidak berlaku di Windows
         assert path.stat().st_mode & 0o077 == 0
     assert info_path().name == "api.json"
+
+
+# ── status suara ──
+def test_state_hub_publish_dedup_and_stream() -> None:
+    import threading as th
+
+    from jarvis.state_hub import StateHub
+
+    hub = StateHub()
+    assert hub.snapshot()["state"] == "loading"
+    hub.publish("idle")
+    seq = hub.snapshot()["seq"]
+    hub.publish("idle")  # sama: tidak menaikkan seq
+    assert hub.snapshot()["seq"] == seq
+    stop = th.Event()
+    gen = hub.stream(ping_every=0.05, stop=stop)
+    assert next(gen)["state"] == "idle"  # keadaan sekarang dulu
+    assert next(gen) is None  # lalu denyut saat tak ada perubahan
+    hub.publish("listening")
+    assert next(gen) == {**hub.snapshot()}  # perubahan sampai ke pelanggan
+    stop.set()
+    assert list(gen) == []  # berhenti bersih
+
+
+def test_state_endpoints_need_token_and_report_current_state(api) -> None:
+    from jarvis.state_hub import HUB
+
+    client, _ = api
+    HUB.publish("thinking")
+    assert client.get("/v1/state", headers=HOST).status_code == 401
+    assert client.get("/v1/state", headers=AUTH).json()["state"] == "thinking"
+    assert client.get("/v1/status", headers=AUTH).json()["state"] == "thinking"
+    HUB.publish("idle")
+
+
+def test_state_stream_over_http_sends_snapshot_first(api) -> None:
+    from jarvis.state_hub import HUB
+
+    client, _ = api
+    HUB.publish("speaking")
+    with client.stream("GET", "/v1/state/events", headers=AUTH) as r:
+        assert r.headers["content-type"].startswith("text/event-stream")
+        lines = []
+        for line in r.iter_lines():
+            lines.append(line)
+            if line.startswith("data: "):
+                break
+    assert lines[0] == "event: state" and json.loads(lines[1][6:])["state"] == "speaking"
+    HUB.publish("idle")

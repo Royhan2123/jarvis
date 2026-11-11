@@ -144,7 +144,7 @@ Dikerjakan berurutan; tiap item: lint + tes, commit kecil, centang di sini. Item
 - [x] 2. Suara pengisi saat agen bekerja ("Membaca toko titik py", di latar; `agent.narrate`); belum didengar lewat speaker nyata
 - [x] 3. Atur izin agen lewat suara ("jangan tanya lagi untuk ubah file", pelonggaran wajib konfirmasi "ya") dan dashboard (kotak centang + simpan permanen), tanpa edit `config.yaml`
 - [x] 4. API lokal berotentikasi (`ui.api`, `/v1`: ask, agen + SSE + konfirmasi lewat tombol, Bearer + cek Host; desain disetujui pemilik 2026-11-11)
-- [ ] 5. Status Jarvis (mendengarkan/berpikir/bicara) tampil di pulau Isla
+- [x] 5. Status Jarvis (mendengarkan/berpikir/bicara) lewat `/v1/state` + `/v1/state/events` (sisi Jarvis selesai; penampil di pulau Isla masih perlu dibuat di repo Isla)
 - [ ] 6. Tuning latensi + benchmark sebelum/sesudah (pramuat model, prompt pendek, Fish berurutan); target ≤ 5 s tetap dibatasi CPU Intel
 - [ ] 7. 👤 Uji suara penuh (konfirmasi "ya"), Google Calendar/Gmail, WhatsApp, Smart Home asli, RAG lewat mic
 - [ ] 8. Rilis v0.2.0 (tag + installer; butuh izin pemilik) lalu bahasa daerah Jawa/Sunda (paling akhir)
