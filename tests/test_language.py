@@ -518,3 +518,16 @@ def test_short_english_replies_are_not_spelled_as_indonesian() -> None:
     for text in ["It's 10:29 PM", "Volume is now 60 percent", "Battery is at 80 percent, charging"]:
         assert speakable(text) == text, text
     assert speakable("Volume sekarang 60 persen") == "Volume sekarang enam puluh persen"
+
+
+def test_stt_follows_language_changes_made_on_the_live_config(stt_cls) -> None:
+    """Aplikasi memberi STT salinan config (prompt + nama file); set_language mengubah yang asli."""
+    live = Config().stt.model_copy(update={"language": "auto", "detect_languages": ["id", "en"]})
+    copy = live.model_copy(update={"initial_prompt": live.initial_prompt + " toko.py"})
+    stt = stt_cls(copy, live=live)
+    FakeModel.probs = [("ja", 0.6), ("id", 0.1), ("en", 0.05)]
+    stt.transcribe(AUDIO)
+    assert FakeModel.seen[-1] == "id"  # ja belum ada di daftar
+    live.detect_languages = ["id", "en", "ja"]  # seperti yang dilakukan tool set_language
+    stt.transcribe(AUDIO)
+    assert FakeModel.seen[-1] == "ja" and stt.last_language == "ja"

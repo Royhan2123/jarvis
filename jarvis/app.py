@@ -82,9 +82,11 @@ class Jarvis:
 
             hint = workspace.stt_hint(cfg)
             stt_cfg = cfg.stt.model_copy(update={"initial_prompt": cfg.stt.initial_prompt + hint})
-        self.stt = WhisperSTT(stt_cfg)
+        self.stt = WhisperSTT(stt_cfg, live=cfg.stt)
         wake_cfg = cfg.stt.model_copy(update={"model": cfg.stt.wake_model, "beam_size": 1})
-        self.wake_stt = self.stt if wake_cfg.model == cfg.stt.model else WhisperSTT(wake_cfg)
+        self.wake_stt = (
+            self.stt if wake_cfg.model == cfg.stt.model else WhisperSTT(wake_cfg, live=cfg.stt)
+        )
         self.llm = LLM(cfg, facts=self.memory.facts_text)
         self.llm.history = self.memory.recent(cfg.llm.history_turns)  # ingat percakapan terakhir
         self.router = Router(cfg)

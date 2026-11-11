@@ -46,7 +46,10 @@ def is_hallucination(text: str, peak: float) -> bool:
 
 
 class WhisperSTT:
-    def __init__(self, cfg: STTConfig) -> None:
+    def __init__(self, cfg: STTConfig, live: STTConfig | None = None) -> None:
+        # `live`: objek config yang bisa diubah saat jalan (tool set_language); `cfg` boleh salinan
+        # (mis. prompt ditambah nama file), jadi bahasa selalu dibaca dari `live`.
+        self.live = live or cfg
         from faster_whisper import WhisperModel
 
         self.cfg = cfg
@@ -94,7 +97,7 @@ class WhisperSTT:
         p = dict(probs)
         from jarvis.brain.language import detect_candidates
 
-        cands = detect_candidates(self.cfg.detect_languages)
+        cands = detect_candidates(self.live.detect_languages)
         if len(cands) <= 3:  # pilihan sedikit: ambil yang tertinggi, tanpa ambang
             return max(cands, key=lambda c: p.get(c, 0.0))
         others = [c for c in cands if c != "id"]
@@ -107,11 +110,11 @@ class WhisperSTT:
         """audio: int16 mono 16 kHz. fast=True: tanpa fallback suhu (untuk wake)."""
         samples, peak = normalize_gain(audio.astype(np.float32) / 32768.0)
         if fast:  # wake: frasa pemanggil selalu dikenali sebagai bahasa Indonesia/"Hello"
-            lang = self.cfg.language if self.cfg.language in ("id", "en") else "id"
-        elif self.cfg.language == "auto":
+            lang = self.live.language if self.live.language in ("id", "en") else "id"
+        elif self.live.language == "auto":
             lang = self.detect_language(samples)
         else:
-            lang = self.cfg.language
+            lang = self.live.language
         if not fast:
             self.last_language = lang or "id"
         if fast:
