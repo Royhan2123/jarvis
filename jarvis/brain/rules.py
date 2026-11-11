@@ -125,8 +125,10 @@ def _open_intent(item: str) -> Intent:
 _RAW_VERBS = (
     (re.compile(r"^\W*(?:jarvis\W+)?(?:tolong\s+)?ketik(?:kan)?\b\s*[:,]?\s*(.+)$", re.I | re.S),
      "type_text"),
-    (re.compile(r"^\W*(?:jarvis\W+)?(?:tolong\s+)?catat(?:kan)?\b\s*[:,]?\s*(.+)$", re.I | re.S),
-     "add_note"),
+    (re.compile(
+        r"^\W*(?:jarvis\W+)?(?:tolong\s+)?(?:catat|chatat|catet)(?:kan)?\b\s*[:,]?\s*(.+)$",
+        re.I | re.S,
+    ), "add_note"),
 )  # fmt: skip
 _WA = re.compile(
     r"^\W*(?:jarvis\W+)?(?:tolong\s+)?(?:kirim|tulis|buat|siapkan)(?:kan)?\s+(?:pesan\s+)?"
@@ -304,7 +306,7 @@ def _match_once(text: str) -> list[Intent] | None:
 
         if action := policy.resolve_action(m.group(1) or m.group(2) or ""):
             return [Intent("agent_ask_always", {"action": action})]
-    if re.fullmatch(r"(?:bacakan|baca) catatan(?: saya)?|catatan saya apa(?: saja)?", t):
+    if re.fullmatch(r"(?:baca ?kan|baca|bacain) catatan(?: saya)?|catatan saya apa(?: saja)?", t):
         return [Intent("list_notes")]
     if m := re.fullmatch(r"(?:nama saya|namaku|panggil saya)\s+(.+)", t):
         return [Intent("remember_fact", {"key": "nama", "value": m.group(1).title()})]

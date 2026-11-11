@@ -465,3 +465,11 @@ def test_open_app_ignores_trailing_words_that_are_not_part_of_the_name(adapter) 
     assert out == "Siap, Spotify sudah dibuka"
     with pytest.raises(ToolError, match="tidak ditemukan"):
         registry.call("open_app", {"name": "Tidak Ada Sama Sekali"})
+
+
+def test_notes_rules_tolerate_how_whisper_splits_and_spells_words() -> None:
+    assert rules.match("Chatat beli kopi besok pagi.") == [
+        Intent("add_note", {"text": "beli kopi besok pagi."})
+    ]
+    assert rules.match("Baca kan catatan saya.") == [Intent("list_notes")]
+    assert rules.match("bacakan catatan saya") == [Intent("list_notes")]
