@@ -39,10 +39,14 @@ def run_translation(text: str, target: str, cfg=None, client=None) -> str:  # no
 
 
 def _barely_translated(source: str, out: str) -> bool:
-    """True bila hasil hampir sama dengan sumber (model kecil kadang gagal untuk bahasa langka)."""
-    a = set(re.findall(r"\w+", source.lower()))
+    """True bila hasil masih memuat kata sumber (model kecil kadang menerjemahkan setengah untuk
+    bahasa langka: "Selamat pagi, bugün hava çok güzel"): ≥2 kata sumber (≥4 huruf) yang sama,
+    atau lebih dari separuh kata sumber."""
+    a = {w for w in re.findall(r"\w+", source.lower()) if not w.isdigit()}
     b = set(re.findall(r"\w+", out.lower()))
-    return len(a) >= 3 and len(a & b) / len(a) > 0.5
+    shared = a & b
+    long_shared = {w for w in shared if len(w) >= 4}
+    return len(a) >= 3 and (len(long_shared) >= 2 or len(shared) / len(a) > 0.5)
 
 
 @tool(

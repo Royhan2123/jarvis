@@ -26,6 +26,12 @@ Pastikan speaker tidak terlalu keras (gema bisa memotong konfirmasi).
 - [ ] "Hello, ada email baru?"
 - [ ] Kembalikan `offline_only: true` → kedua perintah menolak dengan sopan.
 
+> **Status QA (2026-11-11, diuji Claude lewat suara sintetis + server palsu):** sudah terbukti: konfirmasi
+> "ya"/"tidak" lewat mikrofon, agen membuat file, WhatsApp (URL wa.me benar, tanpa kirim otomatis),
+> Smart Home terhadap server Home Assistant palsu (REST + Bearer; alamat internet ditolak saat offline),
+> RAG dengan model embedding asli, Fish Inggris/Jepang. **Masih perlu Anda:** Google Calendar/Gmail (akun),
+> Smart Home perangkat asli, WhatsApp kirim sungguhan, aksen suara Anda sendiri, Windows/Linux.
+
 ## 4. WhatsApp
 Isi `messaging.contacts` (nama → nomor berawalan 62).
 - [ ] "Hello, kirim WhatsApp ke Budi: sampai nanti" → Jarvis membuka chat terisi, **kamu yang menekan kirim**.

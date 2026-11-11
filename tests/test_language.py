@@ -531,3 +531,12 @@ def test_stt_follows_language_changes_made_on_the_live_config(stt_cls) -> None:
     live.detect_languages = ["id", "en", "ja"]  # seperti yang dilakukan tool set_language
     stt.transcribe(AUDIO)
     assert FakeModel.seen[-1] == "ja" and stt.last_language == "ja"
+
+
+def test_barely_translated_detects_half_translated_output() -> None:
+    src = "Selamat pagi, hari ini cuacanya sangat cerah dan saya ingin berjalan-jalan."
+    assert lang_tool._barely_translated(src, "Selamat pagi, bugün hava çok güzel ve yürüyüş yapmak")
+    assert lang_tool._barely_translated(src, src)
+    assert not lang_tool._barely_translated(src, "Günaydın, bugün hava çok açık ve yürüyüş yapmak")
+    assert not lang_tool._barely_translated(src, "Buenos días, hoy el clima está muy soleado")
+    assert not lang_tool._barely_translated("halo", "hello")  # sumber terlalu pendek
