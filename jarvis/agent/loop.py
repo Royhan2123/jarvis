@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 import shutil
 from collections.abc import Callable
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -69,6 +70,21 @@ class AgentError(RuntimeError):
     """Kegagalan agen yang aman dibacakan."""
 
 
+def narration(name: str, args: dict[str, Any]) -> str | None:
+    """Kalimat status singkat satu langkah, atau None bila tak perlu (ubah file: pertanyaan
+    izinnya sudah diucapkan). Nama file dieja "toko titik py" agar TTS tidak salah baca."""
+    spoken = lambda s: str(s).rsplit("/", 1)[-1].replace(".", " titik ")[:40]  # noqa: E731
+    if name == "read_file":
+        return f"Membaca {spoken(args.get('path', 'file'))}"
+    if name == "list_dir":
+        return "Melihat isi folder"
+    if name == "search":
+        return f"Mencari {str(args.get('pattern', ''))[:24]}".strip()
+    if name == "run_command":
+        return "Menjalankan perintah"
+    return None
+
+
 class Agent:
     def __init__(
         self,
@@ -82,6 +98,40 @@ class Agent:
         self.say = say or (lambda _t: None)
         self.client = client or ollama.Client(host=cfg.llm.host)
         self.steps: list[str] = []  # jejak aksi, untuk log/UI
+        self._voice: ThreadPoolExecutor | None = None
+        self._speaking: Future[None] | None = None
+
+    # ── suara pengisi ──
+    def _say_safely(self, text: str) -> None:
+        try:
+            self.say(text)
+        except Exception as e:  # noqa: BLE001 — TTS gagal tidak boleh menghentikan agen
+            logger.warning(f"[agen] suara status gagal: {e}")
+
+    def _narrate(self, text: str | None) -> None:
+        """Ucapkan status di latar tanpa menahan agen. Dilewati bila ucapan sebelumnya belum selesai
+        (tidak menumpuk), atau dimatikan lewat agent.narrate."""
+        if not text or not self.cfg.agent.narrate:
+            return
+        if self._speaking is not None and not self._speaking.done():
+            return
+        if self._voice is None:
+            self._voice = ThreadPoolExecutor(max_workers=1, thread_name_prefix="agen-suara")
+        self._speaking = self._voice.submit(self._say_safely, text)
+
+    def _finish_voice(self) -> None:
+        """Akhir tugas: tunggu ucapan status, lalu bebaskan thread-nya."""
+        self._flush_voice()
+        if self._voice is not None:
+            self._voice.shutdown(wait=True)
+            self._voice = None
+            self._speaking = None
+
+    def _flush_voice(self) -> None:
+        """Tunggu ucapan status selesai. Wajib sebelum pertanyaan izin dan ringkasan akhir: dua
+        suara sekaligus saling menutupi, dan TTS/mikrofon tak aman dipakai bersamaan."""
+        if self._speaking is not None:
+            self._speaking.result()
 
     # ── tool ──
     def _ask(self, action: str, what: str) -> bool:
@@ -89,6 +139,7 @@ class Agent:
         if action not in self.cfg.agent.confirm_actions:
             logger.info(f"[agen] {action} otomatis (tanpa izin, sesuai setelan): {what}")
             return True
+        self._flush_voice()  # pertanyaan izin tidak boleh bertabrakan dengan ucapan status
         return self.confirm(what)
 
     def _path(self, ref: str, must_exist: bool = True) -> Path:
@@ -248,6 +299,13 @@ class Agent:
         )
 
     def run(self, task: str) -> str:
+        """Kerjakan `task`; mengembalikan ringkasan akhir (untuk dibacakan)."""
+        try:
+            return self._run(task)
+        finally:
+            self._finish_voice()  # juga saat galat: tunggu ucapan status, bebaskan thread
+
+    def _run(self, task: str) -> str:
         if not workspace.roots(self.cfg):
             raise AgentError("Folder kerja belum diatur. Isi workspace.folders di config.yaml")
         c, a = self.cfg.llm, self.cfg.agent
@@ -276,6 +334,7 @@ class Agent:
                 name, args = tc.function.name, dict(tc.function.arguments or {})
                 logger.info(f"[agen] {step}. {name}({str(args)[:120]})")
                 self.steps.append(f"{name} {str(args)[:80]}")
+                self._narrate(narration(name, args))
                 result = self.call(name, args)
                 messages.append(
                     {

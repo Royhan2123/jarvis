@@ -284,6 +284,11 @@ tes. Aktifkan: `agent.enabled: true` + isi `workspace.folders`. Model: `llm.smar
 
 Tool agen: `list_dir`, `read_file`, `search`, `edit_file`, `write_file`, `run_command`.
 
+**Suara pengisi:** saat agen bekerja Jarvis mengucapkan status singkat ("Membaca toko titik py", "Mencari …",
+"Menjalankan perintah") di latar, supaya tidak terasa mati selama model berpikir. Ucapan tidak menahan agen,
+dilewati bila ucapan sebelumnya belum selesai, dan selalu selesai dulu sebelum pertanyaan izin atau ringkasan
+akhir (dua suara sekaligus saling menutupi). Matikan dengan `agent.narrate: false`.
+
 **Pengaman (jangan dilonggarkan tanpa izin pemilik):**
 - **Izin bisa disetel** lewat `agent.confirm_actions` (default minta izin untuk `edit_file`, `write_file`, `run_command`; hapus item agar otomatis, `[]` = tanpa tanya). Blokir keras dan file rahasia tidak ikut longgar.
 - Ubah/buat file dan semua perintah shell **dikonfirmasi** (suara "ya"; diam/tidak jelas = batal).

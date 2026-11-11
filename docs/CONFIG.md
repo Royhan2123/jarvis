@@ -214,6 +214,7 @@ agent:                                # agen kerja: tugas bertahap + shell terja
   num_ctx: 4096
   num_predict: 400                    # batas token per langkah
   prewarm: true                       # proses prompt agen di latar saat Jarvis menyala (langkah 1 cepat)
+  narrate: true                       # ucapkan status per langkah ("Membaca toko titik py") di latar
   command_timeout_s: 60
   max_output_chars: 4000
   confirm_actions: ["edit_file", "write_file", "run_command"]   # aksi yang MINTA IZIN (default semua)

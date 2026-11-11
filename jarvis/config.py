@@ -234,6 +234,7 @@ class AgentConfig(_Section):
     num_ctx: int = 4096
     num_predict: int = 400  # batas token per langkah (cegah model bertele-tele)
     prewarm: bool = True  # proses prompt statis di latar saat Jarvis menyala (langkah 1 jadi cepat)
+    narrate: bool = True  # ucapkan status singkat per langkah ("Membaca toko.py") di latar
     command_timeout_s: int = 60
     max_output_chars: int = 4000
     # Aksi yang MINTA IZIN (default: semuanya). Hapus satu agar jalan otomatis, mis. ["run_command"]

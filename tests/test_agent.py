@@ -197,3 +197,85 @@ def test_no_permission_mode_still_enforces_hard_blocks(cfg) -> None:
     assert asked == []
     assert "ERROR" in agent.client.seen[-1]["content"]
     assert "ERROR" in agent.call("read_file", {"path": "~/.ssh/id_rsa"})
+
+
+# ── suara pengisi ──
+def test_narration_phrases() -> None:
+    from jarvis.agent.loop import narration
+
+    assert narration("read_file", {"path": "src/toko.py"}) == "Membaca toko titik py"
+    assert narration("list_dir", {}) == "Melihat isi folder"
+    assert narration("search", {"pattern": "hitung_diskon"}) == "Mencari hitung_diskon"
+    assert narration("run_command", {"command": "pytest"}) == "Menjalankan perintah"
+    assert narration("edit_file", {"path": "a"}) is None  # pertanyaan izinnya sudah diucapkan
+    assert narration("write_file", {"path": "a"}) is None
+
+
+def make_voice(cfg, script, answers=None, delay=0.0):
+    """Agen dengan `say` yang mencatat (nama, mulai, selesai); `delay` mensimulasikan TTS lambat."""
+    import time
+
+    log: list[tuple[str, float, float]] = []
+
+    def say(text: str) -> None:
+        t0 = time.monotonic()
+        time.sleep(delay)
+        log.append((text, t0, time.monotonic()))
+
+    asked: list[tuple[str, float]] = []
+    it = iter(answers or [])
+
+    def confirm(what: str) -> bool:
+        asked.append((what, time.monotonic()))
+        return next(it, False)
+
+    return Agent(cfg, confirm, say=say, client=FakeClient(script)), log, asked
+
+
+def test_status_is_spoken_in_background_per_tool(cfg) -> None:
+    agent, log, _ = make_voice(cfg, [("read_file", {"path": "toko.py"}), "selesai"])
+    agent.run("x")
+    spoken = [t for t, _, _ in log]
+    assert "Siap, saya kerjakan." in spoken
+    assert "Membaca toko titik py" in spoken
+
+
+def test_confirm_prompt_waits_for_status_speech_to_finish(cfg) -> None:
+    script = [
+        ("read_file", {"path": "toko.py"}),
+        ("edit_file", {"path": "toko.py", "old": "a - b", "new": "a + b"}),
+        "selesai",
+    ]
+    agent, log, asked = make_voice(cfg, script, [True], delay=0.15)
+    agent.run("x")
+    status_end = max(end for text, _, end in log if text.startswith("Membaca"))
+    assert asked and asked[0][1] >= status_end - 1e-3  # izin ditanyakan setelah ucapan selesai
+
+
+def test_status_is_skipped_while_previous_is_still_speaking(cfg) -> None:
+    script = [("list_dir", {})] * 4 + ["selesai"]
+    agent, log, _ = make_voice(cfg, script, delay=0.3)
+    agent.run("x")
+    narrated = [t for t, _, _ in log if t == "Melihat isi folder"]
+    assert 1 <= len(narrated) < 4  # tidak menumpuk satu ucapan per langkah
+
+
+def test_narration_can_be_disabled_and_tts_errors_do_not_stop_agent(cfg) -> None:
+    cfg.agent.narrate = False
+    agent, log, _ = make_voice(cfg, [("list_dir", {}), "selesai"])
+    agent.run("x")
+    assert all(t == "Siap, saya kerjakan." for t, _, _ in log)
+
+    cfg.agent.narrate = True
+    calls = {"n": 0}
+
+    def flaky(text: str) -> None:
+        calls["n"] += 1
+        if (
+            calls["n"] > 1
+        ):  # panggilan pertama ("Siap...") langsung; sisanya narasi latar yang gagal
+            raise RuntimeError("TTS rusak")
+
+    agent2 = Agent(cfg, lambda w: True, say=flaky, client=FakeClient([("list_dir", {}), "selesai"]))
+    assert agent2.run("x") == "selesai"
+    assert calls["n"] >= 2  # narasi sempat dicoba dan galatnya tertelan
