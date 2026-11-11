@@ -303,3 +303,62 @@ def test_speakable_rounds_long_decimals_then_spells_them() -> None:
         speakable("versi 1.2.3 dan 12,5 persen")
         == "versi satu titik dua titik tiga dan dua belas koma lima persen"
     )
+
+
+# ── pendengaran & perintah yang gagal di uji nyata (log 2026-11-11) ──
+def test_fuzzy_fix_never_turns_buatkan_into_an_open_command() -> None:
+    assert rules.fix_misheard("buatkan volumenya") == "buatkan volumenya"
+    assert rules.match("buatkan sesuatu yang bagus") is None
+
+
+@pytest.mark.parametrize(
+    ("said", "percent"),
+    [("Buatkan volumenya besar 100%.", 100), ("buat volume jadi 50 persen", 50),
+     ("atur volumenya ke 30", 30)],
+)  # fmt: skip
+def test_volume_phrasings(said, percent) -> None:
+    assert rules.match(said) == [Intent("set_volume", {"percent": percent})]
+
+
+@pytest.mark.parametrize(
+    ("said", "query"),
+    [("putar lagu dewa 19 di youtube", "dewa 19"),
+     ("putarkan Bohemian Rhapsody dari YouTube", "Bohemian Rhapsody"),
+     ("mainkan musik santai di youtube", "musik santai"),
+     ("play despacito on youtube", "despacito")],
+)  # fmt: skip
+def test_play_on_youtube_rule(said, query) -> None:
+    assert rules.match(said) == [Intent("play_youtube", {"query": query})]
+
+
+def test_plain_play_music_still_controls_the_player() -> None:
+    assert rules.match("putar musik") == [Intent("media", {"action": "play_pause"})]
+
+
+def test_closest_app_fixes_misheard_names() -> None:
+    from jarvis.platform.macos import closest_app
+
+    apps = ["Safari", "Google Chrome", "Spotify", "Calculator", "WhatsApp"]
+    assert closest_app("Savari", apps) == "Safari"
+    assert closest_app("whatsap", apps) == "WhatsApp"
+    assert closest_app("Fitur Whatsapp", apps) is None
+    assert closest_app("Xyzzy", apps) is None
+
+
+def test_play_youtube_tool_opens_first_result_and_respects_offline(adapter, monkeypatch) -> None:
+    from jarvis.tools import web
+
+    cfg = Config()
+    cfg.general.offline_only = False
+    context.configure(adapter, cfg, context.memory)
+    opened: list[str] = []
+    monkeypatch.setattr(web, "first_video_id", lambda q: "abcDEF12345")
+    monkeypatch.setattr(web, "_open", opened.append)
+    assert "memutar" in registry.call("play_youtube", {"query": "dewa 19"})
+    assert opened == ["https://www.youtube.com/watch?v=abcDEF12345"]
+    monkeypatch.setattr(web, "first_video_id", lambda q: None)
+    registry.call("play_youtube", {"query": "dewa 19"})
+    assert opened[-1].startswith("https://www.youtube.com/results?search_query=dewa+19")
+    cfg.general.offline_only = True
+    with pytest.raises(ToolError, match="offline"):
+        registry.call("play_youtube", {"query": "x"})

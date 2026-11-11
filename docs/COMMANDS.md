@@ -9,6 +9,7 @@
 | Volume | "Volume 30 persen" · "Kecilin suaranya" · "Mute" | `set_volume`, `mute` | low | Rule |
 | Media | "Putar musik" · "Pause" · "Lagu berikutnya" | `media` | low | Rule |
 | Web | "Cari resep rendang" · "Buka YouTube" | `web_search`, `open_url` | low | Rule / 4B |
+| Web | "Putar lagu Dewa 19 di YouTube" · "play despacito on YouTube" | `play_youtube` (membuka video hasil pertama di browser bawaan; butuh `offline_only: false`; Safari bisa menahan putar otomatis) | low | Rule |
 | Info | "Jam berapa?" · "Tanggal berapa hari ini?" | `get_time` | low | Rule |
 | Info | "Baterai tinggal berapa?" · "RAM kepake berapa?" | `system_info` | low | Rule |
 | Layar | "Rangkum isi layar ini" · "Ini error apa?" | `read_screen` | low | 4B (vision) |

@@ -7,6 +7,32 @@ from jarvis.platform._util import grab_screen_png, is_blank, run, type_via_pynpu
 from jarvis.platform.base import AppNotFound, MediaAction, PlatformAdapter, PlatformError
 
 _PLAYERS = ("Spotify", "Music")
+_APP_DIRS = ("/Applications", "/System/Applications", "/Applications/Utilities",
+             "/System/Applications/Utilities")  # fmt: skip
+
+
+def installed_apps() -> list[str]:
+    """Nama aplikasi terpasang (tanpa .app) dari folder Aplikasi standar dan ~/Applications."""
+    import os
+
+    names: list[str] = []
+    for d in (*_APP_DIRS, os.path.expanduser("~/Applications")):
+        try:
+            names += [f[:-4] for f in os.listdir(d) if f.endswith(".app")]
+        except OSError:
+            continue
+    return names
+
+
+def closest_app(name: str, apps: list[str]) -> str | None:
+    """Nama aplikasi terpasang yang paling mirip dengan yang terdengar (rasio ≥ 0.75)."""
+    import difflib
+
+    lowered = {a.lower(): a for a in apps}
+    near = difflib.get_close_matches(name.lower().strip(), list(lowered), n=1, cutoff=0.75)
+    return lowered[near[0]] if near else None
+
+
 _MEDIA_CMD = {"play_pause": "playpause", "next": "next track", "prev": "previous track"}
 
 
@@ -42,6 +68,13 @@ class MacAdapter(PlatformAdapter):
     def open_app(self, name: str) -> None:
         try:
             run(["open", "-a", name])
+            return
+        except PlatformError as e:
+            guess = closest_app(name, installed_apps())  # "Savari" → "Safari"
+            if guess is None:
+                raise AppNotFound(f"Aplikasi {name} tidak ditemukan") from e
+        try:
+            run(["open", "-a", guess])
         except PlatformError as e:
             raise AppNotFound(f"Aplikasi {name} tidak ditemukan") from e
 
@@ -64,7 +97,10 @@ class MacAdapter(PlatformAdapter):
                     f"on run argv\ntell application (item 1 of argv) to {verb}\nend run", app
                 )
                 return
-        raise PlatformError("Tidak ada pemutar musik (Spotify atau Music) yang sedang jalan")
+        raise PlatformError(
+            "Tidak ada pemutar musik (Spotify atau Music) yang sedang jalan. "
+            "Coba bilang: putar judul lagu di YouTube"
+        )
 
     def lock_screen(self) -> None:
         run(["pmset", "displaysleepnow"])

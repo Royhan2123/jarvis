@@ -176,6 +176,11 @@ _HOW_SAY = (
         r"^\W*(?:jarvis\W+)?how (?:do you|to|would you) say\s+(.+?)\s+in\s+(\w+)\W*$", re.I | re.S
     ),
 )
+_YOUTUBE = re.compile(
+    r"^\W*(?:jarvis\W+)?(?:tolong\s+)?(?:putar|putarkan|mainkan|play)\s+(?:lagu\s+|video\s+)?"
+    r"(.+?)\s+(?:di|dari|lewat|pakai|pake|on|in)\s+(?:youtube|yutub|you tube)\W*$",
+    re.I | re.S,
+)
 _UNIT_MIN = {"detik": 1 / 60, "menit": 1.0, "jam": 60.0}
 
 
@@ -206,6 +211,8 @@ def _match_raw(text: str) -> list[Intent] | None:
         return [Intent("run_agent", {"task": m.group(1).strip()})]
     if m := _WA.match(text.strip()):
         return [Intent("whatsapp_draft", {"contact": m.group(1), "message": m.group(2).strip()})]
+    if m := _YOUTUBE.match(text.strip()):
+        return [Intent("play_youtube", {"query": m.group(1).strip()})]
     for pat, tool in _RAW_VERBS:
         if m := pat.match(text.strip()):
             return [Intent(tool, {"text": m.group(1).strip()})]
@@ -217,10 +224,10 @@ def _match_raw(text: str) -> list[Intent] | None:
 # Kata perintah yang sering salah didengar Whisper ("tanggal" → "anggal"); dipakai untuk mencoba
 # sekali lagi aturan bila ucapan aslinya tidak cocok (jadi tidak mengubah ucapan yang sudah cocok).
 _COMMAND_WORDS = (
-    "tanggal", "berapa", "sekarang", "baterai", "volume", "kunci", "layar", "cuaca", "jadwal",
-    "catat", "catatan", "ingatkan", "bukakan", "putar", "lagu", "berikutnya", "sebelumnya",
-    "matikan", "nyalakan", "terjemahkan", "komputer", "laptop", "persen", "menit",
+    "tanggal", "berapa", "sekarang", "baterai", "volume", "layar", "cuaca", "jadwal", "persen",
 )  # fmt: skip
+# Sengaja tanpa kata kerja perintah (buka, putar, matikan, ...): "buatkan" mirip "bukakan" dan
+# koreksi otomatis akan menjalankan aplikasi yang tidak diminta.
 
 
 def fix_misheard(text: str) -> str:
@@ -301,7 +308,8 @@ def _match_once(text: str) -> list[Intent] | None:
         ]
 
     if m := re.fullmatch(
-        r"(?:(?:atur|set|ubah|ganti)\s+)?volume(?:\s+(?:ke|jadi|menjadi))?\s+(\d{1,3})(?:\s+persen)?",
+        r"(?:(?:atur|set|ubah|ganti|buat|buatkan)\s+)?volume(?:nya)?"
+        r"(?:\s+(?:ke|jadi|menjadi|sebesar|besar|kecil))*\s+(\d{1,3})(?:\s+persen)?",
         t,
     ):
         return [Intent("set_volume", {"percent": int(m.group(1))})]

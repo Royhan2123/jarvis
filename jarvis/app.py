@@ -9,6 +9,7 @@ import time
 from collections.abc import Callable
 from enum import StrEnum
 
+import numpy as np
 from loguru import logger
 
 from jarvis import island
@@ -242,6 +243,13 @@ class Jarvis:
         self._set(State.THINKING)
         t0 = time.perf_counter()
         text = self.stt.transcribe(audio)
+        peak = float(np.abs(audio.astype(np.int32)).max()) / 32768 if len(audio) else 0.0
+        dur = len(audio) / self.cfg.audio.sample_rate
+        logger.info(f"[audio] puncak={peak:.2f} durasi={dur:.1f}s")
+        if peak >= 0.97:
+            logger.warning("[audio] suara pecah (clipping): kecilkan Input volume mic atau menjauh")
+        elif peak < 0.05:
+            logger.warning("[audio] suara sangat pelan: dekatkan mic atau naikkan Input volume")
         logger.debug(f"[stt] '{text}' logprob={self.stt.last_logprob:.2f}")
         self._save_debug_audio(audio)
         if not text:

@@ -66,7 +66,7 @@ class STTConfig(_Section):
     # Kalimat alami, bukan daftar kata: daftar "buka, tutup" membuat "ibu kota" terdengar "buka ta"
     initial_prompt: str = (
         "Hello. Mengapa langit berwarna biru? Tolong catat bahwa saya punya janji dengan dokter. "
-        "Aplikasi saya: Spotify, Chrome, dan VS Code."
+        "Aplikasi saya: Safari, Chrome, Spotify, WhatsApp, YouTube, dan VS Code."
     )
     initial_prompt_en: str = (
         "Hello. Why is the sky blue? Please remind me about my doctor appointment. "

@@ -54,6 +54,7 @@ TOOL_HINTS: dict[tuple[str, ...], tuple[str, ...]] = {
         "open_url",
         "web_search",
     ),
+    ("youtube", "yutub", "video"): ("play_youtube", "open_url"),
     ("layar", "screen", "rangkum", "error", "summarize"): ("read_screen",),
     ("ketik", "tulis"): ("type_text",),
     ("catat", "catatan", "ingat", "pengingat", "nama", "note", "remind", "reminder", "remember"): (
