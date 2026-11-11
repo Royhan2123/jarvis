@@ -145,7 +145,7 @@ Dikerjakan berurutan; tiap item: lint + tes, commit kecil, centang di sini. Item
 - [x] 3. Atur izin agen lewat suara ("jangan tanya lagi untuk ubah file", pelonggaran wajib konfirmasi "ya") dan dashboard (kotak centang + simpan permanen), tanpa edit `config.yaml`
 - [x] 4. API lokal berotentikasi (`ui.api`, `/v1`: ask, agen + SSE + konfirmasi lewat tombol, Bearer + cek Host; desain disetujui pemilik 2026-11-11)
 - [x] 5. Status Jarvis (mendengarkan/berpikir/bicara) lewat `/v1/state` + `/v1/state/events` (sisi Jarvis selesai; penampil di pulau Isla masih perlu dibuat di repo Isla)
-- [ ] 6. Tuning latensi + benchmark sebelum/sesudah (pramuat model, prompt pendek, Fish berurutan); target ≤ 5 s tetap dibatasi CPU Intel
+- [x] 6. Benchmark latensi (2026-11-11, Mac Intel i9, `python -m jarvis.bench`): STT small 2.46 s, token pertama LLM 0.30 s, kalimat pertama 1.73 s, TTS 0.13 s → mulai bicara ±4.3 s (target ≤ 5 s tercapai). Pramuat (`keep_alive=-1`), `think=False`, int8, beam 1 sudah aktif; `cpu_threads=8` tidak membantu (2.66 s). Hanya `stt.model=base` yang menembus target STT (0.89 s) tapi lebih sering salah dengar, jadi default tetap `small`
 - [ ] 7. 👤 Uji suara penuh (konfirmasi "ya"), Google Calendar/Gmail, WhatsApp, Smart Home asli, RAG lewat mic
 - [ ] 8. Rilis v0.2.0 (tag + installer; butuh izin pemilik) lalu bahasa daerah Jawa/Sunda (paling akhir)
 
