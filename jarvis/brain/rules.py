@@ -141,6 +141,14 @@ _ISLAND = re.compile(
     r"\s*[:,]?\s*(.+)$",
     re.I | re.S,
 )
+_NO_ASK = re.compile(
+    r"^(?:jangan|tidak usah|gak usah|ga usah|nggak usah|tak usah) tanya(?: izin)?(?: lagi)?"
+    r"(?: untuk| soal| buat| sebelum)? (.+)$"
+)
+_ASK = re.compile(
+    r"^(?:selalu|mulai|kembali) tanya(?: izin)?(?: lagi)?(?: untuk| soal| buat| sebelum)? (.+)$"
+    r"|^tanya(?: izin)?(?: lagi)? (?:untuk|soal|buat|sebelum) (.+)$"  # "dulu" dibuang normalize()
+)
 _UNIT_MIN = {"detik": 1 / 60, "menit": 1.0, "jam": 60.0}
 
 
@@ -184,6 +192,16 @@ def match(text: str) -> list[Intent] | None:
                 {"text": m.group(3), "minutes": float(m.group(1)) * _UNIT_MIN[m.group(2)]},
             )
         ]
+    if m := _NO_ASK.match(t):
+        from jarvis.agent import policy
+
+        if action := policy.resolve_action(m.group(1)):
+            return [Intent("agent_auto_approve", {"action": action})]
+    if m := _ASK.match(t):
+        from jarvis.agent import policy
+
+        if action := policy.resolve_action(m.group(1) or m.group(2) or ""):
+            return [Intent("agent_ask_always", {"action": action})]
     if re.fullmatch(r"(?:bacakan|baca) catatan(?: saya)?|catatan saya apa(?: saja)?", t):
         return [Intent("list_notes")]
     if m := re.fullmatch(r"(?:nama saya|namaku|panggil saya)\s+(.+)", t):

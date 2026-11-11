@@ -303,6 +303,18 @@ akhir (dua suara sekaligus saling menutupi). Matikan dengan `agent.narrate: fals
 - Isi file & keluaran perintah dikirim ke model sebagai DATA; file yang diubah dicadangkan `.jarvis-bak`.
 - Batas `agent.max_steps` langkah per tugas.
 
+**Mengatur izin tanpa edit `config.yaml`** (berlaku seketika; dari suara hanya sampai Jarvis dimatikan):
+
+| Ucapan | Efek |
+|---|---|
+| "Jarvis, jangan tanya lagi untuk ubah file" / "…buat file baru" / "…menjalankan perintah" / "…semuanya" | Melonggarkan: **butuh konfirmasi suara** ("ya"), karena menurunkan pengaman |
+| "Selalu tanya untuk ubah file" / "tanya sebelum menjalankan perintah" / "mulai tanya lagi untuk semuanya" | Mengetatkan: langsung berlaku |
+
+Tool pelonggar (`agent_auto_approve`, risk high) hanya terpicu oleh rule ucapan dan **tidak pernah ditawarkan ke
+LLM**, jadi teks dari file/web tidak bisa memicunya. Dashboard punya bagian **Izin agen kerja** (kotak centang +
+"simpan permanen ke config.yaml", mengganti hanya baris `confirm_actions`, komentar tetap, cadangan `.bak`).
+Blokir keras dan file rahasia tidak ikut longgar dalam kondisi apa pun.
+
 Batas jujur: Qwen 9B di CPU lambat (puluh detik per langkah) dan bisa salah memilih tool; selalu
 dengarkan kalimat konfirmasi sebelum bilang "ya".
 

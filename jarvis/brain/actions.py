@@ -20,6 +20,12 @@ def _confirm_text(intent: Intent) -> str:
     a = intent.args
     if intent.tool == "replace_in_file":
         return f"mengubah file {str(a.get('path', '?'))[-40:]}, cadangannya disimpan"
+    if intent.tool == "agent_auto_approve":
+        from jarvis.agent import policy
+
+        what = str(a.get("action", "?"))
+        spoken = policy.label(what) if what in {*policy.ACTIONS, "all"} else what
+        return f"berhenti bertanya izin sebelum {spoken}, sampai Jarvis dimatikan"
     if intent.tool == "create_file":
         return f"membuat file baru {str(a.get('path', '?'))[-40:]}"
     return CONFIRM_TEXT.get(intent.tool, f"menjalankan {intent.tool}")
