@@ -87,6 +87,22 @@ def send_voice(cfg: Config, state: str) -> bool:
         return False
 
 
+def send_approval(cfg: Config, approval_id: str, text: str) -> bool:
+    """Tampilkan kartu Setuju/Tolak di pulau; True bila Isla menerimanya (jawab lewat API)."""
+    if not (cfg.island.enabled and cfg.island.approvals):
+        return False
+    try:
+        ep = json.loads(ipc_file(cfg).read_text(encoding="utf-8"))
+        body = {"token": ep["token"], "approval": {"id": approval_id, "text": clean(text)}}
+        with socket.create_connection(("127.0.0.1", int(ep["port"])), timeout=2) as s:
+            s.settimeout(3)
+            s.sendall(json.dumps(body).encode() + b"\n")
+            return bool(s.makefile().readline().strip())
+    except (OSError, ValueError, KeyError) as e:
+        logger.debug(f"Isla tidak terjangkau (persetujuan): {e}")
+        return False
+
+
 class VoiceFeed:
     """Kirim fase suara ke Isla di thread sendiri; fase yang menumpuk digabung (hanya terbaru)."""
 

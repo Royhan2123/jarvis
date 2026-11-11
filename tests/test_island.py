@@ -103,3 +103,37 @@ def test_send_voice_maps_states_and_respects_flags(tmp_path) -> None:
     assert received == [{"token": "k", "voice": "listening"}]
     cfg.island.show_voice = False
     assert not island.send_voice(cfg, "speaking")  # dimatikan lewat config
+
+
+def test_send_approval_sends_card_and_respects_flags(tmp_path) -> None:
+    import socket
+    import threading
+
+    received: list[dict] = []
+    srv = socket.socket()
+    srv.bind(("127.0.0.1", 0))
+    srv.listen(1)
+
+    def serve() -> None:
+        conn, _ = srv.accept()
+        with conn:
+            received.append(json.loads(conn.makefile().readline()))
+            conn.sendall(b'{"allow":true,"message":""}\n')
+
+    t = threading.Thread(target=serve, daemon=True)
+    t.start()
+    f = tmp_path / "ipc.json"
+    f.write_text(json.dumps({"port": srv.getsockname()[1], "token": "k"}), encoding="utf-8")
+    cfg = Config()
+    cfg.island.enabled, cfg.island.ipc_file = True, str(f)
+    assert island.send_approval(cfg, "abc123", "Jarvis ingin menjalankan perintah: ls")
+    t.join(2)
+    srv.close()
+    assert received == [
+        {
+            "token": "k",
+            "approval": {"id": "abc123", "text": "Jarvis ingin menjalankan perintah: ls"},
+        }
+    ]
+    cfg.island.approvals = False
+    assert not island.send_approval(cfg, "x", "y")

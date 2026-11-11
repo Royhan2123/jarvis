@@ -367,3 +367,32 @@ def test_state_stream_over_http_sends_snapshot_first(api) -> None:
                 break
     assert lines[0] == "event: state" and json.loads(lines[1][6:])["state"] == "speaking"
     HUB.publish("idle")
+
+
+# ── persetujuan agen (tombol di pulau Isla) ──
+def test_approval_board_resolve_wait_and_timeout() -> None:
+    from jarvis.approvals import ApprovalBoard
+
+    board = ApprovalBoard()
+    a = board.request()
+    assert board.resolve(a, True) and not board.resolve(a, False)  # jawaban pertama menang
+    assert board.wait(a, 1) is True
+    b = board.request()
+    assert board.wait(b, 0.05) is False  # tak dijawab = ditolak
+    assert not board.resolve(b, True)  # sudah dibersihkan
+    c = board.request()
+    board.resolve(c, False)
+    assert board.wait(c, 1) is False
+
+
+def test_approval_route_requires_token_and_known_id(api) -> None:
+    from jarvis.approvals import BOARD
+
+    client = api[0] if isinstance(api, tuple) else api
+    assert client.post("/v1/approvals/xyz", json={"allow": True}, headers=HOST).status_code == 401
+    r = client.post("/v1/approvals/xyz", json={"allow": True}, headers=AUTH)
+    assert r.status_code == 404
+    approval_id = BOARD.request()
+    r = client.post(f"/v1/approvals/{approval_id}", json={"allow": True}, headers=AUTH)
+    assert r.status_code == 200 and r.json() == {"ok": True, "allow": True}
+    assert BOARD.wait(approval_id, 1) is True

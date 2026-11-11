@@ -270,6 +270,10 @@ class IslandConfig(_Section):
 
     enabled: bool = False
     ipc_file: str = ""  # kosong = folder data Isla di OS ini (…/com.royhan.isladesk/ipc.json)
+    approvals: bool = (
+        True  # izin agen tampil sebagai kartu Setuju/Tolak di pulau (butuh ui.api.enabled)
+    )
+    approval_timeout_s: int = 30  # tak dijawab = ditolak
     show_voice: bool = True  # indikator batang suara di pulau saat Jarvis mendengar/berpikir/bicara
 
 

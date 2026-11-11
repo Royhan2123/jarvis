@@ -12,6 +12,7 @@ from enum import StrEnum
 from loguru import logger
 
 from jarvis import island
+from jarvis.approvals import BOARD
 from jarvis.audio.sounds import play_confirm, play_done, play_error, play_ting
 from jarvis.audio.stream import MicStream
 from jarvis.audio.vad import VAD, record_utterance
@@ -431,9 +432,22 @@ class Jarvis:
         """Tanya ya/tidak untuk tool berisiko; diam/tidak jelas = batal (aman)."""
         self._say(self.actions.resolve(self._listen_yes_no()))
 
+    def _ask_via_island(self, what: str) -> bool | None:
+        """Kartu Setuju/Tolak di Isla: True/False bila dijawab; None bila Isla tak bisa dipakai."""
+        approval_id = BOARD.request()
+        if not island.send_approval(self.cfg, approval_id, f"Jarvis ingin {what}"):
+            BOARD.wait(approval_id, 0)  # bersihkan
+            return None
+        self._say("Saya butuh izin Anda, lihat pulau Isla.", interruptible=False)
+        return BOARD.wait(approval_id, self.cfg.island.approval_timeout_s)
+
     def _agent_confirm(self, what: str) -> bool:
         """Konfirmasi satu langkah agen lewat suara; hanya 'ya' yang jelas yang mengizinkan."""
         print(f"\n⚠️  Agen ingin {what}")
+        if self.cfg.ui.api.enabled:
+            decision = self._ask_via_island(what)
+            if decision is not None:  # Isla menjawab (setuju/tolak/waktu habis): final
+                return decision
         island.notify_async(self.cfg, f"Jarvis ingin {what}. Jawab ya atau tidak")
         # tidak boleh diinterupsi: gema suaranya sendiri pernah terdengar sebagai "Hello"
         self._say(f"Saya ingin {what}. Boleh? Bilang ya atau tidak.", interruptible=False)

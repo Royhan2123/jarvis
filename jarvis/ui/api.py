@@ -6,6 +6,7 @@ agen kerja dan menyetujui langkahnya lewat tombol, bukan suara. Rute ada di `/v1
     GET  /v1/status                      keadaan Jarvis (termasuk state suara)
     GET  /v1/state                       {state, seq, at}: idle/listening/thinking/dst.
     GET  /v1/state/events                SSE `state`: keadaan sekarang, lalu tiap perubahan
+    POST /v1/approvals/{id} {allow}      jawab kartu izin agen (dipakai Isla)
     POST /v1/ask            {text}       jawaban (router + LLM yang sama, tanpa suara)
     POST /v1/agent          {task}       mulai tugas agen -> {id}; satu tugas pada satu waktu
     GET  /v1/agent/{id}                  status + hasil
@@ -40,6 +41,7 @@ from pydantic import BaseModel
 
 from jarvis import workspace
 from jarvis.agent import Agent, AgentError
+from jarvis.approvals import BOARD
 from jarvis.brain.actions import ActionRunner
 from jarvis.brain.llm import LLM
 from jarvis.brain.router import Router
@@ -318,6 +320,10 @@ class AskBody(BaseModel):
     text: str
 
 
+class ApprovalBody(BaseModel):
+    allow: bool
+
+
 class AgentBody(BaseModel):
     task: str
 
@@ -382,6 +388,12 @@ def build_router(backend: ApiBackend, token: str) -> APIRouter:
         except Exception as e:  # noqa: BLE001 — Ollama mati dsb.
             logger.warning(f"[api] ask gagal: {e}")
             raise HTTPException(502, f"Tidak bisa bertanya ke model: {e}") from e
+
+    @router.post("/approvals/{approval_id}", dependencies=[Depends(auth)])
+    def approve(approval_id: str, body: ApprovalBody) -> dict:
+        if not BOARD.resolve(approval_id, body.allow):
+            raise HTTPException(404, "Permintaan izin tidak ditemukan atau sudah selesai")
+        return {"ok": True, "allow": body.allow}
 
     @router.post("/agent", dependencies=[Depends(auth)], status_code=202)
     def start(body: AgentBody) -> dict:
