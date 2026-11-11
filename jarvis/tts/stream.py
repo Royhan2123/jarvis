@@ -14,6 +14,15 @@ from jarvis.tts import TTS
 _END = re.compile(r"(?<=[.!?])\s+")
 
 
+_LONG_DECIMAL = re.compile(r"(\d+)([.,])(\d{2})\d{2,}")
+
+
+def speakable(text: str) -> str:
+    """Rapikan untuk diucapkan: desimal panjang (3,141592653…) dibulatkan ke 2 angka di belakang
+    koma; TTS membacakan tiap digit sehingga terdengar seperti mengoceh."""
+    return _LONG_DECIMAL.sub(r"\1\2\3", text)
+
+
 def split_sentences(buf: str) -> tuple[list[str], str]:
     """Pisah teks jadi kalimat lengkap + sisa yang belum selesai."""
     parts = _END.split(buf)
@@ -47,7 +56,7 @@ class SentenceSpeaker:
         self.tts.stop()
 
     def say(self, sentence: str) -> None:
-        sentence = sentence.strip()
+        sentence = speakable(sentence.strip())
         if not sentence or self.budget <= 0 or self._cancelled:
             return
         self.budget -= len(sentence)

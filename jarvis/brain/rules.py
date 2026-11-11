@@ -214,7 +214,40 @@ def _match_raw(text: str) -> list[Intent] | None:
     return rules_en.match_raw(text)
 
 
+# Kata perintah yang sering salah didengar Whisper ("tanggal" → "anggal"); dipakai untuk mencoba
+# sekali lagi aturan bila ucapan aslinya tidak cocok (jadi tidak mengubah ucapan yang sudah cocok).
+_COMMAND_WORDS = (
+    "tanggal", "berapa", "sekarang", "baterai", "volume", "kunci", "layar", "cuaca", "jadwal",
+    "catat", "catatan", "ingatkan", "bukakan", "putar", "lagu", "berikutnya", "sebelumnya",
+    "matikan", "nyalakan", "terjemahkan", "komputer", "laptop", "persen", "menit",
+)  # fmt: skip
+
+
+def fix_misheard(text: str) -> str:
+    """Ganti kata yang sangat mirip kata perintah (rasio ≥ 0.82), mis. 'anggal' → 'tanggal'."""
+    import difflib
+
+    out = []
+    for tok in text.split():
+        bare = re.sub(r"[^\w]", "", tok.lower())
+        if len(bare) >= 4 and bare not in _COMMAND_WORDS:
+            near = difflib.get_close_matches(bare, _COMMAND_WORDS, n=1, cutoff=0.82)
+            out.append(near[0] if near else tok)
+        else:
+            out.append(tok)
+    return " ".join(out)
+
+
 def match(text: str) -> list[Intent] | None:
+    """Kembalikan intent bila `text` cocok aturan; bila tidak, coba sekali lagi setelah memperbaiki
+    kata perintah yang salah dengar."""
+    if intents := _match_once(text):
+        return intents
+    fixed = fix_misheard(text)
+    return _match_once(fixed) if fixed != text else None
+
+
+def _match_once(text: str) -> list[Intent] | None:
     """Kembalikan daftar intent jika `text` cocok dengan salah satu aturan, selain itu None."""
     if raw := _match_raw(text):
         return raw

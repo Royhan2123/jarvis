@@ -27,13 +27,18 @@ def test_pad_adds_silence_around_the_tone() -> None:
 
 
 def test_play_never_raises_without_an_output_device(monkeypatch) -> None:
-    import threading
-
     def boom(*a, **k):  # noqa: ANN002, ANN003, ANN202
         raise RuntimeError("tidak ada perangkat")
 
     monkeypatch.setattr(sounds.sd, "query_devices", boom)
-    sounds.play_ting()
-    for t in threading.enumerate():
-        if t.name == "jarvis-sound":
-            t.join(2)
+    beeper = sounds._Beeper()
+    beeper.play(lambda r: np.zeros(10, np.float32), None)  # tidak melempar
+
+
+def test_beeper_callback_streams_the_buffer_then_silence() -> None:
+    beeper = sounds._Beeper()
+    beeper._buf = np.array([0.1, 0.2, 0.3], np.float32)
+    out = np.ones((5, 1), np.float32)
+    beeper._callback(out, 5, None, None)
+    assert out[:, 0].tolist() == pytest.approx([0.1, 0.2, 0.3, 0.0, 0.0])
+    assert len(beeper._buf) == 0

@@ -12,7 +12,7 @@ import threading
 import numpy as np
 import sounddevice as sd
 
-LEAD_S = 0.06  # hening di awal supaya perangkat sempat bangun
+LEAD_S = 0.01  # hening singkat di awal (stream selalu terbuka, jadi perangkat sudah bangun)
 TAIL_S = 0.10  # hening di akhir supaya ekor bunyi tidak terpotong
 
 
@@ -44,21 +44,65 @@ def _pad(wave: np.ndarray, rate: int) -> np.ndarray:
     )
 
 
-def _play(make, device: int | str | None) -> None:  # noqa: ANN001
-    """Render pada sample rate perangkat lalu putar di thread sendiri (tidak menahan pipeline)."""
+class _Beeper:
+    """Satu stream keluaran yang selalu terbuka: bunyi tinggal dimasukkan ke buffer, jadi tanpa
+    jeda membuka perangkat (±0.3 dtk di Mac) dan perangkat tetap "bangun" (awal bunyi utuh)."""
 
-    def run() -> None:
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._stream: sd.OutputStream | None = None
+        self._device: int | str | None = None
+        self._rate = 0
+        self._buf = np.zeros(0, np.float32)
+
+    def _callback(self, outdata, frames, _time, _status) -> None:  # noqa: ANN001
+        with self._lock:
+            chunk, self._buf = self._buf[:frames], self._buf[frames:]
+        outdata[: len(chunk), 0] = chunk
+        outdata[len(chunk) :, 0] = 0.0
+
+    def _ensure(self, device: int | str | None) -> int:
+        if self._stream is not None and device == self._device:
+            return self._rate
+        if self._stream is not None:
+            self._stream.close()
+            self._stream = None
+        rate = int(sd.query_devices(device, "output")["default_samplerate"])
+        self._stream = sd.OutputStream(
+            samplerate=rate,
+            channels=1,
+            dtype="float32",
+            device=device,
+            latency=0.1,
+            callback=self._callback,
+        )
+        self._stream.start()
+        self._device, self._rate = device, rate
+        return rate
+
+    def play(self, make, device: int | str | None) -> None:  # noqa: ANN001
         try:
-            rate = int(sd.query_devices(device, "output")["default_samplerate"])
+            with self._lock:
+                rate = self._ensure(device)
             wave = _pad(make(rate), rate)
-            with sd.OutputStream(
-                samplerate=rate, channels=1, dtype="float32", device=device, latency=0.3
-            ) as stream:
-                stream.write(wave.reshape(-1, 1))
+            with self._lock:
+                self._buf = wave  # bunyi baru menggantikan yang belum selesai
         except Exception:  # noqa: BLE001 — tak ada perangkat keluaran: bunyi notifikasi opsional
-            pass
+            self._stream = None
 
-    threading.Thread(target=run, daemon=True, name="jarvis-sound").start()
+
+_BEEPER = _Beeper()
+
+
+def warm(device: int | str | None = None) -> None:
+    """Buka stream di awal (di thread sendiri) supaya "ting" pertama pun tanpa jeda."""
+    threading.Thread(
+        target=lambda: _BEEPER.play(lambda r: np.zeros(1, np.float32), device), daemon=True
+    ).start()
+
+
+def _play(make, device: int | str | None) -> None:  # noqa: ANN001
+    _BEEPER.play(make, device)
 
 
 def play_ting(device: int | str | None = None) -> None:

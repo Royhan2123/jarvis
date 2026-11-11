@@ -13,7 +13,7 @@ from loguru import logger
 
 from jarvis import island
 from jarvis.approvals import BOARD
-from jarvis.audio.sounds import play_confirm, play_done, play_error, play_ting
+from jarvis.audio.sounds import play_confirm, play_done, play_error, play_ting, warm
 from jarvis.audio.stream import MicStream
 from jarvis.audio.vad import VAD, record_utterance
 from jarvis.audio.wakeword import WakeWord, match_any
@@ -29,7 +29,7 @@ from jarvis.state_hub import HUB
 from jarvis.stt.whisper import WhisperSTT
 from jarvis.tools.registry import context, load_tools, registry
 from jarvis.tts import TTS, build_tts
-from jarvis.tts.stream import SentenceSpeaker, split_sentences
+from jarvis.tts.stream import SentenceSpeaker, speakable, split_sentences
 
 
 class State(StrEnum):
@@ -43,7 +43,7 @@ class State(StrEnum):
 
 def shorten_for_speech(text: str, max_chars: int) -> str:
     """Potong di batas kalimat agar tidak melebihi max_chars."""
-    text = re.sub(r"\s+", " ", text).strip()
+    text = speakable(re.sub(r"\s+", " ", text).strip())
     if len(text) <= max_chars:
         return text
     cut = text[:max_chars]
@@ -56,6 +56,8 @@ class Jarvis:
         self.cfg = cfg
         self.state = State.LOADING
         self._voice_feed = island.VoiceFeed(cfg)
+        if cfg.audio.sounds:
+            warm(cfg.audio.output_device)  # buka stream bunyi lebih dulu: "ting" tanpa jeda
         self.listeners: list[Callable[[State], None]] = []
         self.mic_muted = False
         self._running = False

@@ -281,3 +281,20 @@ def test_system_prompt_time_is_indonesian() -> None:
     assert any(
         d in prompt for d in ("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
     )
+
+
+def test_misheard_command_words_are_corrected_only_when_it_helps() -> None:
+    assert rules.match("Anggal berapa ini?") == [Intent("get_time", {"what": "date"})]
+    assert rules.match("tangal berapa hari ini") == [Intent("get_time", {"what": "date"})]
+    assert rules.fix_misheard("anggal berapa") == "tanggal berapa"
+    # ucapan biasa tidak disentuh dan tidak berubah jadi perintah
+    assert rules.match("angka pi itu berapa") is None
+    assert rules.match("saya suka anggur") is None
+
+
+def test_speakable_rounds_long_decimals_only() -> None:
+    from jarvis.tts.stream import speakable
+
+    assert speakable("Angka pi adalah 3,141592653589793.") == "Angka pi adalah 3,14."
+    assert speakable("Sekarang jam 19.43") == "Sekarang jam 19.43"
+    assert speakable("versi 1.2.3 dan 12,5 persen") == "versi 1.2.3 dan 12,5 persen"
