@@ -153,6 +153,7 @@ def test(cfg: Config) -> str:
     resp = client.chat(
         model=cfg.llm.active_fast_model,
         messages=[{"role": "user", "content": "Balas satu kata: siap"}],
-        options={"num_predict": 16, "temperature": 0.0},
+        options={"num_predict": 24, "temperature": 0.0},
+        think=False,  # Qwen lokal: tanpa berpikir; adapter online mengabaikannya
     )
     return (resp.message.content or "").strip()[:80]
