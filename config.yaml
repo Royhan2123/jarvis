@@ -122,3 +122,6 @@ agent:
   confirm_actions: ["edit_file", "write_file", "run_command"]
 workspace:
   folders: ["~"]
+  # Keputusan pemilik 2026-11-13: agen boleh MEMERIKSA seluruh komputer. Tiap akses di luar folders
+  # selalu minta izin; ubah/buat file tetap hanya di folders; rahasia (deny) tetap dilindungi.
+  full_access: true

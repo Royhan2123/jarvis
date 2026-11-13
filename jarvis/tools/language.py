@@ -16,12 +16,12 @@ MAX_CHARS = 600
 
 def run_translation(text: str, target: str, cfg=None, client=None) -> str:  # noqa: ANN001
     """Terjemahkan `text` ke bahasa `target` (nama Inggris, mis. 'English')."""
-    import ollama
+    from jarvis.brain import providers
 
     cfg = cfg or context.cfg
-    client = client or ollama.Client(host=cfg.llm.host)
+    client = client or providers.client_for(cfg)
     resp = client.chat(
-        model=cfg.llm.fast_model,
+        model=cfg.llm.active_fast_model,
         messages=[
             {"role": "system", "content": _SYSTEM.format(target=target)},
             {"role": "user", "content": text[:MAX_CHARS]},
@@ -32,7 +32,7 @@ def run_translation(text: str, target: str, cfg=None, client=None) -> str:  # no
             "num_ctx": cfg.llm.num_ctx,
             "num_thread": cfg.llm.num_thread,
         },
-        keep_alive=cfg.llm.keep_alive_for(cfg.llm.fast_model),
+        keep_alive=cfg.llm.keep_alive_for(cfg.llm.active_fast_model),
         think=False,
     )
     return (resp.message.content or "").strip().strip("\"'“”")
@@ -63,7 +63,7 @@ def translate(text: str, target: str = "English") -> str:
         out = run_translation(text, name)
         if name != "Indonesian" and _barely_translated(text, out):  # coba model yang lebih pintar
             smart = context.cfg.model_copy(deep=True)
-            smart.llm.fast_model = smart.llm.smart_model
+            smart.llm.fast_model = smart.llm.cloud_fast_model = smart.llm.active_smart_model
             out = run_translation(text, name, smart) or out
     except Exception as e:  # noqa: BLE001 — Ollama mati / model belum ada
         raise ToolError(f"Penerjemah tidak bisa dipakai: {e}") from e

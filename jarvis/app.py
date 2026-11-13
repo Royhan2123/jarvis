@@ -123,7 +123,14 @@ class Jarvis:
         from jarvis.tools import agent as agent_tool
 
         agent_tool.confirm_hook, agent_tool.say_hook = self._agent_confirm, self._say
-        if cfg.agent.enabled and cfg.agent.prewarm and cfg.workspace.folders:
+        if (
+            cfg.agent.enabled
+            and cfg.agent.prewarm
+            and cfg.workspace.folders
+            and (
+                cfg.llm.provider == "ollama"  # pemanasan model online hanya buang kuota
+            )
+        ):
             threading.Thread(target=self._prewarm_agent, daemon=True).start()
         self._set(State.IDLE)
 
@@ -346,13 +353,13 @@ class Jarvis:
                 )
                 tools = registry.schemas(["workspace"]) if edit else []
                 plan = Plan(
-                    model=self.cfg.llm.fast_model,
+                    model=self.cfg.llm.active_fast_model,
                     tier="fast",
                     tools=[t for t in tools if t["function"]["name"] != "list_files"],
                     num_ctx=self.cfg.workspace.context_num_ctx,
                 )
             elif docs:  # dijawab dari dokumen oleh 4B tanpa tools → cepat & tanpa tool-calling
-                plan = Plan(model=self.cfg.llm.fast_model, tier="fast", tools=[])
+                plan = Plan(model=self.cfg.llm.active_fast_model, tier="fast", tools=[])
             reply = self._ask_llm(text, plan, t0, t_start, docs)
         self.memory.add_message("user", text)
         self.memory.add_message("assistant", reply or "")

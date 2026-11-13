@@ -91,6 +91,15 @@ llm:
   keep_alive: -1              # model cepat (4B): -1 = tetap di RAM; "10m" = lepas setelah 10 menit
   keep_alive_smart: "5m"      # model pintar (9B, ±6 GB): dibongkar dari RAM setelah idle 5 menit
   think: false                # mode reasoning Qwen; false = jauh lebih cepat
+  # Penyedia model bahasa. Bawaan "ollama" (lokal). Online: openai | anthropic | gemini | groq |
+  # openrouter | deepseek | mistral | custom (protokol OpenAI, isi api_base). Kunci API TIDAK di sini:
+  # simpan lewat `python -m jarvis.setup ai <penyedia>` atau Isla Desk (berkas ai.json 0600), atau env
+  # JARVIS_API_KEY / JARVIS_API_KEY_<PENYEDIA>. Setelan di ai.json menimpa nilai di sini.
+  provider: "ollama"
+  api_base: ""                # kosong = alamat bawaan penyedia
+  allow_cloud: false          # izin eksplisit: boleh kirim pertanyaan ke penyedia online
+  cloud_fast_model: ""        # mis. "gpt-4o-mini" / "claude-haiku-5-5" / "gemini-2.5-flash"
+  cloud_smart_model: ""       # kosong = pakai cloud_fast_model
 
   history_turns: 6            # jumlah pesan terakhir yang diingat dalam konteks
 
@@ -220,6 +229,7 @@ workspace:
   extensions: [".py", ".js", ".ts", ".json", ".md", ...]   # ekstensi teks yang diizinkan
   deny: [".git", ".ssh", ".env", ".aws", "node_modules", ".venv", "id_rsa", "credentials", ...]
   max_file_kb: 256
+  full_access: false                  # true = agen boleh MEMERIKSA seluruh komputer; tiap akses di luar folders SELALU tanya, ubah/buat file tetap hanya di folders, deny tetap berlaku
   context_chars: 3000                 # potongan file yang dikirim ke LLM
   context_num_ctx: 4096               # konteks LLM saat ada file (lebih lambat dari 2048)
 
@@ -347,6 +357,7 @@ router: { preload_smart_model: true }
 | Qwen3.5 9B (Q4) | ~7–8 GB |
 | **Total (4B saja)** | **~6 GB** |
 | **Total (4B + 9B dimuat)** | **~14 GB** |
+| **Total (penyedia online)** | **~1,5 GB** (model Ollama dibongkar saat pindah; tanpa 4B/9B) |
 
 ---
 

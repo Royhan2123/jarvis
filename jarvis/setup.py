@@ -165,6 +165,33 @@ def test_stt(config: str, tries: int, save_dir: str | None) -> None:
         mic.stop()
 
 
+def set_ai(args: argparse.Namespace) -> None:
+    """Ganti penyedia AI; kunci dibaca lewat prompt tersembunyi (tidak lewat argumen/riwayat)."""
+    import getpass
+
+    from jarvis import ai_settings
+
+    cfg = load_config(args.config)
+    if args.provider:
+        key = None
+        if args.provider != "ollama" and not ai_settings.get_key(args.provider):
+            key = getpass.getpass(f"Kunci API {args.provider} (tidak ditampilkan): ")
+        try:
+            ai_settings.update(
+                cfg, args.provider, api_key=key, api_base=args.api_base,
+                fast_model=args.model, smart_model=args.smart_model,
+            )  # fmt: skip
+        except ValueError as e:
+            sys.exit(str(e))
+    v = ai_settings.view(cfg)
+    print(f"Penyedia: {v['provider']} | cepat: {v['fast_model']} | pintar: {v['smart_model']}")
+    if args.test:
+        try:
+            print("Balasan uji:", ai_settings.test(cfg))
+        except Exception as e:  # noqa: BLE001
+            sys.exit(f"Gagal: {e}")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="jarvis.setup")
     ap.add_argument("--config", default="config.yaml")
@@ -176,6 +203,12 @@ def main() -> None:
     v.add_argument("name", nargs="?", default="id_ID-news_tts-medium")
     sub.add_parser("index-docs")
     sub.add_parser("google-login")
+    a = sub.add_parser("ai", help="pilih penyedia model bahasa (ollama bawaan, atau API online)")
+    a.add_argument("provider", nargs="?", help="ollama | openai | anthropic | gemini | groq | ...")
+    a.add_argument("--model", help="model cepat (online)")
+    a.add_argument("--smart-model", help="model pintar (online, opsional)")
+    a.add_argument("--api-base", help="alamat API (wajib untuk custom)")
+    a.add_argument("--test", action="store_true", help="coba kirim satu pertanyaan uji")
     t = sub.add_parser("test-stt")
     t.add_argument("-n", "--tries", type=int, default=3)
     t.add_argument("--save", help="folder untuk menyimpan rekaman .wav")
@@ -195,6 +228,8 @@ def main() -> None:
             print(google.login(load_config(args.config)))
         except google.GoogleError as e:
             sys.exit(str(e))
+    elif args.cmd == "ai":
+        set_ai(args)
     elif args.cmd == "index-docs":
         from jarvis.brain.rag import DocIndex, ollama_embedder
 

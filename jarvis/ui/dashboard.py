@@ -88,7 +88,7 @@ def create_app(
         return {
             "name": cfg.general.name,
             "offline_only": cfg.general.offline_only,
-            "models": {"fast": cfg.llm.fast_model, "smart": cfg.llm.smart_model},
+            "models": {"fast": cfg.llm.active_fast_model, "smart": cfg.llm.active_smart_model},
             "config_path": str(config_path),
         }
 

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import io
 
-import ollama
 from PIL import Image
 
+from jarvis.brain import providers
 from jarvis.config import Config
 
 VISION_SYSTEM = (
@@ -27,8 +27,8 @@ def shrink(png: bytes, max_width: int = MAX_WIDTH) -> bytes:
     return buf.getvalue()
 
 
-def describe(png: bytes, question: str, cfg: Config, client: ollama.Client | None = None) -> str:
-    client = client or ollama.Client(host=cfg.llm.host)
+def describe(png: bytes, question: str, cfg: Config, client=None) -> str:  # noqa: ANN001
+    client = client or providers.local_client(cfg)  # gambar layar tidak keluar komputer
     resp = client.chat(
         model=cfg.llm.vision_model,
         messages=[

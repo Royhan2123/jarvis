@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from typing import Any
 
-import ollama
-
+from jarvis.brain import providers
 from jarvis.brain.prompts import context_line, static_system_prompt
 from jarvis.config import Config
 
@@ -14,14 +14,18 @@ class LLM:
     def __init__(
         self,
         cfg: Config,
-        client: ollama.Client | None = None,
+        client: Any = None,
         facts: Callable[[], str] | None = None,
     ) -> None:
         self.facts = facts or (lambda: "belum ada")
         self.cfg = cfg
-        self.client = client or ollama.Client(host=cfg.llm.host)
+        self._client = client  # None = ikuti penyedia aktif (bisa berganti saat berjalan)
         self.history: list[dict[str, str]] = []
         self.tool_calls: list[tuple[str, dict]] = []
+
+    @property
+    def client(self) -> Any:
+        return self._client or providers.client_for(self.cfg)
 
     def _options(self, num_ctx: int | None = None) -> dict:
         c = self.cfg.llm
@@ -63,11 +67,11 @@ class LLM:
         ]
         reply = ""
         for chunk in self.client.chat(
-            model=model or c.fast_model,
+            model=model or c.active_fast_model,
             messages=messages,
             stream=True,
             options=self._options(num_ctx),
-            keep_alive=c.keep_alive_for(model or c.fast_model),
+            keep_alive=c.keep_alive_for(model or c.active_fast_model),
             think=c.think,
             tools=tools or None,
         ):

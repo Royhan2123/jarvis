@@ -150,9 +150,11 @@ class Router:
         if r.enable_rules and (intents := rules.match(text)):
             return Plan(intents=intents, tier="rule")
         if r.enable_smart_model and self.is_complex(text):
-            return Plan(model=llm.smart_model, tier="smart", tools=self.tool_schemas(text, False))
+            return Plan(
+                model=llm.active_smart_model, tier="smart", tools=self.tool_schemas(text, False)
+            )
         return Plan(
-            model=llm.fast_model,
+            model=llm.active_fast_model,
             tier="fast",
             tools=self.tool_schemas(text, escalate=r.enable_smart_model),
         )
@@ -160,7 +162,7 @@ class Router:
     def escalated(self, text: str) -> Plan:
         """Rencana Tier 2 setelah 4B memanggil tool `escalate`."""
         return Plan(
-            model=self.cfg.llm.smart_model,
+            model=self.cfg.llm.active_smart_model,
             tier="smart",
             tools=self.tool_schemas(text, escalate=False),
         )

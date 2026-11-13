@@ -312,6 +312,10 @@ Piper sebagai cadangan.
 
 ## 11. Agen kerja (shell terjaga)
 
+> **Akses penuh (2026-11-13):** `workspace.full_access: true` membolehkan agen *memeriksa* (baca/lihat/cari) di mana saja di
+> komputer. Tiap akses di luar `workspace.folders` **selalu minta izin** (tak bisa dilonggarkan); ubah/buat file tetap hanya di
+> `folders`; rahasia (`workspace.deny`) dan blokir keras shell tetap berlaku.
+
 Jarvis mengerjakan tugas bertahap di komputer, mirip Claude Code: baca/cari file, ubah, lalu jalankan
 tes. Aktifkan: `agent.enabled: true` + isi `workspace.folders`. Model: `llm.smart_model` (Qwen 9B).
 
@@ -394,6 +398,25 @@ Teks dirapikan jadi satu baris tanpa karakter kontrol, maksimal 200 karakter (ba
 
 ---
 
+## 12b. Penyedia AI (Ollama bawaan atau API online)
+
+Bawaan: **Ollama lokal**, offline penuh. Atas pilihan pemilik, otak Jarvis bisa memakai API online
+(OpenAI, Anthropic, Gemini, Groq, OpenRouter, DeepSeek, Mistral, atau alamat sendiri berprotokol OpenAI) dengan kunci
+milik pengguna. Atur lewat Isla Desk (`PUT /v1/ai`), atau:
+
+```bash
+uv run python -m jarvis.setup ai openai --model gpt-4o-mini     # kunci ditanya (tersembunyi)
+uv run python -m jarvis.setup ai ollama                         # kembali ke lokal
+uv run python -m jarvis.setup ai --test                         # lihat penyedia aktif + uji
+```
+
+- Berlaku **seketika** tanpa restart. Pindah ke online membongkar model Ollama dari RAM (Jarvis ±1,5 GB).
+- Kunci disimpan di `ai.json` (izin 0600, folder data pengguna) atau env; tidak pernah di `config.yaml`, log, atau respons API.
+- Online hanya jalan bila `llm.allow_cloud` (otomatis true saat dipilih lewat setelan). Tanpa izin itu, tidak ada byte keluar.
+- **Tetap lokal apa pun penyedianya:** baca layar (gambar tidak dikirim), embedding RAG, dan suara/STT.
+- Yang dikirim ke penyedia online: pertanyaan, riwayat singkat, info/dokumen yang relevan, dan (agen) isi file yang dibaca.
+- Pemanasan model (`agent.prewarm`) dilewati saat online (hanya membuang kuota).
+
 ## 13. API lokal untuk aplikasi lain
 
 Agar aplikasi desktop (mis. Isla Desk) bisa bertanya ke Jarvis dan memberi tugas ke agen kerja, dengan persetujuan
@@ -409,6 +432,9 @@ lewat **tombol** (bukan suara). Aktifkan: `ui.api.enabled: true` (memakai server
 | `GET /v1/status` | Model, `agent.enabled/workspace/busy/confirm_actions`, `state` suara |
 | `GET /v1/state` | `{state, seq, at}`: idle/listening/thinking/speaking/confirming |
 | `GET /v1/state/events` | SSE `state`: keadaan sekarang dulu, lalu tiap perubahan (denyut tiap 15 dtk) |
+| `GET /v1/ai` | Penyedia AI aktif, model, `has_key`, daftar penyedia (kunci tidak pernah dikembalikan) |
+| `PUT /v1/ai` `{provider, api_key?, api_base?, fast_model?, smart_model?}` | Ganti penyedia saat berjalan (tanpa restart). Memilih penyedia online = izin eksplisit (`allow_cloud`); model Ollama dibongkar dari RAM. 422 bila isian tak sah |
+| `POST /v1/ai/test` | Satu pertanyaan uji ke penyedia aktif: `{ok, reply}` / `{ok:false, error}` |
 | `POST /v1/ask` `{text}` | `{reply, tier}`: aturan, Qwen 4B, atau 9B; tanpa suara. Riwayat percakapan API terpisah dari suara. Aksi berisiko tinggi (matikan komputer) **tidak dijalankan** (butuh "ya" suara) |
 | `POST /v1/agent` `{task}` | 202 `{id}`; **satu tugas pada satu waktu** (409 bila sibuk, agen mati, atau folder kerja belum diatur) |
 | `GET /v1/agent/{id}` | `{status, result, pending_confirm}` (status: running/done/error/cancelled) |

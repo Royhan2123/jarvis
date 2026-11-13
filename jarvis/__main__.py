@@ -30,7 +30,17 @@ def check(cfg: Config) -> bool:
         print(f"❌ Audio bermasalah: {e}")
         ok = False
 
-    print("\n── Ollama ──")
+    print(f"\n── Model bahasa ({cfg.llm.provider}) ──")
+    if cfg.llm.provider != "ollama":
+        try:
+            from jarvis import ai_settings
+
+            print("Balasan uji:", ai_settings.test(cfg))
+        except Exception as e:  # noqa: BLE001
+            print(f"❌ Penyedia {cfg.llm.provider} bermasalah: {e}")
+            ok = False
+        print("\n✅ Semua siap!" if ok else "\n⚠️  Ada yang perlu dibereskan dulu.")
+        return ok
     try:
         models = [m.model for m in ollama.Client(host=cfg.llm.host).list().models]
         print("Model terpasang:", ", ".join(models) or "(kosong)")
@@ -50,9 +60,8 @@ def check(cfg: Config) -> bool:
 def chat(cfg: Config, voice: bool) -> None:
     llm = LLM(cfg)
     adapter = get_adapter() if voice else None
-    print(
-        f"🤖 {cfg.general.name} siap (model: {cfg.llm.fast_model}). Ketik 'keluar' untuk berhenti."
-    )
+    model = cfg.llm.active_fast_model
+    print(f"🤖 {cfg.general.name} siap (model: {model}). Ketik 'keluar' untuk berhenti.")
     while True:
         try:
             text = input("\nKamu: ").strip()

@@ -79,3 +79,11 @@ def adapter(tmp_path) -> MockAdapter:
     context.configure(a, Config(), Memory(path=tmp_path / "test.db"))
     load_tools(Config())
     return a
+
+
+@pytest.fixture(autouse=True)
+def _isolated_ai_settings(tmp_path_factory, monkeypatch):
+    """Tes tidak boleh membaca/menulis setelan AI & kunci milik pengguna sungguhan."""
+    monkeypatch.setenv("JARVIS_AI_SETTINGS", str(tmp_path_factory.mktemp("ai") / "ai.json"))
+    for k in [k for k in __import__("os").environ if k.startswith("JARVIS_API_KEY")]:
+        monkeypatch.delenv(k)

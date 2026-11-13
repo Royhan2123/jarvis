@@ -90,10 +90,37 @@ class STTConfig(_Section):
 
 
 class LLMConfig(_Section):
+    @property
+    def active_fast_model(self) -> str:
+        """Model cepat yang dipakai sekarang (online bila penyedia online dan modelnya diisi)."""
+        return (
+            (self.cloud_fast_model or self.fast_model)
+            if self.provider != "ollama"
+            else (self.fast_model)
+        )
+
+    @property
+    def active_smart_model(self) -> str:
+        if self.provider == "ollama":
+            return self.smart_model
+        return self.cloud_smart_model or self.cloud_fast_model or self.smart_model
+
     def keep_alive_for(self, model: str | None) -> int | str:
         """keep_alive untuk `model`: model pintar dibongkar saat idle, model cepat tetap di RAM."""
         return self.keep_alive_smart if model == self.smart_model else self.keep_alive
 
+    # Penyedia model bahasa. Bawaan "ollama" (lokal, offline). Penyedia online memakai kunci API
+    # milik pengguna (disimpan di berkas setelan AI 0600, BUKAN di sini; atau env JARVIS_API_KEY)
+    # dan hanya jalan bila `allow_cloud: true`. Atur lewat `python -m jarvis.setup ai ...` atau
+    # setelan di Isla Desk. Lihat docs/CONFIG.md.
+    provider: Literal[
+        "ollama", "openai", "anthropic", "gemini", "groq", "openrouter", "deepseek",
+        "mistral", "custom",
+    ] = "ollama"  # fmt: skip
+    api_base: str = ""  # kosong = alamat bawaan penyedia; wajib untuk "custom"
+    allow_cloud: bool = False  # izin eksplisit pemilik: kirim pertanyaan ke penyedia online
+    cloud_fast_model: str = ""  # mis. "gpt-4o-mini", "claude-haiku-5-5", "gemini-2.5-flash"
+    cloud_smart_model: str = ""
     host: str = "http://localhost:11434"
     fast_model: str = "qwen3.5:4b"
     smart_model: str = "qwen3.5:9b"
@@ -249,6 +276,11 @@ class WorkspaceConfig(_Section):
         ".bash_history", ".zsh_history", ".python_history", ".claude.json",
     ]  # fmt: skip
     max_file_kb: int = 256
+    # Agen boleh MEMERIKSA (baca/lihat/cari) di mana saja di komputer, bukan hanya `folders`. Tiap
+    # akses di luar `folders` SELALU minta izin (tak bisa dilonggarkan); ubah/buat file tetap
+    # hanya di `folders`. Rahasia (`deny`) dan blokir keras shell tetap berlaku.
+    # Keputusan pemilik 2026-11-13.
+    full_access: bool = False
     context_chars: int = 3000  # potongan file yang dikirim ke LLM (num_ctx kecil di CPU)
     context_num_ctx: int = 4096
 
@@ -388,4 +420,8 @@ def load_config(path: str | Path = "config.yaml") -> Config:
     """Baca YAML; file tidak ada → default. Nilai salah → ValidationError dengan pesan jelas."""
     p = Path(path)
     data = yaml.safe_load(p.read_text(encoding="utf-8")) if p.exists() else None
-    return Config.model_validate(data or {})
+    cfg = Config.model_validate(data or {})
+    from jarvis import ai_settings  # setelan AI pengguna (berkas terpisah) menimpa config.yaml
+
+    ai_settings.apply(cfg)
+    return cfg

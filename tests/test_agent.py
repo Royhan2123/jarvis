@@ -284,3 +284,33 @@ def test_narration_can_be_disabled_and_tts_errors_do_not_stop_agent(cfg) -> None
     agent2 = Agent(cfg, lambda w: True, say=flaky, client=FakeClient([("list_dir", {}), "selesai"]))
     assert agent2.run("x") == "selesai"
     assert calls["n"] >= 2  # narasi sempat dicoba dan galatnya tertelan
+
+
+def test_full_access_reads_outside_only_with_permission_and_never_writes(
+    cfg, tmp_path_factory
+) -> None:
+    outside = tmp_path_factory.mktemp("luar") / "catatan.txt"
+    outside.write_text("rahasia kecil", encoding="utf-8")
+    # tanpa full_access: ditolak tanpa bertanya
+    agent, asked = make(cfg, [])
+    assert "di luar folder" in agent.call("read_file", {"path": str(outside)})
+    assert asked == []
+    cfg.workspace.full_access = True
+    agent, asked = make(cfg, [], [False])
+    assert "menolak" in agent.call("read_file", {"path": str(outside)})
+    assert len(asked) == 1 and "catatan.txt" in asked[0]
+    agent, asked = make(cfg, [], [True])
+    assert "rahasia kecil" in agent.call("read_file", {"path": str(outside)})
+    # menulis/mengubah di luar folder kerja tetap dilarang, walau full_access
+    agent, asked = make(cfg, [], [True, True])
+    out = agent.call("edit_file", {"path": str(outside), "old": "rahasia", "new": "x"})
+    assert "di luar folder" in out and outside.read_text() == "rahasia kecil"
+    assert "di luar folder" in agent.call(
+        "write_file", {"path": str(outside) + "2", "content": "x"}
+    )
+    # file rahasia tetap dilindungi
+    (outside.parent / ".ssh").mkdir()
+    (outside.parent / ".ssh" / "id_rsa").write_text("KEY")
+    agent, asked = make(cfg, [], [True])
+    assert "dilindungi" in agent.call("read_file", {"path": str(outside.parent / ".ssh/id_rsa")})
+    assert asked == []

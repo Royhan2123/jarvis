@@ -2,6 +2,14 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/). Versi mengikuti `pyproject.toml`.
 
+## [Belum dirilis]
+
+### Ditambahkan
+- **Penyedia AI** (`jarvis/brain/providers.py`, `jarvis/ai_settings.py`): Ollama tetap bawaan; opsional API online
+  (OpenAI, Anthropic, Gemini, Groq, OpenRouter, DeepSeek, Mistral, custom) dengan kunci milik pengguna. Berlaku
+  seketika, model Ollama dibongkar dari RAM saat pindah. API `GET/PUT /v1/ai`, `POST /v1/ai/test`; CLI `jarvis.setup ai`.
+- **Akses penuh agen** (`workspace.full_access`): memeriksa seluruh komputer dengan izin tiap akses di luar folder kerja.
+
 ## [0.2.0] — 2026-11-11
 
 ### Ditambahkan

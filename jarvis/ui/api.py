@@ -39,7 +39,7 @@ from loguru import logger
 from platformdirs import user_data_dir
 from pydantic import BaseModel
 
-from jarvis import workspace
+from jarvis import ai_settings, workspace
 from jarvis.agent import Agent, AgentError
 from jarvis.approvals import BOARD
 from jarvis.brain.actions import ActionRunner
@@ -186,7 +186,7 @@ class ApiBackend:
         return {
             "name": c.general.name,
             "offline_only": c.general.offline_only,
-            "models": {"fast": c.llm.fast_model, "smart": c.llm.smart_model},
+            "models": {"fast": c.llm.active_fast_model, "smart": c.llm.active_smart_model},
             "state": HUB.snapshot()["state"],
             "agent": {
                 "enabled": c.agent.enabled,
@@ -320,6 +320,14 @@ class AskBody(BaseModel):
     text: str
 
 
+class AiBody(BaseModel):
+    provider: str
+    api_key: str | None = None
+    api_base: str | None = None
+    fast_model: str | None = None
+    smart_model: str | None = None
+
+
 class ApprovalBody(BaseModel):
     allow: bool
 
@@ -388,6 +396,28 @@ def build_router(backend: ApiBackend, token: str) -> APIRouter:
         except Exception as e:  # noqa: BLE001 — Ollama mati dsb.
             logger.warning(f"[api] ask gagal: {e}")
             raise HTTPException(502, f"Tidak bisa bertanya ke model: {e}") from e
+
+    @router.get("/ai", dependencies=[Depends(auth)])
+    def ai_get() -> dict:
+        return ai_settings.view(cfg)
+
+    @router.put("/ai", dependencies=[Depends(auth)])
+    def ai_put(body: AiBody) -> dict:
+        """Ganti penyedia AI saat berjalan. Kunci hanya ditulis, tidak pernah dikembalikan."""
+        try:
+            return ai_settings.update(
+                cfg, body.provider, api_key=body.api_key, api_base=body.api_base,
+                fast_model=body.fast_model, smart_model=body.smart_model,
+            )  # fmt: skip
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
+
+    @router.post("/ai/test", dependencies=[Depends(auth)])
+    def ai_test() -> dict:
+        try:
+            return {"ok": True, "reply": ai_settings.test(cfg)}
+        except Exception as e:  # noqa: BLE001 — pesan penyedia sudah aman (tanpa kunci)
+            return {"ok": False, "error": str(e)[:300]}
 
     @router.post("/approvals/{approval_id}", dependencies=[Depends(auth)])
     def approve(approval_id: str, body: ApprovalBody) -> dict:

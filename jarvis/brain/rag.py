@@ -39,9 +39,9 @@ class Hit:
 
 
 def ollama_embedder(cfg: Config) -> Embedder:
-    import ollama
+    from jarvis.brain import providers
 
-    client = ollama.Client(host=cfg.llm.host)
+    client = providers.local_client(cfg)  # embedding selalu lokal
 
     def embed(texts: list[str]) -> np.ndarray:
         out = client.embed(model=cfg.rag.embed_model, input=texts)
