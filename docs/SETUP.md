@@ -11,6 +11,30 @@ Panduan ini untuk **macOS, Windows, dan Linux**. Langkahnya sama secara garis be
 
 ---
 
+## ⚡ Pasang Satu Baris (untuk pengguna biasa, tanpa sudo/admin, tanpa Node.js)
+
+Memasang `uv` ke folder pengguna, mengunduh Jarvis, menyiapkan Python & paket, mengunduh model suara, dan membuat
+`config.yaml` awal (API lokal aktif untuk Isla Desk). Aman dijalankan ulang: kode diperbarui, `config.yaml` kamu tidak disentuh.
+
+| OS | Perintah |
+|---|---|
+| macOS / Linux (Terminal) | `curl -LsSf https://raw.githubusercontent.com/Royhan2123/jarvis/main/scripts/install.sh \| bash` |
+| Windows (PowerShell) | `irm https://raw.githubusercontent.com/Royhan2123/jarvis/main/scripts/install.ps1 \| iex` |
+
+- Lokasi: macOS `~/Library/Application Support/jarvis-app/`, Linux `~/.local/share/jarvis-app/`, Windows `%LOCALAPPDATA%\jarvis-app\`.
+  Di sana ada `app/` (kode + `config.yaml`) dan peluncur `run.sh` / `run.cmd`.
+- **Isla Desk** menemukan peluncur itu sendiri: bila otak AI dipilih "Jarvis", Isla menyalakannya saat start dan mematikannya saat keluar
+  (Setelan → Otak Jarvis juga punya tombol "Jalankan Jarvis" dan menampilkan perintah di atas bila belum terpasang).
+- Linux: PortAudio (`libportaudio2`) kadang perlu dipasang lewat `apt`/`dnf`/`pacman` (butuh sudo); skrip hanya mencetak perintahnya.
+- Ollama tidak ikut dipasang (https://ollama.com/download). Tanpa Ollama pakai penyedia online di Setelan Isla → Otak Jarvis.
+- Uji/offline: `JARVIS_SOURCE_DIR=<folder jarvis> JARVIS_SKIP_MODELS=1 bash scripts/install.sh` (juga `JARVIS_HOME`, `JARVIS_SOURCE_URL`).
+- **Status uji (2026-11-13):** macOS terbukti (pasang ke folder sementara, Jarvis menyala, `/v1/ai` menjawab). **Windows dan Linux belum diuji**
+  (skrip ditulis, sintaks bash diperiksa; PowerShell belum dijalankan sama sekali).
+- **Syarat sebelum perintah di atas bisa dipakai orang lain:** repo GitHub harus **publik** (sekarang private), dan `config.yaml`
+  pengembang di repo diganti `config.example.yaml` (installer membuang `config.yaml` dari arsip dan membuat yang baru).
+
+---
+
 ## 🍎 macOS (Intel & Apple Silicon)
 
 > ⚠️ **Tanpa Homebrew.** Sejak September 2026 Homebrew menurunkan Mac Intel ke Tier 3

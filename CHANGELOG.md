@@ -5,6 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/). Versi mengikut
 ## [Belum dirilis]
 
 ### Ditambahkan
+- **Pemasang satu baris** `scripts/install.sh` / `scripts/install.ps1` (tanpa sudo, admin, atau Node.js) + peluncur untuk Isla Desk. Lihat `docs/SETUP.md`.
 - **Penyedia AI** (`jarvis/brain/providers.py`, `jarvis/ai_settings.py`): Ollama tetap bawaan; opsional API online
   (OpenAI, Anthropic, Gemini, Groq, OpenRouter, DeepSeek, Mistral, custom) dengan kunci milik pengguna. Berlaku
   seketika, model Ollama dibongkar dari RAM saat pindah. API `GET/PUT /v1/ai`, `POST /v1/ai/test`; CLI `jarvis.setup ai`.
