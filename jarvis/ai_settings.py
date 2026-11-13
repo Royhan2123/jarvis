@@ -86,6 +86,7 @@ def view(cfg: Config) -> dict[str, Any]:
         "has_key": bool(get_key(c.provider)) if c.provider != "ollama" else False,
         "keys_set": [p for p in PRESETS if p != "ollama" and get_key(p)],
         "offline_only": cfg.general.offline_only,
+        "voice": {"engine": cfg.tts.engine, "gender": cfg.tts.gender},
     }
 
 

@@ -169,6 +169,15 @@ def test_update_saves_key_0600_never_returns_it_and_switches_live(tmp_path, monk
     assert again.llm.provider == "openai" and again.llm.cloud_fast_model == "gpt-4o-mini"
 
 
+def test_view_reports_voice_without_secrets() -> None:
+    c = Config()
+    c.tts.engine = "fish"
+    c.tts.gender = "female"
+    v = ai_settings.view(c)
+    assert v["voice"] == {"engine": "fish", "gender": "female"}
+    assert "voice_id" not in json.dumps(v) and "api_key" not in json.dumps(v)
+
+
 def test_update_validates_input() -> None:
     c = Config()
     with pytest.raises(ValueError, match="tidak dikenal"):

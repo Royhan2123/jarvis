@@ -110,6 +110,8 @@ platform:
 
 ui:
   tray: true
+  api:
+    enabled: true            # dibutuhkan Isla Desk (Tanya AI, Setelan Jarvis); hanya 127.0.0.1
 
 # Sambungan ke Isla Desk: batang suara (mendengar/berpikir/bicara) dan kartu izin di pulau.
 island:
