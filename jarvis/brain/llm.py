@@ -67,7 +67,7 @@ class LLM:
             messages=messages,
             stream=True,
             options=self._options(num_ctx),
-            keep_alive=c.keep_alive,
+            keep_alive=c.keep_alive_for(model or c.fast_model),
             think=c.think,
             tools=tools or None,
         ):

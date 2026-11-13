@@ -148,6 +148,14 @@ class MacAdapter(PlatformAdapter):
                 "Tidak bisa mengetik. Izinkan Accessibility untuk aplikasi ini di System Settings"
             ) from e
 
+    def trim_memory(self) -> None:
+        import ctypes
+
+        try:
+            ctypes.CDLL("/usr/lib/libSystem.B.dylib").malloc_zone_pressure_relief(None, 0)
+        except (OSError, AttributeError):
+            pass
+
     def notify(self, title: str, body: str) -> None:
         self._osascript(
             "on run argv\ndisplay notification (item 1 of argv) "

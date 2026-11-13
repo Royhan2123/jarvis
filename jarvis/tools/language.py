@@ -32,7 +32,7 @@ def run_translation(text: str, target: str, cfg=None, client=None) -> str:  # no
             "num_ctx": cfg.llm.num_ctx,
             "num_thread": cfg.llm.num_thread,
         },
-        keep_alive=cfg.llm.keep_alive,
+        keep_alive=cfg.llm.keep_alive_for(cfg.llm.fast_model),
         think=False,
     )
     return (resp.message.content or "").strip().strip("\"'“”")

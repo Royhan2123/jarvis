@@ -41,7 +41,7 @@ def describe(png: bytes, question: str, cfg: Config, client: ollama.Client | Non
             "num_ctx": max(cfg.llm.num_ctx, 4096),
             "num_thread": cfg.llm.num_thread,
         },
-        keep_alive=cfg.llm.keep_alive,
+        keep_alive=cfg.llm.keep_alive_for(cfg.llm.vision_model),
         think=False,
     )
     return (resp.message.content or "").strip()

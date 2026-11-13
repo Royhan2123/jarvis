@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 import numpy as np
 from loguru import logger
@@ -46,7 +47,7 @@ def is_hallucination(text: str, peak: float) -> bool:
 
 
 class WhisperSTT:
-    def __init__(self, cfg: STTConfig, live: STTConfig | None = None) -> None:
+    def __init__(self, cfg: STTConfig, live: STTConfig | None = None, detector: Any = None) -> None:
         # `live`: objek config yang bisa diubah saat jalan (tool set_language); `cfg` boleh salinan
         # (mis. prompt ditambah nama file), jadi bahasa selalu dibaca dari `live`.
         self.live = live or cfg
@@ -61,12 +62,12 @@ class WhisperSTT:
             compute_type=cfg.compute_type,
             cpu_threads=cfg.cpu_threads,
         )
-        self.detector = None
+        self.detector = detector  # model deteksi bahasa (boleh dibagi dengan penyaring wake)
         self._detector_failed = False
         from jarvis.brain.language import detect_candidates
 
         self.candidates = set(detect_candidates(cfg.detect_languages))
-        if cfg.language == "auto":
+        if cfg.language == "auto" and detector is None:
             self._load_detector()
 
     def _load_detector(self) -> None:

@@ -172,5 +172,13 @@ class LinuxAdapter(PlatformAdapter):
             return
         type_via_pynput(text, "ctrl")
 
+    def trim_memory(self) -> None:
+        import ctypes
+
+        try:
+            ctypes.CDLL("libc.so.6").malloc_trim(0)
+        except (OSError, AttributeError):  # bukan glibc (mis. musl)
+            pass
+
     def notify(self, title: str, body: str) -> None:
         run(["notify-send", title, body])

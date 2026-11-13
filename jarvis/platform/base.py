@@ -19,6 +19,13 @@ class AppNotFound(PlatformError):
 class PlatformAdapter(ABC):
     name: Literal["macos", "windows", "linux"]
 
+    def trim_memory(self) -> None:  # noqa: B027 — hook opsional, default tidak melakukan apa-apa
+        """Kembalikan memori bebas milik alokator ke OS (RSS turun).
+
+        Model Whisper/ONNX meninggalkan ratusan MB memori "dicadangkan" setelah dimuat dan tumbuh
+        pelan tiap transkripsi; tanpa ini RSS terlihat bocor.
+        """
+
     # ── Suara (TTS fallback) ──
     @abstractmethod
     def say(self, text: str, voice: str | None = None) -> None:

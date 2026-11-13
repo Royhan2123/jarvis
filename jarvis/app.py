@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import queue
 import re
 import threading
@@ -17,7 +18,7 @@ from jarvis.approvals import BOARD
 from jarvis.audio.sounds import play_confirm, play_done, play_error, play_ting, warm
 from jarvis.audio.stream import MicStream
 from jarvis.audio.vad import VAD, record_utterance
-from jarvis.audio.wakeword import WakeWord, match_any
+from jarvis.audio.wakeword import WakeWord, match_any, plausible_wake
 from jarvis.brain import rules
 from jarvis.brain.actions import ActionRunner
 from jarvis.brain.llm import LLM
@@ -82,11 +83,34 @@ class Jarvis:
 
             hint = workspace.stt_hint(cfg)
             stt_cfg = cfg.stt.model_copy(update={"initial_prompt": cfg.stt.initial_prompt + hint})
-        self.stt = WhisperSTT(stt_cfg, live=cfg.stt)
-        wake_cfg = cfg.stt.model_copy(update={"model": cfg.stt.wake_model, "beam_size": 1})
-        self.wake_stt = (
-            self.stt if wake_cfg.model == cfg.stt.model else WhisperSTT(wake_cfg, live=cfg.stt)
+        # Penyaring wake murah (Whisper tiny); modelnya dibagi dengan pendeteksi bahasa.
+        self.gate: WhisperSTT | None = None
+        shared_detector = None
+        if cfg.wakeword.gate and self.wake is None:
+            gate_cfg = cfg.stt.model_copy(
+                update={
+                    "model": cfg.stt.detect_model,
+                    "beam_size": 1,
+                    "language": "id",
+                    "cpu_threads": cfg.stt.wake_threads,
+                }
+            )
+            self.gate = WhisperSTT(gate_cfg)
+            shared_detector = self.gate.model
+        self.stt = WhisperSTT(stt_cfg, live=cfg.stt, detector=shared_detector)
+        wake_cfg = cfg.stt.model_copy(
+            update={
+                "model": cfg.stt.wake_model,
+                "beam_size": 1,
+                "cpu_threads": cfg.stt.wake_threads,
+            }
         )
+        self.wake_stt = (
+            self.stt
+            if wake_cfg.model == cfg.stt.model
+            else WhisperSTT(wake_cfg, live=cfg.stt, detector=shared_detector)
+        )
+        self._last_trim = 0.0
         self.llm = LLM(cfg, facts=self.memory.facts_text)
         self.llm.history = self.memory.recent(cfg.llm.history_turns)  # ingat percakapan terakhir
         self.router = Router(cfg)
@@ -123,6 +147,18 @@ class Jarvis:
         self._voice_feed.push(state.value)  # indikator batang suara di pulau Isla
         for fn in self.listeners:
             fn(state)
+
+    def _maybe_trim(self, force: bool = False) -> None:
+        """Kembalikan memori bebas ke OS paling sering tiap 30 dtk (mencegah RSS terlihat bocor)."""
+        now = time.monotonic()
+        if not force and now - self._last_trim < 30:
+            return
+        self._last_trim = now
+        gc.collect()
+        try:
+            context.adapter.trim_memory()
+        except Exception as e:  # noqa: BLE001 — optimasi opsional
+            logger.debug(f"trim memori gagal: {e}")
 
     def _beep_error(self) -> None:
         if self.cfg.audio.sounds:
@@ -184,6 +220,12 @@ class Jarvis:
                 or len(seg) >= sr * cfg.max_record_s - sr * ms // 1000
             ):
                 continue
+            voiced, ratio = vad.speech_stats(seg)
+            if (
+                voiced < self.cfg.wakeword.min_speech_s
+                or ratio < self.cfg.wakeword.min_speech_ratio
+            ):
+                continue  # derau/gema, bukan ucapan
             text = self.wake_stt.transcribe(seg, fast=True)
             logger.debug(f"[interupsi?] '{text}'")
             if text and self._is_interrupt(text):
@@ -482,6 +524,16 @@ class Jarvis:
         if seg is None or len(seg) < c.audio.sample_rate * 0.4:
             return None
         t0 = time.perf_counter()
+        w = c.wakeword
+        voiced, ratio = self.vad.speech_stats(seg)
+        if w.gate and (voiced < w.min_speech_s or ratio < w.min_speech_ratio):
+            logger.debug(f"[wake] derau (suara {voiced:.2f}s, {ratio:.0%}) → abaikan")
+            return None
+        if self.gate is not None:  # tahap 1 murah: mirip kata pemanggil? baru tahap 2 (base)
+            heard = self.gate.transcribe(seg, fast=True)
+            if not plausible_wake(heard, w.all_phrases):
+                logger.debug(f"[wake] gate '{heard}' → abaikan ({time.perf_counter() - t0:.2f}s)")
+                return None
         text = self.wake_stt.transcribe(seg, fast=True)
         rest = match_any(text, c.wakeword.all_phrases)
         logger.debug(
@@ -529,7 +581,9 @@ class Jarvis:
         name = " / ".join(self.cfg.wakeword.all_phrases) if phrase_mode else self.cfg.wakeword.model
         print(f'🎙️  Katakan "{name}" (Ctrl+C untuk berhenti)')
         try:
+            self._maybe_trim(force=True)  # buang sisa memori pemuatan model
             while self._running:
+                self._maybe_trim()
                 self._deliver_reminders()
                 if self.mic_muted:
                     self.mic.flush()

@@ -111,6 +111,15 @@ class WindowsAdapter(PlatformAdapter):
     def type_text(self, text: str) -> None:
         type_via_pynput(text, "ctrl")
 
+    def trim_memory(self) -> None:
+        import ctypes
+
+        try:  # kecilkan working set; Windows memuat ulang halaman yang dibutuhkan
+            kernel, psapi = ctypes.windll.kernel32, ctypes.windll.psapi
+            psapi.EmptyWorkingSet(kernel.GetCurrentProcess())
+        except (OSError, AttributeError):
+            pass
+
     def notify(self, title: str, body: str) -> None:
         from win11toast import notify  # dependensi khusus Windows
 

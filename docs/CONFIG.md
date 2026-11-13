@@ -40,6 +40,9 @@ wakeword:
   threshold: 0.5              # 0.0–1.0; naikkan jika sering terpanggil sendiri
   cooldown_s: 2.0             # jeda minimal antar aktivasi
   inference_framework: "onnx" # onnx (semua OS) | tflite (Linux saja)
+  gate: true                  # mode frasa: suara sekitar diperiksa murah dulu (VAD + Whisper tiny), base hanya bila mirip
+  min_speech_s: 0.3           # suara kurang dari ini (detik berbicara) diabaikan
+  min_speech_ratio: 0.35      # porsi segmen yang benar-benar suara; di bawah ini = derau
 
 # ─────────────────────────────────────────────
 # VAD (deteksi selesai bicara)
@@ -68,6 +71,7 @@ stt:
   wake_prompt: "Hello, buka, tutup, volume, Spotify, Chrome, VS Code"  # khusus deteksi panggilan
   min_logprob: -0.85          # keyakinan Whisper di bawah ini → Jarvis minta diulang; null = mati
   cpu_threads: 6              # hasil bench Mac i9: 6 lebih cepat dari 8 (sisakan core untuk audio)
+  wake_threads: 2             # thread model kecil yang jalan terus (wake/penyaring/deteksi bahasa): 2 = CPU idle ±60% lebih kecil
 
 # ─────────────────────────────────────────────
 # LLM (OTAK)
@@ -84,7 +88,8 @@ llm:
   num_ctx: 2048               # panjang konteks (token); bench: 2048 lebih cepat dari 4096
   num_predict: 100            # panjang maksimal jawaban (token)
   num_thread: 8               # = jumlah CORE FISIK CPU
-  keep_alive: -1              # -1 = model tetap di RAM; "10m" = lepas setelah 10 menit
+  keep_alive: -1              # model cepat (4B): -1 = tetap di RAM; "10m" = lepas setelah 10 menit
+  keep_alive_smart: "5m"      # model pintar (9B, ±6 GB): dibongkar dari RAM setelah idle 5 menit
   think: false                # mode reasoning Qwen; false = jauh lebih cepat
 
   history_turns: 6            # jumlah pesan terakhir yang diingat dalam konteks
@@ -224,7 +229,7 @@ agent:                                # agen kerja: tugas bertahap + shell terja
   max_steps: 12                       # batas langkah per tugas
   num_ctx: 4096
   num_predict: 400                    # batas token per langkah
-  prewarm: true                       # proses prompt agen di latar saat Jarvis menyala (langkah 1 cepat)
+  prewarm: false                      # true = muat model agen (9B, ±6 GB RAM, ±15 dtk CPU) saat Jarvis menyala
   narrate: true                       # ucapkan status per langkah ("Membaca toko titik py") di latar
   command_timeout_s: 60
   max_output_chars: 4000
@@ -287,7 +292,8 @@ ui:
 | `llm.num_ctx` | Konteks lebih besar = lebih lambat & boros RAM | 2048–4096 | 8192 |
 | `llm.num_predict` | Jawaban lebih pendek = lebih cepat | 150–200 | 300 |
 | `llm.think` | Mode berpikir panjang | `false` | `false` (kecuali tugas rumit) |
-| `llm.keep_alive` | Hindari loading ulang model | `-1` | `-1` |
+| `llm.keep_alive` | Hindari loading ulang model cepat | `-1` | `-1` |
+| `llm.keep_alive_smart` | Bongkar 9B saat idle (hemat ±6 GB) | `"5m"` | `"5m"` |
 | `stt.model` | Akurasi vs kecepatan STT | `small` | `medium` / `large-v3-turbo` |
 | `stt.beam_size` | Akurasi vs kecepatan | `1` | `5` |
 | `vad.silence_ms` | Kecil = cepat tapi bisa memotong ucapan | 700–900 | sama |

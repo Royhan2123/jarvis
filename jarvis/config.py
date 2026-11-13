@@ -38,6 +38,11 @@ class WakewordConfig(_Section):
     threshold: float = 0.5
     cooldown_s: float = 2.0
     inference_framework: Literal["onnx", "tflite"] = "onnx"
+    # Mode frasa: suara sekitar yang lolos VAD diperiksa murah dulu (VAD + Whisper tiny); Whisper
+    # base hanya untuk yang mirip kata pemanggil. Memangkas CPU idle.
+    gate: bool = True
+    min_speech_s: float = 0.3  # suara kurang dari ini (detik berbicara) tidak diperiksa
+    min_speech_ratio: float = 0.35  # porsi segmen yang benar-benar suara; di bawah ini = derau
 
     @property
     def all_phrases(self) -> list[str]:
@@ -79,9 +84,16 @@ class STTConfig(_Section):
     )
     min_logprob: float | None = -0.85  # keyakinan Whisper di bawah ini → minta diulang; null=mati
     cpu_threads: int = 6
+    # Thread untuk model kecil yang jalan terus (wake + penyaring + deteksi bahasa). Model kecil
+    # tidak cepat dengan banyak thread, hanya memboroskan CPU: 2 thread memangkas CPU idle ±60%.
+    wake_threads: int = 2
 
 
 class LLMConfig(_Section):
+    def keep_alive_for(self, model: str | None) -> int | str:
+        """keep_alive untuk `model`: model pintar dibongkar saat idle, model cepat tetap di RAM."""
+        return self.keep_alive_smart if model == self.smart_model else self.keep_alive
+
     host: str = "http://localhost:11434"
     fast_model: str = "qwen3.5:4b"
     smart_model: str = "qwen3.5:9b"
@@ -92,7 +104,10 @@ class LLMConfig(_Section):
     num_ctx: int = 2048
     num_predict: int = 100
     num_thread: int = 8
-    keep_alive: int | str = -1
+    keep_alive: int | str = -1  # model cepat (4B) tetap di RAM
+    # Model pintar (9B, ±6 GB RAM) dibongkar dari RAM setelah idle selama ini; dimuat ulang ±15 dtk
+    # saat dibutuhkan lagi. "-1" = selalu di RAM.
+    keep_alive_smart: int | str = "5m"
     think: bool = False
     history_turns: int = 6
 
@@ -250,7 +265,7 @@ class AgentConfig(_Section):
     max_steps: int = 12
     num_ctx: int = 4096
     num_predict: int = 400  # batas token per langkah (cegah model bertele-tele)
-    prewarm: bool = True  # proses prompt statis di latar saat Jarvis menyala (langkah 1 jadi cepat)
+    prewarm: bool = False  # True = muat model agen (9B, ±6 GB RAM, ±15 dtk CPU) saat Jarvis menyala
     narrate: bool = True  # ucapkan status singkat per langkah ("Membaca toko.py") di latar
     command_timeout_s: int = 60
     max_output_chars: int = 4000

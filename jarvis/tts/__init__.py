@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Protocol
 
 from loguru import logger
@@ -34,8 +35,8 @@ class BilingualTTS:
             self.en_tts.stop()
 
 
-def _local_for(cfg: Config, lang: str) -> TTS | None:
-    """Piper bila ada, kalau tidak suara OS; untuk Inggris None bila tidak ada suaranya."""
+def _build_local(cfg: Config, lang: str) -> TTS | None:
+    """Piper bila ada, kalau tidak suara OS; None bila tidak ada suara untuk bahasa itu."""
     from jarvis.tts.fallback import SystemTTS
 
     try:
@@ -51,12 +52,36 @@ def _local_for(cfg: Config, lang: str) -> TTS | None:
         return None
 
 
+class LazyTTS:
+    """Suara lokal yang baru dimuat saat dipakai pertama kali (Piper ±70 MB RAM per suara; dengan
+    Fish aktif, suara cadangan ini jarang terpakai). `fallback` dipakai bila suaranya tak ada."""
+
+    def __init__(self, build: Callable[[], TTS | None], fallback: TTS | None = None) -> None:
+        self._build, self._fallback = build, fallback
+        self._impl: TTS | None = None
+        self._tried = False
+
+    def _get(self) -> TTS | None:
+        if not self._tried:
+            self._tried, self._impl = True, self._build()
+        return self._impl or self._fallback
+
+    def speak(self, text: str) -> None:
+        if (tts := self._get()) is not None:
+            tts.speak(text)
+
+    def stop(self) -> None:
+        if self._impl is not None:
+            self._impl.stop()
+
+
 def _local_tts(cfg: Config) -> TTS:
-    """Suara lokal dua bahasa: Indonesia (wajib) + Inggris (bila ada)."""
+    """Suara lokal dua bahasa: Indonesia + Inggris, keduanya dimuat malas."""
     from jarvis.tts.fallback import SystemTTS
 
-    id_tts = _local_for(cfg, "id") or SystemTTS(cfg)
-    return BilingualTTS(id_tts, _local_for(cfg, "en"))
+    id_tts = LazyTTS(lambda: _build_local(cfg, "id") or SystemTTS(cfg))
+    en_tts = LazyTTS(lambda: _build_local(cfg, "en"), fallback=id_tts)
+    return BilingualTTS(id_tts, en_tts)
 
 
 def build_tts(cfg: Config) -> TTS:
@@ -75,5 +100,7 @@ def build_tts(cfg: Config) -> TTS:
         logger.warning("Engine 'edge' belum tersedia (Fase 1); memakai suara OS")
         return SystemTTS(cfg)
     if cfg.tts.engine == "piper":
-        return _local_tts(cfg)
+        local = _local_tts(cfg)
+        local.id_tts._get()  # Piper adalah suara utama: muat sekarang supaya ucapan pertama cepat
+        return local
     return SystemTTS(cfg)

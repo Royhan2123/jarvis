@@ -304,7 +304,7 @@ class Agent:
             ],
             tools=TOOLS,
             options={**self._options(), "num_predict": 1},
-            keep_alive=c.keep_alive,
+            keep_alive=c.keep_alive_for(a.model or c.smart_model),
             think=False,
         )
 
@@ -335,7 +335,7 @@ class Agent:
                 return "Tugas dibatalkan."
             resp = self.client.chat(
                 model=model, messages=messages, tools=TOOLS, options=options,
-                keep_alive=c.keep_alive, think=False,
+                keep_alive=c.keep_alive_for(model), think=False,
             )  # fmt: skip
             msg = resp.message
             calls = getattr(msg, "tool_calls", None) or []

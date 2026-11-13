@@ -76,6 +76,14 @@ def match_phrase(text: str, phrase: str) -> str | None:
     return None
 
 
+def plausible_wake(text: str, phrases: list[str]) -> bool:
+    """Penyaring murah: ada kata yang agak mirip (≥0.6) dengan kata pemanggil mana pun? Longgar
+    sengaja (salah-positif hanya memicu pemeriksaan lebih teliti); kosong = bukan."""
+    heard = _norm(text)
+    wanted = {w for p in phrases for w in _norm(p)} | _GREETINGS
+    return any(SequenceMatcher(None, h, w).ratio() >= 0.6 for h in heard for w in wanted)
+
+
 def match_any(text: str, phrases: list[str]) -> str | None:
     """Coba semua frasa pemanggil; kembalikan sisa ucapan dari frasa pertama yang cocok."""
     for phrase in phrases:

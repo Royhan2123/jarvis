@@ -34,6 +34,16 @@ class VAD:
     def reset(self) -> None:
         self._tail = np.zeros(0, dtype=np.float32)
 
+    def speech_stats(self, samples: np.ndarray) -> tuple[float, float]:
+        """(detik berbicara, porsi berbicara 0..1) pada satu segmen utuh; ±15 ms untuk 3 detik."""
+        audio = samples.astype(np.float32) / 32768.0
+        n = (len(audio) // WINDOW) * WINDOW
+        if n == 0:
+            return 0.0, 0.0
+        probs = np.asarray(self.model(audio[:n].copy())).reshape(-1)
+        voiced = float((probs >= self.cfg.threshold).sum()) * WINDOW / 16000
+        return voiced, voiced / (n / 16000)
+
 
 def record_utterance(
     chunks: Iterator[np.ndarray | None],
