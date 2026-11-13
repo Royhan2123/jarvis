@@ -111,6 +111,10 @@ platform:
 ui:
   tray: true
 
+# Sambungan ke Isla Desk: batang suara (mendengar/berpikir/bicara) dan kartu izin di pulau.
+island:
+  enabled: true
+
 # Agen kerja: Jarvis mengerjakan tugas bertahap di komputer (keputusan pemilik 2026-11-10: seluruh home).
 # Tetap berlaku: konfirmasi tiap ubah file/perintah, blokir keras (sudo, hapus massal, ...), file
 # rahasia dilindungi (workspace.deny), pemblokiran jaringan bila offline_only.

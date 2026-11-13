@@ -102,6 +102,8 @@ if [ ! -f "$APP/config.yaml" ]; then
 ui:
   api:
     enabled: true   # dibutuhkan Isla Desk untuk berbicara dengan Jarvis (hanya 127.0.0.1)
+island:
+  enabled: true     # kirim status suara (mendengar/berpikir/bicara) dan kartu izin ke pulau Isla
 YAML
   echo "config.yaml dibuat."
 else

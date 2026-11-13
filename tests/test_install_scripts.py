@@ -31,4 +31,5 @@ def test_both_installers_create_launcher_with_api_enabled() -> None:
     for text, launcher in ((sh, "run.sh"), (ps, "run.cmd")):
         assert launcher in text
         assert "enabled: true" in text  # ui.api untuk Isla Desk
+        assert "island:" in text  # status suara & kartu izin tampil di pulau Isla
         assert "--listen" in text
