@@ -140,11 +140,11 @@ class ApiBackend:
         self.task: Task | None = None
 
     # ── tanya ──
-    def ask(self, text: str) -> dict[str, Any]:
+    def ask(self, text: str, system: str = "") -> dict[str, Any]:
         with self._ask_lock:  # LLM menyimpan riwayat; satu pertanyaan pada satu waktu
             if self._llm is None:
                 self._llm = LLM(self.cfg, client=self._llm_client, facts=context.memory.facts_text)
-            return self._ask(text)
+            return self._ask(text, system)
 
     def _run_intents(self, intents: list[Intent]) -> str:
         runner = ActionRunner()
@@ -156,21 +156,22 @@ class ApiBackend:
             )
         return reply
 
-    def _ask(self, text: str) -> dict[str, Any]:
+    def _ask(self, text: str, system: str = "") -> dict[str, Any]:
         assert self._llm is not None
         router = Router(self.cfg)
         plan = router.plan(text)
         if plan.intents:
             return {"reply": self._run_intents(plan.intents), "tier": "rule"}
+        prompt = f"{system}\n\n{text}" if system else text  # rute dipilih dari `text` saja
         reply = "".join(
-            self._llm.ask(text, model=plan.model, tools=plan.tools, num_ctx=plan.num_ctx)
+            self._llm.ask(prompt, model=plan.model, tools=plan.tools, num_ctx=plan.num_ctx)
         )
         calls = list(self._llm.tool_calls)
         tier = plan.tier
         if any(n == "escalate" for n, _ in calls):
             plan, tier = router.escalated(text), "smart"
             reply = "".join(
-                self._llm.ask(text, model=plan.model, tools=plan.tools, num_ctx=plan.num_ctx)
+                self._llm.ask(prompt, model=plan.model, tools=plan.tools, num_ctx=plan.num_ctx)
             )
             calls = list(self._llm.tool_calls)
         if calls:
@@ -318,6 +319,9 @@ async def sse_stream(request: Request, wait, fmt, ping_every: float = PING_EVERY
 
 class AskBody(BaseModel):
     text: str
+    # Petunjuk gaya dari aplikasi pemanggil (mis. persona Isla). Hanya ikut ke model; TIDAK dihitung
+    # saat memilih model (kalau ikut dihitung, pertanyaan pendek selalu dianggap rumit → model 9B).
+    system: str = ""
 
 
 class AiBody(BaseModel):
@@ -391,8 +395,11 @@ def build_router(backend: ApiBackend, token: str) -> APIRouter:
     @router.post("/ask", dependencies=[Depends(auth)])
     def ask(body: AskBody) -> dict:
         text = check(body.text, "text")
+        system = body.system.strip()
+        if len(system) > cfg.ui.api.max_text_chars:
+            raise HTTPException(413, "system terlalu panjang")
         try:
-            return backend.ask(text)
+            return backend.ask(text, system)
         except Exception as e:  # noqa: BLE001 — Ollama mati dsb.
             logger.warning(f"[api] ask gagal: {e}")
             raise HTTPException(502, f"Tidak bisa bertanya ke model: {e}") from e

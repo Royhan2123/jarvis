@@ -139,6 +139,26 @@ def test_ask_goes_through_rules_then_llm_with_history(cfg, tmp_path, adapter) ->
     assert roles.count("user") >= 2  # riwayat percakapan API tersimpan antar permintaan
 
 
+def test_system_hint_reaches_model_but_does_not_make_short_questions_complex(
+    cfg, tmp_path, adapter
+) -> None:
+    context.configure(adapter, cfg, context.memory)
+    llm = FakeLLM()
+    client, _ = make_client(cfg, tmp_path, llm=llm)
+    hint = "Jawab singkat dan sopan dalam bahasa Indonesia, teks polos tanpa markdown. " * 3
+    assert len(hint.split()) > cfg.router.complex_min_words  # petunjuk saja sudah "panjang"
+    r = client.post(
+        "/v1/ask", headers=AUTH, json={"text": "ceritakan sesuatu yang menarik", "system": hint}
+    ).json()
+    assert r["tier"] == "fast"  # model cepat, bukan 9B
+    assert llm.calls[-1]["model"] == cfg.llm.fast_model
+    sent = llm.calls[-1]["messages"][-1]["content"]
+    assert hint.strip() in sent and sent.endswith("ceritakan sesuatu yang menarik")
+    too_long = "x" * (cfg.ui.api.max_text_chars + 1)
+    bad = client.post("/v1/ask", headers=AUTH, json={"text": "halo", "system": too_long})
+    assert bad.status_code == 413
+
+
 def test_ask_validates_input(api, cfg) -> None:
     client, _ = api
     assert client.post("/v1/ask", headers=AUTH, json={"text": "   "}).status_code == 422

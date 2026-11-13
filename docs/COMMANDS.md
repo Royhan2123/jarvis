@@ -435,7 +435,7 @@ lewat **tombol** (bukan suara). Aktifkan: `ui.api.enabled: true` (memakai server
 | `GET /v1/ai` | Penyedia AI aktif, model, `has_key`, daftar penyedia (kunci tidak pernah dikembalikan) |
 | `PUT /v1/ai` `{provider, api_key?, api_base?, fast_model?, smart_model?}` | Ganti penyedia saat berjalan (tanpa restart). Memilih penyedia online = izin eksplisit (`allow_cloud`); model Ollama dibongkar dari RAM. 422 bila isian tak sah |
 | `POST /v1/ai/test` | Satu pertanyaan uji ke penyedia aktif: `{ok, reply}` / `{ok:false, error}` |
-| `POST /v1/ask` `{text}` | `{reply, tier}`: aturan, Qwen 4B, atau 9B; tanpa suara. Riwayat percakapan API terpisah dari suara. Aksi berisiko tinggi (matikan komputer) **tidak dijalankan** (butuh "ya" suara) |
+| `POST /v1/ask` `{text, system?}` | `{reply, tier}`: aturan, Qwen 4B, atau 9B; tanpa suara. Riwayat percakapan API terpisah dari suara. `system` (opsional) = petunjuk gaya dari aplikasi pemanggil; ikut ke model tapi tidak dihitung saat memilih model. Aksi berisiko tinggi (matikan komputer) **tidak dijalankan** (butuh "ya" suara) |
 | `POST /v1/agent` `{task}` | 202 `{id}`; **satu tugas pada satu waktu** (409 bila sibuk, agen mati, atau folder kerja belum diatur) |
 | `GET /v1/agent/{id}` | `{status, result, pending_confirm}` (status: running/done/error/cancelled) |
 | `GET /v1/agent/{id}/events` | SSE: `step`, `result`, `confirm` {confirm_id, what}, `confirm_result` {allow, timeout}, `done`/`error`/`cancelled`; denyut `: ping` tiap 15 dtk |
